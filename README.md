@@ -32,4 +32,4 @@ This tool allows you to easily process lists of tags by applying various filters
 
 ## **Live Demo**
 
-You can try the tool live here: https://https://isaacwach234.github.io/
+You can try the tool live here: [https://https://isaacwach234.github.io/](https://isaacwach234.github.io/)
