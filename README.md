@@ -1,6 +1,6 @@
-# **Danbooru Dataset Tag Helper**
+# **Danbooru Tag Helper**
 
-A web-based utility designed primarily to **streamline the process of tagging datasets**, particularly those using Danbooru-style conventions. It's also helpful for managing, refining, and formatting tags for AI image generation prompts.
+A web-based utility designed primarily to **streamline the process of tagging**, particularly those using Danbooru-style conventions. It's also helpful for managing, refining, and formatting tags for AI image generation prompts.
 
 This tool allows you to easily process lists of tags by applying various filters, formatting options, and additions, making dataset management more efficient.
 
