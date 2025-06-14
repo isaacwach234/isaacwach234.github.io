@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Danbooru Tag Helper Final</title>
+    <title>Danbooru Tag Helper</title> <!-- Title will be updated by script -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -153,12 +153,7 @@
     </div>
 
     <script>
-    // --- MODIFICATION 1: REMOVE THE OLD LIST ---
-    // const TAG_DATABASE = ["1girl", "solo", ...]; // This is now gone.
-
-    // --- MODIFICATION 2: ADD A PLACEHOLDER ---
     let TAG_DATABASE = []; // This will be filled by our new function.
-
     const SUGGESTION_MAP = {
         'default': ['masterpiece', 'highres', '1girl', 'solo'], '1girl': ['smile', 'blush', 'long_hair', 'looking_at_viewer'],
         'school_uniform': ['pleated_skirt', 'sailor_collar', 'serafuku', 'thighhighs'], 'dress': ['frills', 'ribbon', 'sleeveless_dress'],
@@ -194,7 +189,6 @@
         { name: 'Environment', keywords: ['simple_background', 'white_background', 'black_background', 'transparent_background', 'outdoors', 'indoors', 'night', 'day', 'cityscape', 'sky', 'room', 'forest', 'beach', 'space'] },
         { name: 'Art Style & Meta', keywords: ['monochrome', 'sketch', 'lineart', 'greyscale', 'comic', 'photo-realistic', 'shadow_hands', 'umbrakinesis', 'cinematic_lighting', 'volumetric_lighting', 'dutch_angle', 'motion_blur'] },
     ];
-
     const body = document.body;
     const allInputs = document.querySelectorAll('input, textarea, select');
     const tagInput = document.getElementById('tagInput');
@@ -216,9 +210,7 @@
     const autocompleteBox = document.getElementById('autocomplete-box');
     const suggestBtn = document.getElementById('suggest-btn');
     const themeButtons = document.querySelectorAll('.theme-button');
-
     let baseTags = [], copyHistory = [], autocomplete = { active: false, index: -1, currentWord: '' }, sortable;
-
     function processAll() {
         const swaps = new Map(swapsInput.value.split(',').map(s => s.split('->').map(p => p.trim())).filter(p => p.length === 2 && p[0]));
         const implications = new Map(implicationsInput.value.split(',').map(s => s.split('=>').map(p => p.trim())).filter(p => p.length === 2 && p[0]));
@@ -232,7 +224,6 @@
             }
         });
         rawTags = [...rawTags, ...tagsToAdd];
-        
         if (deduplicateToggle.checked) {
             const seen = new Set();
             rawTags = rawTags.filter(tag => {
@@ -241,7 +232,6 @@
                 else { seen.add(lower); return true; }
             });
         }
-        
         let filteredTags = rawTags.filter(tag => ![...blacklist].some(b => tag.toLowerCase().includes(b)));
         const maxTags = parseInt(maxTagsInput.value, 10) || 75;
         const newBaseTags = [];
@@ -254,7 +244,6 @@
         baseTags = newBaseTags;
         displayTags();
     }
-    
     function displayTags() {
         const maxTags = parseInt(maxTagsInput.value, 10) || 75;
         processedTagsLabel.querySelector('#tagCount').textContent = baseTags.length;
@@ -267,7 +256,6 @@
         const sortOrder = sortSelect.value;
         let tagsToDisplay = [...baseTags];
         const getSortCategories = () => sortOrder === 'expert' ? EXPERT_SORT_CATEGORIES : SMART_SORT_CATEGORIES;
-        
         if (sortOrder === 'smart' || sortOrder === 'expert') {
             const categories = getSortCategories();
             tagsToDisplay.sort((a, b) => {
@@ -282,8 +270,7 @@
                 acc[categoryName].push(tag); return acc;
             }, {});
             const sortedCategoryNames = categories.map(c => c.name);
-            if (groups['Other']) sortedCategoryNames.push('Other'); // Only add 'Other' if it exists
-
+            if (groups['Other']) sortedCategoryNames.push('Other');
             sortedCategoryNames.forEach(categoryName => {
                 if (groups[categoryName]) {
                     const groupDiv = document.createElement('div');
@@ -308,7 +295,6 @@
         }
         copyButton.disabled = false; initSortable();
     }
-    
     function createTagElement(tag) {
         const el = document.createElement('div');
         el.className = 'tag-base processed-tag'; el.dataset.id = tag.id;
@@ -328,7 +314,6 @@
         }
         return el;
     }
-    
     window.updateTagWeight = (id, action) => {
         const tag = baseTags.find(t => t.id === id); if (!tag) return;
         let current = tag.weighted; const original = tag.original;
@@ -345,7 +330,6 @@
         }
         tag.weighted = current; displayTags();
     };
-
     function getTagCategoryName(tag, categories) {
         const tagLower = (tag.original || tag).toLowerCase().replace(/_/g, ' ');
         const paddedTag = ` ${tagLower} `;
@@ -357,7 +341,6 @@
         }
         return 'Other';
     }
-
     function initSortable() {
         if (sortable) sortable.destroy();
         const containers = tagOutput.querySelectorAll('.tag-group-container');
@@ -378,7 +361,6 @@
             });
         });
     }
-
     function handleAutocomplete(e) {
         const text = tagInput.value; const cursorPos = tagInput.selectionStart;
         const lastComma = text.lastIndexOf(',', cursorPos - 1);
@@ -396,14 +378,11 @@
         if (autocomplete.suggestions.length > 0) { autocomplete.active = true; autocomplete.index = -1; renderAutocomplete(); }
         else { hideAutocomplete(); }
     }
-    
     function renderAutocomplete() {
         autocompleteBox.innerHTML = autocomplete.suggestions.map((s, i) => `<div class="autocomplete-item p-2 cursor-pointer ${i === autocomplete.index ? 'selected' : ''}" onmousedown="selectAutocompleteItem('${s}')">${s.replace(/_/g, ' ')}</div>`).join('');
         autocompleteBox.style.display = 'block';
     }
-
     function updateAutocompleteSelection() { Array.from(autocompleteBox.children).forEach((child, i) => child.classList.toggle('selected', i === autocomplete.index)); }
-    
     window.selectAutocompleteItem = (tag) => {
         const text = tagInput.value; const cursorPos = tagInput.selectionStart;
         const lastComma = text.lastIndexOf(',', cursorPos - 1);
@@ -411,9 +390,7 @@
         tagInput.value = `${before} ${tag.replace(/_/g, ' ')}, ${text.substring(cursorPos)}`;
         hideAutocomplete(); tagInput.focus(); processAll();
     };
-
     function hideAutocomplete() { autocomplete.active = false; autocompleteBox.style.display = 'none'; }
-    
     function copyTagsToClipboard() {
         const useUnderscores = underscoreToggle.checked;
         const triggers = triggerInput.value.split(',').map(t => t.trim()).filter(Boolean);
@@ -426,7 +403,6 @@
             setTimeout(() => copyMessage.textContent = '', 2000);
         }).catch(err => copyMessage.textContent = 'Copy failed!');
     }
-
     function updateCopyHistory(text) {
         if(text){ copyHistory.unshift(text); if (copyHistory.length > 10) copyHistory.pop(); localStorage.setItem('danbooru-tag-history', JSON.stringify(copyHistory)); }
         historyContainer.innerHTML = '';
@@ -438,9 +414,7 @@
             historyContainer.appendChild(el);
         });
     }
-    
     function applyTheme(theme) { body.className = theme; themeButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.theme === theme)); localStorage.setItem('danbooru-tag-helper-theme', theme); }
-    
     function suggestCoherentTags() {
         const currentTags = new Set(baseTags.map(t => t.original.toLowerCase()));
         let potentialSuggestions = new Set();
@@ -455,47 +429,42 @@
             processAll();
         }
     }
-    
-    // --- MODIFICATION 3: ADD THE NEW LOADING FUNCTION ---
     async function loadExternalTags() {
+        document.title = 'Danbooru Tag Helper (Loading...)';
         try {
             const response = await fetch('tags.json');
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                throw new Error(`Failed to fetch tags.json: ${response.status} ${response.statusText}`);
             }
             TAG_DATABASE = await response.json();
             console.log(`Successfully loaded ${TAG_DATABASE.length} tags from tags.json`);
+            document.title = 'Danbooru Tag Helper (Ready)';
         } catch (error) {
-            console.error("Could not load external tag database:", error);
-            TAG_DATABASE = ['1girl', 'solo', 'masterpiece', 'highres', 'blush', 'smile'];
-            console.warn("Using a small fallback tag list because tags.json could not be loaded.");
+            console.error("--- FATAL ERROR ---");
+            console.error("Could not load tag database from 'tags.json'.");
+            console.error("Please ensure 'tags.json' exists in the same directory as index.html and that the web server has permission to read it.");
+            console.error("Error details:", error);
+            document.title = 'Danbooru Tag Helper (ERROR)';
+            tagInput.placeholder = "ERROR: Could not load tag database. Autocomplete is disabled.";
+            TAG_DATABASE = ['error_loading_tags'];
         }
     }
-
-
-    // --- MODIFICATION 4: CHANGE THE INITIAL PAGE LOAD ---
     document.addEventListener('DOMContentLoaded', async () => {
-        // Wait for the external tags to load before doing anything else
         await loadExternalTags();
-
-        // Now that tags are loaded, proceed with the rest of the setup
         allInputs.forEach(input => {
             const handler = input.tagName === 'SELECT' || input.type === 'checkbox' ? displayTags : processAll;
             input.addEventListener('change', handler);
             if(input.tagName !== 'SELECT' && input.type !== 'checkbox') input.addEventListener('input', processAll);
         });
-        
         tagInput.addEventListener('keyup', handleAutocomplete);
         tagInput.addEventListener('keydown', handleAutocomplete);
         tagInput.addEventListener('blur', () => setTimeout(hideAutocomplete, 150));
         copyButton.addEventListener('click', copyTagsToClipboard);
         suggestBtn.addEventListener('click', suggestCoherentTags);
         themeButtons.forEach(btn => btn.addEventListener('click', () => applyTheme(btn.dataset.theme)));
-
         const savedTheme = localStorage.getItem('danbooru-tag-helper-theme') || 'theme-indigo';
         const savedHistory = localStorage.getItem('danbooru-tag-history');
         if (savedHistory) { copyHistory = JSON.parse(savedHistory); }
-        
         applyTheme(savedTheme);
         processAll();
         updateCopyHistory();
