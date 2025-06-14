@@ -153,7 +153,12 @@
     </div>
 
     <script>
-    const TAG_DATABASE = ["1girl", "solo", "long_hair", "blush", "smile", "looking_at_viewer", "short_hair", "breasts", "open_mouth", "blue_eyes", "skirt", "multiple_girls", "brown_hair", "blonde_hair", "black_hair", "2girls", "school_uniform", "red_eyes", "twintails", "dress", "very_long_hair", "hat", "ribbon", "closed_eyes", "thighhighs", "bangs", "hair_ornament", "gloves", "full_body", "bare_shoulders", "white_hair", "long_sleeves", "shirt", "bow", "green_eyes", "hair_ribbon", "cleavage", "ponytail", "pantyhose", "purple_eyes", "cat_ears", "socks", "jewelry", "ahoge", "silver_hair", "animal_ears", "pink_hair", "braid", "red_hair", "purple_hair", "earrings", "tail", "outfit", "hairband", "detached_sleeves", "3girls", "weapon", "navel", "upper_body", "parted_lips", "panty", "medium_hair", "standing", "cowboy_shot", "sitting", "yellow_eyes", "glasses", "food", "holding", "ass", "choker", "frills", "grey_hair", "blue_hair", "simple_background", "white_background", "black_background", "black_legwear", "stockings", "sidelocks", "weapon", "boots", "jacket", "barefoot", "short_sleeper", "one_eye_closed", "sidelocks", "hair_between_eyes", "full_body_shot", "shoes", "hair_flower", "black_gloves", "large_breasts", "medium_breasts", "small_breasts", "flat_chest", "bare_legs", "speech_bubble", "text", "signature", "artist_name", "watermark", "censored", "bar_censor", "comic", "4k", "8k", "absurdres", "highres", "monochrome", "greyscale", "sketch", "lineart", "photo-realistic", "masterpiece", "best_quality", "good_quality", "normal_quality", "bad_quality", "worst_quality", "blurry", "jpeg_artifacts", "lowres"];
+    // --- MODIFICATION 1: REMOVE THE OLD LIST ---
+    // const TAG_DATABASE = ["1girl", "solo", ...]; // This is now gone.
+
+    // --- MODIFICATION 2: ADD A PLACEHOLDER ---
+    let TAG_DATABASE = []; // This will be filled by our new function.
+
     const SUGGESTION_MAP = {
         'default': ['masterpiece', 'highres', '1girl', 'solo'], '1girl': ['smile', 'blush', 'long_hair', 'looking_at_viewer'],
         'school_uniform': ['pleated_skirt', 'sailor_collar', 'serafuku', 'thighhighs'], 'dress': ['frills', 'ribbon', 'sleeveless_dress'],
@@ -228,7 +233,6 @@
         });
         rawTags = [...rawTags, ...tagsToAdd];
         
-        // FIX: Deduplicate while preserving original casing
         if (deduplicateToggle.checked) {
             const seen = new Set();
             rawTags = rawTags.filter(tag => {
@@ -344,7 +348,6 @@
 
     function getTagCategoryName(tag, categories) {
         const tagLower = (tag.original || tag).toLowerCase().replace(/_/g, ' ');
-        // FIX: Use a more robust check to avoid partial word matches
         const paddedTag = ` ${tagLower} `;
         for (const category of categories) {
             const hasKeyword = category.keywords?.some(k => paddedTag.includes(` ${k.replace(/_/g, ' ')} `));
@@ -452,27 +455,51 @@
             processAll();
         }
     }
+    
+    // --- MODIFICATION 3: ADD THE NEW LOADING FUNCTION ---
+    async function loadExternalTags() {
+        try {
+            const response = await fetch('tags.json');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            TAG_DATABASE = await response.json();
+            console.log(`Successfully loaded ${TAG_DATABASE.length} tags from tags.json`);
+        } catch (error) {
+            console.error("Could not load external tag database:", error);
+            TAG_DATABASE = ['1girl', 'solo', 'masterpiece', 'highres', 'blush', 'smile'];
+            console.warn("Using a small fallback tag list because tags.json could not be loaded.");
+        }
+    }
 
-    allInputs.forEach(input => {
-        const handler = input.tagName === 'SELECT' || input.type === 'checkbox' ? displayTags : processAll;
-        input.addEventListener('change', handler);
-        if(input.tagName !== 'SELECT' && input.type !== 'checkbox') input.addEventListener('input', processAll);
+
+    // --- MODIFICATION 4: CHANGE THE INITIAL PAGE LOAD ---
+    document.addEventListener('DOMContentLoaded', async () => {
+        // Wait for the external tags to load before doing anything else
+        await loadExternalTags();
+
+        // Now that tags are loaded, proceed with the rest of the setup
+        allInputs.forEach(input => {
+            const handler = input.tagName === 'SELECT' || input.type === 'checkbox' ? displayTags : processAll;
+            input.addEventListener('change', handler);
+            if(input.tagName !== 'SELECT' && input.type !== 'checkbox') input.addEventListener('input', processAll);
+        });
+        
+        tagInput.addEventListener('keyup', handleAutocomplete);
+        tagInput.addEventListener('keydown', handleAutocomplete);
+        tagInput.addEventListener('blur', () => setTimeout(hideAutocomplete, 150));
+        copyButton.addEventListener('click', copyTagsToClipboard);
+        suggestBtn.addEventListener('click', suggestCoherentTags);
+        themeButtons.forEach(btn => btn.addEventListener('click', () => applyTheme(btn.dataset.theme)));
+
+        const savedTheme = localStorage.getItem('danbooru-tag-helper-theme') || 'theme-indigo';
+        const savedHistory = localStorage.getItem('danbooru-tag-history');
+        if (savedHistory) { copyHistory = JSON.parse(savedHistory); }
+        
+        applyTheme(savedTheme);
+        processAll();
+        updateCopyHistory();
     });
-    
-    tagInput.addEventListener('keyup', handleAutocomplete);
-    tagInput.addEventListener('keydown', handleAutocomplete);
-    tagInput.addEventListener('blur', () => setTimeout(hideAutocomplete, 150));
-    copyButton.addEventListener('click', copyTagsToClipboard);
-    suggestBtn.addEventListener('click', suggestCoherentTags);
-    themeButtons.forEach(btn => btn.addEventListener('click', () => applyTheme(btn.dataset.theme)));
-
-    const savedTheme = localStorage.getItem('danbooru-tag-helper-theme') || 'theme-indigo';
-    const savedHistory = localStorage.getItem('danbooru-tag-history');
-    if (savedHistory) { copyHistory = JSON.parse(savedHistory); }
-    
-    applyTheme(savedTheme);
-    processAll();
-    updateCopyHistory();
     </script>
 </body>
 </html>
