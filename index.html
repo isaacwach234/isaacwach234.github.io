@@ -98,7 +98,7 @@
                  </div>
                  <div>
                     <label for="implicationsInput" class="block text-sm font-medium text-gray-300 mb-2">Implications</label>
-                    <textarea id="implicationsInput" rows="3" class="w-full input-base" placeholder="2girls => duo, uniform => clothing"></textarea>
+                    <textarea id="implicationsInput" rows="3" class="w-full input-base" placeholder="1girl => backlighting"></textarea>
                  </div>
                  <div>
                     <label for="blacklistInput" class="block text-sm font-medium text-gray-300 mb-2">Blacklist</label>
@@ -166,19 +166,24 @@
     let TAG_DATABASE = [];
     let tagIdCounter = 0;
 
-    const QUESTIONABLE_KEYWORDS = ['bikini', 'swimsuit', 'cleavage', 'breasts', 'ass', 'thighs', 'pantyhose', 'leotard', 'garter_belt', 'panty_shot', 'sideboob', 'topless', 'bra', 'panties', 'lingerie', 'seductive', 'bondage', 'shibari', 'partially_nude', 'armpits'];
+    const QUESTIONABLE_KEYWORDS = ['bikini', 'swimsuit', 'cleavage', 'breasts', 'ass', 'thighs', 'pantyhose', 'leotard', 'garter_belt', 'panty_shot', 'sideboob', 'topless', 'bra', 'panties', 'lingerie', 'seductive', 'bondage', 'shibari', 'partially_nude', 'armpits', 'bottomless'];
     const EXPLICIT_KEYWORDS = ['pussy', 'penis', 'sex', 'oral', 'ahegao', 'nude', 'naked', 'cum', 'masturbation', 'fellatio', 'cunnilingus', 'prolapse'];
     
-    // --- NEW: Massively expanded category list for accurate sorting ---
+    // --- NEW: More specific, granular categories for accurate sorting ---
     const TAG_CATEGORIES = [
         { name: 'Quality', keywords: ['masterpiece', 'best quality', 'highres', 'absurdres', '4k', '8k', 'extremely detailed', 'best quality'] },
         { name: 'Composition', keywords: ['solo', '1girl', '1boy', '2girls', 'duo', 'trio', 'group', 'portrait', 'full body', 'upper body', 'cowboy shot', 'close-up', 'from side', 'from behind', 'from above', 'from below', 'profile', 'dutch angle', 'wide shot', 'upper_body'] },
-        { name: 'Subject', keywords: ['hatsune miku', 'gawr gura', 'rem (re:zero)', 'remilia scarlet', 'ganyu (genshin impact)', 'hu tao (genshin impact)', 'raiden shogun (genshin impact)', 'yae miko (genshin impact)', 'flandre scarlet', 'cirno', 'hakurei reimu', 'monika (doki doki literature club!)', 'tokisaki kurumi', 'honshou kaede', 'zero two (darling in the franxx)', 'hololive', 'genshin impact', 'touhou', 'kantai collection', 'azur lane', 'fate/grand order', 'the idolm@ster', 'original', 'stuffed animal', 'stuffed toy', 'hugging doll', 'hugging object', 'stuffed cat'] },
-        { name: 'Body & Face', keywords: [':d', ':3', 'ahoge', 'bangs', 'blush', 'breasts', 'large breasts', 'medium breasts', 'small breasts', 'closed eyes', 'closed mouth', 'collarbone', 'ears', 'cat ears', 'elf ears', 'pointy ears', 'eyelashes', 'eyes', 'blue eyes', 'red eyes', 'green eyes', 'brown eyes', 'purple eyes', 'yellow eyes', 'aqua eyes', 'face', 'facial mark', 'fangs', 'flat chest', 'hair', 'blonde hair', 'long hair', 'brown hair', 'black hair', 'short hair', 'white hair', 'silver hair', 'pink hair', 'purple hair', 'blue hair', 'red hair', 'green hair', 'orange hair', 'grey hair', 'hair between eyes', 'very long hair', 'multicolored hair', 'streaked hair', 'two-tone hair', 'hands', 'head', 'horns', 'lips', 'mouth', 'navel', 'nose', 'open mouth', 'skin', 'pale skin', 'dark skin', 'tan', 'smile', 'tail', 'thighs', 'tongue', 'wings', 'chibi', 'parted bangs', 'short eyebrows', 'blush stickers'] },
-        { name: 'Attire & Accessories', keywords: ['animal ears', 'apron', 'armor', 'bandaid', 'bare shoulders', 'barefoot', 'bell', 'belt', 'bikini', 'bloomers', 'boots', 'bow', 'bracelet', 'braid', 'cape', 'chain', 'choker', 'red choker', 'cleavage', 'cleavage cutout', 'clothing', 'coat', 'collar', 'crown', 'detached sleeves', 'dress', 'earrings', 'elbow gloves', 'eyewear', 'frills', 'glasses', 'gloves', 'goggles', 'hair ornament', 'hairband', 'hairpin', 'hat', 'headband', 'headphones', 'headdress', 'hood', 'hoodie', 'jacket', 'japanese clothes', 'jewelry', 'kimono', 'leotard', 'lingerie', 'maid headdress', 'mask', 'miniskirt', 'navel cutout', 'necklace', 'neckerchief', 'necktie', 'pantyhose', 'panties', 'puffy sleeves', 'ribbon', 'school uniform', 'seifuku', 'serafuku', 'shirt', 'shoes', 'shorts', 'skirt', 'sleeves', 'long sleeves', 'sleeveless', 'sleeves past wrists', 'slippers', 'socks', 'stockings', 'suit', 'sweater', 'swimsuit', 'sword', 'thighhighs', 'tie', 'turtleneck', 'uniform', 'weapon', 'zettai ryouiki', 'hood down', 'hooded jacket', 'pink jacket'] },
-        { name: 'Actions & Poses', keywords: ['ass grab', 'bending over', 'crossed arms', 'crouching', 'dancing', 'fighting', 'fingers in mouth', 'flying', 'hand in own hair', 'hands on hips', 'hands up', 'holding', 'hugging', 'animal hug', 'jumping', 'kicking', 'kissing', 'kneeling', 'leaning forward', 'licking', 'lying', 'on back', 'on stomach', 'one eye closed', 'pointing', 'pout', 'punching', 'reaching', 'running', 'sitting', 'sleeping', 'spread arms', 'spread legs', 'standing', 'stretching', 'waving', 'yawning', 'looking at viewer', 'looking away', 'looking back', 'looking down', 'looking up'] },
-        { name: 'Setting & Environment', keywords: ['indoors', 'outdoors', 'background', 'simple background', 'white background', 'black background', 'colored background', 'grey background', 'transparent background', 'gradient background', 'blurry background', 'beach', 'bed', 'building', 'chair', 'city', 'clouds', 'day', 'desk', 'forest', 'moon', 'nature', 'night', 'ocean', 'park', 'rain', 'river', 'road', 'room', 'school', 'sea', 'sky', 'snow', 'stars', 'street', 'sun', 'sunset', 'tree', 'underwater', 'water', 'window', 'pink background'] },
-        { name: 'Style & Meta', keywords: ['2d', '3d', 'absurdres', 'artbook', 'artist name', 'bad anatomy', 'bad artist', 'bad hands', 'bad id', 'bad pixiv id', 'bad twitter id', 'bad uri', 'comic', 'commentary', 'commentary request', 'conditional parent', 'deletethis', 'drawing', 'extra digits', 'fanart', 'greyscale', 'hi res', 'jpeg artifacts', 'lineart', 'low res', 'monochrome', 'photo', 'pixel art', 'realistic', 'scanned', 'signature', 'sketch', 'tagme', 'text', 'traditional media', 'translation request', 'watermark', 'web bro', 'heart'] }
+        { name: 'Subject & Creatures', keywords: ['hatsune miku', 'gawr gura', 'rem (re:zero)', 'remilia scarlet', 'ganyu (genshin impact)', 'hu tao (genshin impact)', 'raiden shogun (genshin impact)', 'yae miko (genshin impact)', 'flandre scarlet', 'cirno', 'hakurei reimu', 'monika (doki doki literature club!)', 'tokisaki kurumi', 'honshou kaede', 'zero two (darling in the franxx)', 'hololive', 'genshin impact', 'touhou', 'kantai collection', 'azur lane', 'fate/grand order', 'the idolm@ster', 'original', 'monster girl', 'slime girl', 'personification'] },
+        { name: 'Face', keywords: [':d', ':3', 'blush', 'closed mouth', 'open mouth', 'smile', 'face', 'facial mark', 'fangs', 'lips', 'nose', 'parted bangs', 'short eyebrows', 'bags under eyes', 'blush stickers', 'one eye closed', 'pout', 'tongue', 'green tongue', 'colored tongue'] },
+        { name: 'Eyes', keywords: ['closed eyes', 'eyelashes', 'eyes', 'blue eyes', 'red eyes', 'green eyes', 'brown eyes', 'purple eyes', 'yellow eyes', 'orange eyes', 'aqua eyes', 'hair between eyes'] },
+        { name: 'Hair', keywords: ['ahoge', 'hair', 'blonde hair', 'long hair', 'brown hair', 'black hair', 'short hair', 'white hair', 'silver hair', 'pink hair', 'purple hair', 'blue hair', 'red hair', 'green hair', 'orange hair', 'grey hair', 'hair between eyes', 'very long hair', 'multicolored hair', 'streaked hair', 'two-tone hair', 'braid', 'colored inner hair'] },
+        { name: 'Body Parts', keywords: ['breasts', 'large breasts', 'medium breasts', 'small breasts', 'collarbone', 'ears', 'cat ears', 'elf ears', 'pointy ears', 'hands', 'head', 'horns', 'navel', 'skin', 'pale skin', 'dark skin', 'tan', 'thighs', 'wings', 'chibi', 'colored skin', 'yellow skin'] },
+        { name: 'Attire', keywords: ['apron', 'armor', 'bandaid', 'bare shoulders', 'barefoot', 'bloomers', 'boots', 'cape', 'cleavage', 'cleavage cutout', 'clothing', 'coat', 'dress', 'japanese clothes', 'kimono', 'leotard', 'lingerie', 'miniskirt', 'navel cutout', 'pantyhose', 'panties', 'puffy sleeves', 'school uniform', 'seifuku', 'serafuku', 'shirt', 'white shirt', 'collared shirt', 'shoes', 'sneakers', 'shorts', 'skirt', 'sleeveless', 'slippers', 'socks', 'stockings', 'suit', 'sweater', 'swimsuit', 'turtleneck', 'uniform', 'zettai ryouiki', 'hood', 'hood down', 'hooded jacket', 'pink jacket', 'jacket', 'sleeves', 'long sleeves', 'sleeves past wrists', 'bottomless'] },
+        { name: 'Accessories', keywords: ['animal ears', 'bell', 'belt', 'bow', 'bracelet', 'chain', 'choker', 'red choker', 'collar', 'crown', 'detached sleeves', 'earrings', 'elbow gloves', 'eyewear', 'frills', 'glasses', 'gloves', 'goggles', 'hair ornament', 'hairband', 'hairpin', 'hat', 'headband', 'headphones', 'headdress', 'hoodie', 'jewelry', 'maid headdress', 'mask', 'necklace', 'neckerchief', 'necktie', 'ribbon', 'tie'] },
+        { name: 'Held Items & Objects', keywords: ['holding', 'weapon', 'sword', 'gun', 'chopsticks', 'holding chopsticks', 'food', 'cup ramen', 'nissin cup noodle', 'stuffed animal', 'stuffed toy', 'hugging doll', 'hugging object', 'stuffed cat', 'liquid hair'] },
+        { name: 'Actions & Poses', keywords: ['ass grab', 'bending over', 'crossed arms', 'crouching', 'dancing', 'fighting', 'fingers in mouth', 'flying', 'hand in own hair', 'hands on hips', 'hands up', 'hugging', 'animal hug', 'jumping', 'kicking', 'kissing', 'kneeling', 'leaning forward', 'licking', 'lying', 'on back', 'on stomach', 'pointing', 'punching', 'reaching', 'running', 'sitting', 'sleeping', 'spread arms', 'spread legs', 'standing', 'stretching', 'waving', 'yawning', 'looking at viewer', 'looking away', 'looking back', 'looking down', 'looking up', 'eating'] },
+        { name: 'Setting & Environment', keywords: ['indoors', 'outdoors', 'background', 'simple background', 'white background', 'black background', 'colored background', 'grey background', 'transparent background', 'gradient background', 'blurry background', 'beach', 'bed', 'building', 'chair', 'city', 'clouds', 'day', 'desk', 'forest', 'moon', 'nature', 'night', 'ocean', 'park', 'rain', 'river', 'road', 'room', 'school', 'sea', 'sky', 'snow', 'stars', 'street', 'sun', 'sunset', 'tree', 'underwater', 'water', 'window', 'pink background', 'scenery'] },
+        { name: 'Style & Meta', keywords: ['2d', '3d', 'absurdres', 'artbook', 'artist name', 'bad anatomy', 'bad artist', 'bad hands', 'bad id', 'bad pixiv id', 'bad twitter id', 'bad uri', 'comic', 'commentary', 'commentary request', 'conditional parent', 'deletethis', 'drawing', 'extra digits', 'fanart', 'greyscale', 'hi res', 'jpeg artifacts', 'lineart', 'low res', 'monochrome', 'photo', 'pixel art', 'realistic', 'scanned', 'signature', 'sketch', 'tagme', 'text', 'traditional media', 'translation request', 'watermark', 'web bro', 'heart', 'backlighting', 'steam', '(steaming food:1.2)', 'wariza', 'faux traditional media', 'painting (medium)'] }
     ];
 
     const element = (id) => document.getElementById(id);
@@ -334,21 +339,30 @@
         });
     }
 
+    // --- MODIFIED: Added 'Tab' key logic ---
     function handleAutocomplete(e) {
         const text = tagInput.value; const cursorPos = tagInput.selectionStart;
         const lastComma = text.lastIndexOf(',', cursorPos - 1);
         autocomplete.currentWord = text.substring(lastComma + 1, cursorPos).trim();
-        if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter') {
+
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === 'Tab') {
             if (!autocomplete.active) return;
             e.preventDefault();
-            if (e.key === 'Enter' && autocomplete.suggestions[autocomplete.index]) {
-                selectAutocompleteItem(autocomplete.suggestions[autocomplete.index]);
+
+            if (e.key === 'Enter' || e.key === 'Tab') {
+                if (autocomplete.index === -1) autocomplete.index = 0; // Default to first item if none selected
+                if (autocomplete.suggestions[autocomplete.index]) {
+                    selectAutocompleteItem(autocomplete.suggestions[autocomplete.index]);
+                }
                 return;
             }
+            
             if (e.key === 'ArrowDown') autocomplete.index = (autocomplete.index + 1) % autocomplete.suggestions.length;
             if (e.key === 'ArrowUp') autocomplete.index = (autocomplete.index - 1 + autocomplete.suggestions.length) % autocomplete.suggestions.length;
-            updateAutocompleteSelection(); return;
+            updateAutocompleteSelection();
+            return;
         }
+
         if (!autocomplete.currentWord) { hideAutocomplete(); return; }
         autocomplete.suggestions = TAG_DATABASE.filter(t => t.startsWith(autocomplete.currentWord.replace(/ /g, '_'))).slice(0, 5);
         if (autocomplete.suggestions.length > 0) {
@@ -428,7 +442,7 @@
         }
 
         const plan = (existingTags.size === 0) 
-            ? [ { name: 'Quality', count: 2 }, { name: 'Composition', count: 2 }, { name: 'Subject', count: 1 }, { name: 'Body & Face', count: 3 }, { name: 'Attire & Accessories', count: 2 }, { name: 'Actions & Poses', count: 2 }, { name: 'Setting & Environment', count: 2 } ]
+            ? [ { name: 'Quality', count: 1 }, { name: 'Composition', count: 2 }, { name: 'Subject & Creatures', count: 1 }, { name: 'Face', count: 2 }, { name: 'Eyes', count: 1 }, { name: 'Hair', count: 2 }, { name: 'Body Parts', count: 1 }, { name: 'Attire', count: 1 }, { name: 'Actions & Poses', count: 2 }, { name: 'Setting & Environment', count: 2 } ]
             : Object.entries(baseTags.reduce((acc, tag) => { acc[getTagCategoryName(tag)] = (acc[getTagCategoryName(tag)] || 0) + 1; return acc; }, {})).map(([name, count]) => ({name, count}));
         
         let suggestionsNeeded = numToSuggest;
@@ -485,7 +499,7 @@
             if(input.tagName !== 'SELECT' && input.type !== 'checkbox') input.addEventListener('input', processAll);
         });
         tagInput.addEventListener('keyup', handleAutocomplete);
-        tagInput.addEventListener('keydown', handleAutocomplete);
+        tagInput.addEventListener('keydown', handleAutocomplete); // Keydown is important for Tab
         tagInput.addEventListener('blur', () => setTimeout(hideAutocomplete, 150));
         copyButton.addEventListener('click', copyTagsToClipboard);
         suggestBtn.addEventListener('click', suggestCoherentTags);
