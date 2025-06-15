@@ -240,12 +240,19 @@
             const s = new Sortable(container, {
                 group: 'shared', animation: 150, ghostClass: 'opacity-50',
                 onEnd: () => {
-                    sortSelect.value = 'manual';
+                    // --- MODIFICATION START ---
+                    // Update the internal baseTags array to reflect the new visual order.
                     const allTagElements = Array.from(tagOutput.querySelectorAll('.tag-base'));
                     baseTags = allTagElements.map(el => baseTags.find(t => t.id === el.dataset.id)).filter(Boolean);
-                    // After a manual sort, we must update the source textarea
+                    
+                    // Update the source textarea to match the new order.
                     tagInput.value = baseTags.map(t => t.original).join(', ');
-                    displayTags(); // Re-render to ensure consistency
+
+                    // By not changing sortSelect.value and not calling displayTags(), we prevent
+                    // the dropdown from changing and the tags from snapping back.
+                    // Note: This manual order is now transient and will be reset on the next
+                    // full processing event (e.g., adding a new tag).
+                    // --- MODIFICATION END ---
                 },
             });
             sortableInstances.push(s);
