@@ -58,7 +58,6 @@
         </div>
         <h1 class="text-3xl font-bold mb-4 text-gray-100 text-center">Danbooru Tag Helper</h1>
         
-        <!-- --- NEW: Suggestion options --- -->
         <div class="flex justify-center items-center gap-6 mb-8 text-sm text-gray-300">
             <div class="flex items-center gap-2">
                 <label for="suggestionCountInput">Suggest:</label>
@@ -126,8 +125,7 @@
                      </div>
                      <div class="flex items-center gap-x-4">
                          <select id="sortSelect" class="input-base text-sm">
-                             <option value="expert" selected>Sort: Expert</option>
-                             <option value="smart">Sort: Smart</option>
+                             <option value="danbooru" selected>Sort: Danbooru</option>
                              <option value="manual">Sort: Manual</option>
                              <option value="none">Sort: None</option>
                              <option value="az">Sort: A-Z</option>
@@ -164,46 +162,34 @@
         </div>
     </div>
 
-        <!-- ( body HTML remains the same) -->
-
     <script>
     let TAG_DATABASE = [];
-    let tagIdCounter = 0; // --- NEW: More robust way to generate unique IDs.
+    let tagIdCounter = 0;
 
-    // --- Keyword lists for best-effort rating filters ---
-    const QUESTIONABLE_KEYWORDS = ['bikini', 'swimsuit', 'cleavage', 'breasts', 'ass', 'thighs', 'pantyhose', 'leotard', 'garter_belt', 'panty_shot', 'sideboob', 'topless', 'bra', 'panties', 'lingerie', 'seductive', 'bondage', 'shibari', 'partially_nude'];
+    const QUESTIONABLE_KEYWORDS = ['bikini', 'swimsuit', 'cleavage', 'breasts', 'ass', 'thighs', 'pantyhose', 'leotard', 'garter_belt', 'panty_shot', 'sideboob', 'topless', 'bra', 'panties', 'lingerie', 'seductive', 'bondage', 'shibari', 'partially_nude', 'armpits'];
     const EXPLICIT_KEYWORDS = ['pussy', 'penis', 'sex', 'oral', 'ahegao', 'nude', 'naked', 'cum', 'masturbation', 'fellatio', 'cunnilingus', 'prolapse'];
     
-    // --- Data definitions ---
-    const SMART_SORT_CATEGORIES = [ { name: 'Quality', keywords: ['masterpiece', 'best_quality', 'highres', 'absurdres'] }, { name: 'Composition', keywords: ['solo', 'duo', 'trio', 'group', 'portrait', 'full_body', 'upper_body', 'cowboy_shot', 'close-up'], regex: /^\d+(boy|girl)s?$/ }, { name: 'Subject', keywords: ['hatsune_miku', 'gawr_gura', 'genshin_impact', 'hololive', 'touhou', 'raven (dc)'] }, { name: 'Actions & Poses', keywords: ['looking_at_viewer', 'sitting', 'standing', 'lying', 'pout', 'spread_legs', 'on_back', 'leaning_forward'] }, { name: 'Expressions & Face', keywords: ['smile', 'open_mouth', 'blush', 'sad', 'angry', 'crying', 'tongue_out', 'ahegao', 'closed_mouth', 'closed_eyes', 'blue_eyes', 'purple_eyes'] }, { name: 'Hair', regex: /.+_hair$/, keywords: ['ahoge', 'purple_hair'] }, { name: 'Clothing', keywords: ['uniform', 'dress', 'shirt', 'skirt', 'pants', 'bra', 'panties', 'bikini', 'swimsuit', 'naked', 'nude', 'leotard', 'pantyhose', 'cape', 'cloak', 'costume'] }, { name: 'Body', keywords: ['breasts', 'ass', 'thighs', 'pussy', 'penis', 'navel', 'feet', 'hands', 'small_breasts', 'medium_breasts', 'large_breasts', 'grey_skin', 'colored_skin'] }, { name: 'Accessories', keywords: ['hat', 'glasses', 'ribbon', 'jewelry', 'hairband', 'choker', 'cat_ears', 'tail', 'forehead_jewel', 'fingerless_gloves', 'elbow_gloves', 'gloves'] }, { name: 'Environment', keywords: ['simple_background', 'white_background', 'black_background', 'transparent_background', 'outdoors', 'indoors', 'night', 'day', 'cityscape', 'sky', 'room'] }, { name: 'Art Style & Meta', keywords: ['monochrome', 'sketch', 'lineart', 'greyscale', 'comic', 'photo-realistic', 'shadow_hands', 'umbrakinesis', 'cinematic_lighting'] } ];
-    const EXPERT_SORT_CATEGORIES = [ { name: 'Quality', keywords: ['masterpiece', 'best_quality', 'highres', 'absurdres', '4k', '8k'] }, { name: 'Composition', keywords: ['solo', 'duo', 'trio', 'group', 'portrait', 'full_body', 'upper_body', 'cowboy_shot', 'close-up', 'from_side', 'from_behind', 'from_above', 'from_below'], regex: /^\d+(boy|girl)s?$/ }, { name: 'Subject', keywords: ['hatsune_miku', 'gawr_gura', 'genshin_impact', 'hololive', 'touhou', 'spider-man', 'batman', 'superman', 'raven (dc)'] }, { name: 'Actions & Poses', keywords: ['looking_at_viewer', 'sitting', 'standing', 'lying', 'pout', 'spread_legs', 'on_back', 'leaning_forward', 'dancing', 'running', 'jumping', 'fighting', 'stretching', 'animal_hug', 'holding'] }, { name: 'Expressions & Face', keywords: ['smile', 'open_mouth', 'blush', 'sad', 'angry', 'crying', 'tongue_out', 'ahegao', 'closed_mouth', 'closed_eyes', 'winking', 'smirk', 'surprised', 'facial_mark', 'parted_bangs', 'short_eyebrows', ':3', ';d'] }, { name: 'Hair', regex: /.+_hair$/, keywords: ['ahoge', 'ponytail', 'twintails', 'braid', 'bob_cut', 'pixie_cut', 'long_hair', 'short_hair', 'very_long_hair', 'blonde_hair', 'green_hair', 'multicolored_hair', 'streaked_hair', 'two-tone_hair'] }, { name: 'Eyes', regex: /.+_eyes$/, keywords: ['heterochromia', 'glowing_eyes', 'heart-shaped_pupils'] }, { name: 'Core Clothing', keywords: ['school_uniform', 'dress', 'suit', 'armor', 'leotard', 'bikini', 'swimsuit', 'pajamas', 'naked', 'nude', 'superhero_costume', 'sweater', 'skirt', 'shirt', 'jacket', 'hood', 'hooded_jacket', 'pink_jacket', 'long_sleeves'] }, { name: 'Body', keywords: ['breasts', 'ass', 'thighs', 'pussy', 'penis', 'navel', 'feet', 'hands', 'abs', 'muscular', 'freckles', 'scar', 'tattoo', 'small_breasts', 'medium_breasts', 'large_breasts', 'grey_skin', 'colored_skin', 'skin_fang', 'collarbone', 'chibi'] }, { name: 'Outerwear', keywords: ['jacket', 'coat', 'cape', 'cloak', 'hoodie'] }, { name: 'Underwear', keywords: ['bra', 'panties', 'pantyhose', 'thighhighs', 'socks', 'garter_belt', 'black_pantyhose'] }, { name: 'Accessories', keywords: ['hat', 'glasses', 'ribbon', 'jewelry', 'hairband', 'choker', 'cat_ears', 'tail', 'forehead_jewel', 'fingerless_gloves', 'elbow_gloves', 'gloves', 'mask', 'scarf', 'belt', 'neckerchief', 'white_neckerchief', 'horns', 'pointy_ears', 'red_choker', 'sleeves_past_wrists', 'brush_stickers'] }, { name: 'Held Items', keywords: ['sword', 'gun', 'book', 'phone', 'cup', 'food', 'wand', 'holding_flower'] }, { name: 'Environment', keywords: ['simple_background', 'white_background', 'black_background', 'transparent_background', 'outdoors', 'indoors', 'night', 'day', 'cityscape', 'sky', 'room', 'forest', 'beach', 'space', 'blue_background', 'floral_background', 'pink_background'] }, { name: 'Art Style & Meta', keywords: ['monochrome', 'sketch', 'lineart', 'greyscale', 'comic', 'photo-realistic', 'shadow_hands', 'umbrakinesis', 'cinematic_lighting', 'volumetric_lighting', 'dutch_angle', 'motion_blur'] }, ];
-    
-    // --- Element selectors ---
+    // --- Authoritative tag categories based on the Danbooru Wiki ---
+    const TAG_CATEGORIES = [
+        { name: 'Quality', keywords: ['masterpiece', 'best_quality', 'highres', 'absurdres', '4k', '8k', 'extremely_detailed'] },
+        { name: 'Composition', keywords: ['solo', '1girl', '1boy', '2girls', 'duo', 'trio', 'group', 'portrait', 'full_body', 'upper_body', 'cowboy_shot', 'close-up', 'from_side', 'from_behind', 'from_above', 'from_below', 'profile', 'dutch_angle', 'wide_shot'] },
+        { name: 'Subject', keywords: ['hatsune_miku', 'gawr_gura', 'rem_(re:zero)', 'remilia_scarlet', 'ganyu_(genshin_impact)', 'hu_tao_(genshin_impact)', 'raiden_shogun_(genshin_impact)', 'yae_miko_(genshin_impact)', 'flandre_scarlet', 'cirno', 'hakurei_reimu', 'monika_(doki_doki_literature_club!)', 'tokisaki_kurumi', 'honshou_kaede', 'zero_two_(darling_in_the_franxx)', 'hololive', 'genshin_impact', 'touhou', 'kantai_collection', 'azur_lane', 'fate/grand_order', 'the_idolm@ster', 'original'] },
+        { name: 'Body & Face', keywords: ['ahoge', 'bangs', 'blush', 'breasts', 'large_breasts', 'medium_breasts', 'small_breasts', 'closed_eyes', 'closed_mouth', 'collarbone', 'ears', 'cat_ears', 'elf_ears', 'pointy_ears', 'eyelashes', 'eyes', 'blue_eyes', 'red_eyes', 'green_eyes', 'brown_eyes', 'purple_eyes', 'yellow_eyes', 'aqua_eyes', 'face', 'facial_mark', 'fangs', 'flat_chest', 'hair', 'blonde_hair', 'long_hair', 'brown_hair', 'black_hair', 'short_hair', 'white_hair', 'silver_hair', 'pink_hair', 'purple_hair', 'blue_hair', 'red_hair', 'green_hair', 'orange_hair', 'grey_hair', 'hair_between_eyes', 'very_long_hair', 'hands', 'head', 'horns', 'lips', 'mouth', 'navel', 'nose', 'open_mouth', 'skin', 'pale_skin', 'dark_skin', 'tan', 'smile', 'tail', 'thighs', 'tongue', 'wings', 'chibi'] },
+        { name: 'Attire & Accessories', keywords: ['animal_ears', 'apron', 'armor', 'bandaid', 'bare_shoulders', 'barefoot', 'bell', 'belt', 'bikini', 'bloomers', 'boots', 'bow', 'bracelet', 'braid', 'cape', 'chain', 'choker', 'cleavage', 'cleavage_cutout', 'clothing', 'coat', 'collar', 'crown', 'detached_sleeves', 'dress', 'earrings', 'elbow_gloves', 'eyewear', 'frills', 'glasses', 'gloves', 'goggles', 'hair_ornament', 'hairband', 'hairpin', 'hat', 'headband', 'headphones', 'headdress', 'hood', 'hoodie', 'jacket', 'japanese_clothes', 'jewelry', 'kimono', 'leotard', 'lingerie', 'maid_headdress', 'mask', 'miniskirt', 'navel_cutout', 'necklace', 'neckerchief', 'necktie', 'pantyhose', 'panties', 'puffy_sleeves', 'ribbon', 'school_uniform', 'seifuku', 'serafuku', 'shirt', 'shoes', 'shorts', 'skirt', 'sleeveless', 'slippers', 'socks', 'stockings', 'suit', 'sweater', 'swimsuit', 'sword', 'thighhighs', 'tie', 'turtleneck', 'uniform', 'weapon', 'zettai_ryouiki'] },
+        { name: 'Actions & Poses', keywords: ['ass_grab', 'bending_over', 'crossed_arms', 'crouching', 'dancing', 'fighting', 'fingers_in_mouth', 'flying', 'hand_in_own_hair', 'hands_on_hips', 'hands_up', 'holding', 'hugging', 'jumping', 'kicking', 'kissing', 'kneeling', 'leaning_forward', 'licking', 'lying', 'on_back', 'on_stomach', 'one_eye_closed', 'pointing', 'pout', 'punching', 'reaching', 'running', 'sitting', 'sleeping', 'spread_arms', 'spread_legs', 'standing', 'stretching', 'waving', 'yawning', 'looking_at_viewer', 'looking_away', 'looking_back', 'looking_down', 'looking_up'] },
+        { name: 'Setting & Environment', keywords: ['indoors', 'outdoors', 'background', 'simple_background', 'white_background', 'black_background', 'colored_background', 'grey_background', 'transparent_background', 'gradient_background', 'blurry_background', 'beach', 'bed', 'building', 'chair', 'city', 'clouds', 'day', 'desk', 'forest', 'moon', 'nature', 'night', 'ocean', 'park', 'rain', 'river', 'road', 'room', 'school', 'sea', 'sky', 'snow', 'stars', 'street', 'sun', 'sunset', 'tree', 'underwater', 'water', 'window'] },
+        { name: 'Style & Meta', keywords: ['2d', '3d', 'absurdres', 'artbook', 'artist_name', 'bad_anatomy', 'bad_artist', 'bad_hands', 'bad_id', 'bad_pixiv_id', 'bad_twitter_id', 'bad_uri', 'comic', 'commentary', 'commentary_request', 'conditional_parent', 'deletethis', 'drawing', 'extra_digits', 'fanart', 'greyscale', 'hi_res', 'jpeg_artifacts', 'lineart', 'low_res', 'monochrome', 'photo', 'pixel_art', 'realistic', 'scanned', 'signature', 'sketch', 'tagme', 'text', 'traditional_media', 'translation_request', 'watermark', 'web_bro'] }
+    ];
+
+    const element = (id) => document.getElementById(id);
     const body = document.body;
     const allInputs = document.querySelectorAll('input, textarea, select');
-    const tagInput = document.getElementById('tagInput');
-    const swapsInput = document.getElementById('swapsInput');
-    const implicationsInput = document.getElementById('implicationsInput');
-    const blacklistInput = document.getElementById('blacklistInput');
-    const triggerInput = document.getElementById('triggerInput');
-    const appendInput = document.getElementById('appendInput');
-    const deduplicateToggle = document.getElementById('deduplicateToggle');
-    const underscoreToggle = document.getElementById('underscoreToggle');
-    const enableWeightingToggle = document.getElementById('enableWeightingToggle');
-    const sortSelect = document.getElementById('sortSelect');
-    const maxTagsInput = document.getElementById('maxTagsInput');
-    const tagOutput = document.getElementById('tagOutput');
-    const processedTagsLabel = document.getElementById('processedTagsLabel');
-    const copyButton = document.getElementById('copyButton');
-    const copyMessage = document.getElementById('copyMessage');
-    const historyContainer = document.getElementById('history-container');
-    const autocompleteBox = document.getElementById('autocomplete-box');
-    const suggestBtn = document.getElementById('suggest-btn');
-    const themeButtons = document.querySelectorAll('.theme-button');
-    const suggestionCountInput = document.getElementById('suggestionCountInput');
-    const ratingSafe = document.getElementById('rating-safe');
-    const ratingGeneral = document.getElementById('rating-general');
-    const ratingQuestionable = document.getElementById('rating-questionable');
+    const tagInput = element('tagInput'), swapsInput = element('swapsInput'), implicationsInput = element('implicationsInput'), blacklistInput = element('blacklistInput'), triggerInput = element('triggerInput'), appendInput = element('appendInput');
+    const deduplicateToggle = element('deduplicateToggle'), underscoreToggle = element('underscoreToggle'), enableWeightingToggle = element('enableWeightingToggle');
+    const sortSelect = element('sortSelect'), maxTagsInput = element('maxTagsInput'), tagOutput = element('tagOutput'), processedTagsLabel = element('processedTagsLabel');
+    const copyButton = element('copyButton'), copyMessage = element('copyMessage'), historyContainer = element('history-container'), autocompleteBox = element('autocomplete-box');
+    const suggestBtn = element('suggest-btn'), themeButtons = document.querySelectorAll('.theme-button'), suggestionCountInput = element('suggestionCountInput');
+    const ratingSafe = element('rating-safe'), ratingGeneral = element('rating-general'), ratingQuestionable = element('rating-questionable');
     
     let baseTags = [], copyHistory = [], autocomplete = { active: false, index: -1, currentWord: '' }, sortableInstances = [];
     
@@ -211,80 +197,54 @@
         const swaps = new Map(swapsInput.value.split(',').map(s => s.split('->').map(p => p.trim())).filter(p => p.length === 2 && p[0]));
         const implications = new Map(implicationsInput.value.split(',').map(s => s.split('=>').map(p => p.trim())).filter(p => p.length === 2 && p[0]));
         const blacklist = new Set(blacklistInput.value.replace(/[\n\s]+/g, ',').split(',').map(w => w.trim().toLowerCase()).filter(Boolean));
-        
         let rawTags = tagInput.value.replace(/[\n]+/g, ',').split(',').map(t => t.trim()).filter(Boolean);
-        
-        rawTags = rawTags.map(tag => {
-            const lowerTag = tag.toLowerCase().replace(/_/g, ' ');
-            return swaps.get(lowerTag) || tag;
-        });
-        
+        rawTags = rawTags.map(tag => swaps.get(tag.toLowerCase().replace(/_/g, ' ')) || tag);
         const tagsToAdd = new Set();
         rawTags.forEach(tag => {
-            if (implications.has(tag.toLowerCase())) {
-                implications.get(tag.toLowerCase()).split(',').forEach(imp => tagsToAdd.add(imp.trim()));
-            }
+            const lowerTag = tag.toLowerCase();
+            if (implications.has(lowerTag)) implications.get(lowerTag).split(',').forEach(imp => tagsToAdd.add(imp.trim()));
         });
         rawTags = [...rawTags, ...tagsToAdd];
-        
         if (deduplicateToggle.checked) {
             const seen = new Set();
             rawTags = rawTags.filter(tag => {
                 const lower = tag.toLowerCase().replace(/_/g, ' ');
-                if (seen.has(lower)) { return false; } 
-                else { seen.add(lower); return true; }
+                if (seen.has(lower)) return false;
+                seen.add(lower); return true;
             });
         }
-        
         let filteredTags = rawTags.filter(tag => ![...blacklist].some(b => tag.toLowerCase().includes(b)));
         const maxTags = parseInt(maxTagsInput.value, 10) || 75;
-        
         const newBaseTags = [];
         const existingTagsMap = new Map(baseTags.map(t => [t.original, t]));
-        
         filteredTags.slice(0, maxTags).forEach(tag => {
-            if (existingTagsMap.has(tag)) {
-                newBaseTags.push(existingTagsMap.get(tag));
-            } else {
-                newBaseTags.push({ original: tag, weighted: tag, id: `tag-${tagIdCounter++}` });
-            }
+            if (existingTagsMap.has(tag)) newBaseTags.push(existingTagsMap.get(tag));
+            else newBaseTags.push({ original: tag, weighted: tag, id: `tag-${tagIdCounter++}` });
         });
-        
-        if (!enableWeightingToggle.checked) {
-            newBaseTags.forEach(t => t.weighted = t.original);
-        }
-        
+        if (!enableWeightingToggle.checked) newBaseTags.forEach(t => t.weighted = t.original);
         baseTags = newBaseTags;
         displayTags();
     }
 
     function displayTags() {
-        const maxTags = parseInt(maxTagsInput.value, 10) || 75;
         processedTagsLabel.querySelector('#tagCount').textContent = baseTags.length;
-        processedTagsLabel.querySelector('#maxTagCount').textContent = maxTags;
+        processedTagsLabel.querySelector('#maxTagCount').textContent = maxTagsInput.value;
         tagOutput.innerHTML = '';
-        
         if (baseTags.length === 0) {
             tagOutput.innerHTML = '<span class="text-gray-500 italic">Start typing or paste tags above...</span>';
             copyButton.disabled = true; return;
         }
-        
         const sortOrder = sortSelect.value;
         let tagsToDisplay = [...baseTags];
-        const getSortCategories = () => sortOrder === 'expert' ? EXPERT_SORT_CATEGORIES : SMART_SORT_CATEGORIES;
-        
-        if (sortOrder === 'smart' || sortOrder === 'expert') {
-            const categories = getSortCategories();
+        if (sortOrder === 'danbooru') {
             const groups = tagsToDisplay.reduce((acc, tag) => {
-                const categoryName = getTagCategoryName(tag, categories);
+                const categoryName = getTagCategoryName(tag);
                 if (!acc[categoryName]) acc[categoryName] = [];
                 acc[categoryName].push(tag);
                 return acc;
             }, {});
-
-            const sortedCategoryNames = categories.map(c => c.name).filter(name => groups[name]);
+            const sortedCategoryNames = TAG_CATEGORIES.map(c => c.name).filter(name => groups[name]);
             if (groups['Other']) sortedCategoryNames.push('Other');
-
             sortedCategoryNames.forEach(categoryName => {
                 const groupDiv = document.createElement('div');
                 groupDiv.className = 'tag-group';
@@ -292,10 +252,7 @@
                 const container = document.createElement('div');
                 container.className = 'tag-group-container';
                 container.dataset.groupName = categoryName;
-                groups[categoryName].forEach(tag => {
-                    const tagElement = createTagElement(tag);
-                    if (tagElement) container.appendChild(tagElement); // Defensive check
-                });
+                groups[categoryName].forEach(tag => container.appendChild(createTagElement(tag)));
                 groupDiv.appendChild(container);
                 tagOutput.appendChild(groupDiv);
             });
@@ -305,28 +262,19 @@
             const container = document.createElement('div');
             container.className = 'tag-group-container';
             container.dataset.groupName = 'all';
-            tagsToDisplay.forEach(tag => {
-                const tagElement = createTagElement(tag);
-                if (tagElement) container.appendChild(tagElement); // Defensive check
-            });
+            tagsToDisplay.forEach(tag => container.appendChild(createTagElement(tag)));
             tagOutput.appendChild(container);
         }
         copyButton.disabled = false;
         initSortable();
     }
     
-    // --- RESTORED FUNCTION ---
     function createTagElement(tag) {
-        if (!tag || typeof tag.id === 'undefined') {
-            console.error("Invalid tag object passed to createTagElement:", tag);
-            return null; // Return null to prevent crash
-        }
         const el = document.createElement('div');
         el.className = 'tag-base processed-tag';
         el.dataset.id = tag.id;
         const useUnderscores = underscoreToggle.checked;
         const displayTag = useUnderscores ? tag.weighted.replace(/\s/g, '_') : tag.weighted.replace(/_/g, ' ');
-
         if (enableWeightingToggle.checked) {
             el.style.paddingLeft = '0.375rem';
             el.oncontextmenu = (e) => {
@@ -334,8 +282,7 @@
                 const weightVal = tag.weighted.match(/:(\d\.\d+)\)$/)?.[1] || '1.1';
                 const newWeight = prompt(`Enter weight for "${tag.original}" (e.g., 1.1):`, weightVal);
                 if (newWeight && !isNaN(parseFloat(newWeight))) {
-                    tag.weighted = `(${tag.original}:${newWeight})`;
-                    displayTags();
+                    tag.weighted = `(${tag.original}:${newWeight})`; displayTags();
                 }
             };
             el.innerHTML = `<button class="tag-weight-btn" onclick="updateTagWeight('${tag.id}', 'decrease')" title="Decrease weight">-</button><span class="tag-text px-1">${displayTag}</span><button class="tag-weight-btn" onclick="updateTagWeight('${tag.id}', 'increase')" title="Increase weight">+</button>`;
@@ -345,39 +292,34 @@
         return el;
     }
 
-    // --- RESTORED FUNCTION ---
     window.updateTagWeight = (id, action) => {
         const tag = baseTags.find(t => t.id === id); if (!tag) return;
         let current = tag.weighted; const original = tag.original;
         if (action === 'increase') {
-            if (current.startsWith('((')) { current = `(((${original})))`; }
-            else if (current.startsWith('(')) { current = `((${original}))`; }
-            else if (current.startsWith('[')) { current = original; }
-            else { current = `(${original})`; }
-        } else { // decrease
-            if (current.startsWith('[[')) { current = `[[[${original}]]]`; }
-            else if (current.startsWith('[')) { current = `[[${original}]]`; }
-            else if (current.startsWith('(')) { current = original; }
-            else { current = `[${original}]`; }
+            if (current.startsWith('((')) current = `(((${original})))`;
+            else if (current.startsWith('(')) current = `((${original}))`;
+            else if (current.startsWith('[')) current = original;
+            else current = `(${original})`;
+        } else {
+            if (current.startsWith('[[')) current = `[[[${original}]]]`;
+            else if (current.startsWith('[')) current = `[[${original}]]`;
+            else if (current.startsWith('(')) current = original;
+            else current = `[${original}]`;
         }
         tag.weighted = current; displayTags();
     };
 
-    function getTagCategoryName(tag, categories) {
-        const tagOriginal = (tag.original || tag).toLowerCase();
-        const tagWithSpaces = tagOriginal.replace(/_/g, ' ');
-        for (const category of categories) {
-            if (category.regex && category.regex.test(tagOriginal)) return category.name;
-            if (category.keywords?.some(k => k.replace(/_/g, ' ') === tagWithSpaces)) return category.name;
+    function getTagCategoryName(tag) {
+        const tagWithSpaces = (tag.original || tag).toLowerCase().replace(/_/g, ' ');
+        for (const category of TAG_CATEGORIES) {
+            if (category.keywords.includes(tagWithSpaces)) return category.name;
         }
         return 'Other';
     }
 
     function initSortable() {
-        if (sortableInstances.length) {
-            sortableInstances.forEach(s => s.destroy());
-            sortableInstances = [];
-        }
+        if (sortableInstances.length) sortableInstances.forEach(s => s.destroy());
+        sortableInstances = [];
         const containers = tagOutput.querySelectorAll('.tag-group-container');
         containers.forEach(container => {
             const s = new Sortable(container, {
@@ -392,7 +334,6 @@
         });
     }
 
-    // --- RESTORED FUNCTION ---
     function handleAutocomplete(e) {
         const text = tagInput.value; const cursorPos = tagInput.selectionStart;
         const lastComma = text.lastIndexOf(',', cursorPos - 1);
@@ -400,27 +341,32 @@
         if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter') {
             if (!autocomplete.active) return;
             e.preventDefault();
-            if (e.key === 'Enter') { if(autocomplete.suggestions[autocomplete.index]) selectAutocompleteItem(autocomplete.suggestions[autocomplete.index]); return; }
+            if (e.key === 'Enter' && autocomplete.suggestions[autocomplete.index]) {
+                selectAutocompleteItem(autocomplete.suggestions[autocomplete.index]);
+                return;
+            }
             if (e.key === 'ArrowDown') autocomplete.index = (autocomplete.index + 1) % autocomplete.suggestions.length;
             if (e.key === 'ArrowUp') autocomplete.index = (autocomplete.index - 1 + autocomplete.suggestions.length) % autocomplete.suggestions.length;
             updateAutocompleteSelection(); return;
         }
         if (!autocomplete.currentWord) { hideAutocomplete(); return; }
         autocomplete.suggestions = TAG_DATABASE.filter(t => t.startsWith(autocomplete.currentWord.replace(/ /g, '_'))).slice(0, 5);
-        if (autocomplete.suggestions.length > 0) { autocomplete.active = true; autocomplete.index = -1; renderAutocomplete(); }
-        else { hideAutocomplete(); }
+        if (autocomplete.suggestions.length > 0) {
+            autocomplete.active = true; autocomplete.index = -1; renderAutocomplete();
+        } else {
+            hideAutocomplete();
+        }
     }
 
-    // --- RESTORED FUNCTION ---
     function renderAutocomplete() {
         autocompleteBox.innerHTML = autocomplete.suggestions.map((s, i) => `<div class="autocomplete-item p-2 cursor-pointer ${i === autocomplete.index ? 'selected' : ''}" onmousedown="selectAutocompleteItem('${s}')">${s.replace(/_/g, ' ')}</div>`).join('');
         autocompleteBox.style.display = 'block';
     }
 
-    // --- RESTORED FUNCTION ---
-    function updateAutocompleteSelection() { Array.from(autocompleteBox.children).forEach((child, i) => child.classList.toggle('selected', i === autocomplete.index)); }
+    function updateAutocompleteSelection() {
+        Array.from(autocompleteBox.children).forEach((child, i) => child.classList.toggle('selected', i === autocomplete.index));
+    }
 
-    // --- RESTORED FUNCTION ---
     window.selectAutocompleteItem = (tag) => {
         const text = tagInput.value; const cursorPos = tagInput.selectionStart;
         const lastComma = text.lastIndexOf(',', cursorPos - 1);
@@ -429,7 +375,10 @@
         hideAutocomplete(); tagInput.focus(); processAll();
     };
 
-    function hideAutocomplete() { autocomplete.active = false; autocompleteBox.style.display = 'none'; }
+    function hideAutocomplete() {
+        autocomplete.active = false; autocompleteBox.style.display = 'none';
+    }
+    
     function copyTagsToClipboard() {
         const useUnderscores = underscoreToggle.checked;
         const triggers = triggerInput.value.split(',').map(t => t.trim()).filter(Boolean);
@@ -442,6 +391,7 @@
             setTimeout(() => copyMessage.textContent = '', 2000);
         }).catch(err => copyMessage.textContent = 'Copy failed!');
     }
+
     function updateCopyHistory(text) {
         if(text){ copyHistory.unshift(text); if (copyHistory.length > 10) copyHistory.pop(); localStorage.setItem('danbooru-tag-history', JSON.stringify(copyHistory)); }
         historyContainer.innerHTML = '';
@@ -453,32 +403,33 @@
             historyContainer.appendChild(el);
         });
     }
-    function applyTheme(theme) { body.className = `p-4 md:p-8 ${theme}`; themeButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.theme === theme)); localStorage.setItem('danbooru-tag-helper-theme', theme); }
+
+    function applyTheme(theme) {
+        body.className = `p-4 md:p-8 ${theme}`; themeButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.theme === theme)); localStorage.setItem('danbooru-tag-helper-theme', theme);
+    }
 
     function suggestCoherentTags() {
         if (TAG_DATABASE.length < 2) return;
         const numToSuggest = parseInt(suggestionCountInput.value, 10);
         const existingTags = new Set(baseTags.map(t => t.original.toLowerCase().replace(/ /g, '_')));
-        const categories = EXPERT_SORT_CATEGORIES;
         const isAllowed = (tag) => {
             if (EXPLICIT_KEYWORDS.some(kw => tag.includes(kw))) return false;
             if (!ratingQuestionable.checked && QUESTIONABLE_KEYWORDS.some(kw => tag.includes(kw))) return false;
+            if (!ratingGeneral.checked && !ratingSafe.checked) return false;
             return true;
         };
-        let suggestions = new Set();
+        const suggestions = new Set();
         const categoryPools = {};
-        categories.forEach(c => categoryPools[c.name] = []);
+        TAG_CATEGORIES.forEach(c => categoryPools[c.name] = []);
         for (const tag of TAG_DATABASE) {
             if (existingTags.has(tag) || !isAllowed(tag)) continue;
-            const categoryName = getTagCategoryName({ original: tag }, categories);
-            if (categoryPools[categoryName] && categoryPools[categoryName].length < 100) {
-                categoryPools[categoryName].push(tag);
-            }
+            const categoryName = getTagCategoryName({ original: tag });
+            if (categoryPools[categoryName]) categoryPools[categoryName].push(tag);
         }
 
         const plan = (existingTags.size === 0) 
-            ? [ { name: 'Quality', count: 2 }, { name: 'Composition', count: 2 }, { name: 'Subject', count: 1 }, { name: 'Hair', count: 2 }, { name: 'Core Clothing', count: 1 }, { name: 'Actions & Poses', count: 2 }, { name: 'Environment', count: 2 } ]
-            : Object.keys(baseTags.reduce((acc, tag) => { acc[getTagCategoryName(tag, categories)] = true; return acc; }, {})).map(name => ({name, count: 2}));
+            ? [ { name: 'Quality', count: 2 }, { name: 'Composition', count: 2 }, { name: 'Subject', count: 1 }, { name: 'Body & Face', count: 3 }, { name: 'Attire & Accessories', count: 2 }, { name: 'Actions & Poses', count: 2 }, { name: 'Setting & Environment', count: 2 } ]
+            : Object.entries(baseTags.reduce((acc, tag) => { acc[getTagCategoryName(tag)] = (acc[getTagCategoryName(tag)] || 0) + 1; return acc; }, {})).map(([name, count]) => ({name, count}));
         
         let suggestionsNeeded = numToSuggest;
         while(suggestionsNeeded > 0) {
@@ -486,19 +437,21 @@
             for(const p of plan) {
                 if(suggestionsNeeded <= 0) break;
                 const pool = categoryPools[p.name] || [];
-                if (pool.length > 0) {
-                    const [suggestion] = pool.splice(Math.floor(Math.random() * pool.length), 1);
-                    if(suggestion && !suggestions.has(suggestion)) {
-                        suggestions.add(suggestion);
-                        suggestionsNeeded--;
-                        madeSuggestion = true;
+                for(let i=0; i < p.count; ++i) {
+                     if(pool.length > 0) {
+                        const [suggestion] = pool.splice(Math.floor(Math.random() * pool.length), 1);
+                        if(suggestion && !suggestions.has(suggestion)) {
+                            suggestions.add(suggestion);
+                            suggestionsNeeded--;
+                            madeSuggestion = true;
+                        }
                     }
                 }
             }
             if(!madeSuggestion) break;
         }
         
-        const suggestionsToAdd = [...suggestions].slice(0, numToSuggest);
+        const suggestionsToAdd = [...suggestions];
         if (suggestionsToAdd.length > 0) {
             const separator = tagInput.value.trim().length > 0 && !tagInput.value.trim().endsWith(',') ? ', ' : '';
             tagInput.value += separator + suggestionsToAdd.join(', ').replace(/_/g, ' ');
@@ -526,8 +479,7 @@
         await loadExternalTags();
         allInputs.forEach(input => {
             const isSuggestControl = input.id.startsWith('rating-') || input.id === 'suggestionCountInput';
-            if (isSuggestControl) return; // Don't trigger full process for suggestion controls
-
+            if (isSuggestControl) return;
             const handler = input.tagName === 'SELECT' || input.type === 'checkbox' ? displayTags : processAll;
             input.addEventListener('change', handler);
             if(input.tagName !== 'SELECT' && input.type !== 'checkbox') input.addEventListener('input', processAll);
@@ -540,13 +492,11 @@
         themeButtons.forEach(btn => btn.addEventListener('click', () => applyTheme(btn.dataset.theme)));
         const savedTheme = localStorage.getItem('danbooru-tag-helper-theme') || 'theme-indigo';
         const savedHistory = localStorage.getItem('danbooru-tag-history');
-        if (savedHistory) { copyHistory = JSON.parse(savedHistory); }
+        if (savedHistory) copyHistory = JSON.parse(savedHistory);
         applyTheme(savedTheme);
         processAll();
         updateCopyHistory();
     });
     </script>
-</body>
-</html>
 </body>
 </html>
