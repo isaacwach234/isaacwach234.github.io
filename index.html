@@ -48,144 +48,19 @@
     </style>
 </head>
 <body class="p-4 md:p-8">
-
     <div class="main-container max-w-7xl mx-auto p-8 rounded-xl shadow-2xl relative">
-        <div class="absolute top-4 right-4 flex items-center gap-2">
-            <button class="theme-button bg-indigo-600" data-theme="theme-indigo" title="Indigo Theme"></button>
-            <button class="theme-button bg-blue-600" data-theme="theme-blue" title="Blue Theme"></button>
-            <button class="theme-button bg-teal-600" data-theme="theme-teal" title="Teal Theme"></button>
-            <button class="theme-button bg-red-600" data-theme="theme-crimson" title="Crimson Theme"></button>
-        </div>
-        <h1 class="text-3xl font-bold mb-4 text-gray-100 text-center">Danbooru Tag Helper</h1>
-        
-        <div class="flex justify-center items-center gap-6 mb-8 text-sm text-gray-300">
-            <div class="flex items-center gap-2">
-                <label for="suggestionCountInput">Suggest:</label>
-                <input type="number" id="suggestionCountInput" value="15" min="5" max="50" class="input-base text-sm w-20">
-                <button id="suggest-btn" class="px-3 py-1 font-semibold rounded-md text-white" style="background-color: var(--accent-color); transition: background-color 0.2s;" onmouseover="this.style.backgroundColor=getComputedStyle(this).getPropertyValue('--accent-color-hover')" onmouseout="this.style.backgroundColor=getComputedStyle(this).getPropertyValue('--accent-color')">Go</button>
-            </div>
-            <div class="flex items-center gap-4" id="suggestion-ratings">
-                <span>Ratings:</span>
-                <div class="flex items-center"><input type="checkbox" id="rating-safe" class="checkbox-base" checked><label for="rating-safe" class="ml-2 cursor-pointer">Safe</label></div>
-                <div class="flex items-center"><input type="checkbox" id="rating-general" class="checkbox-base" checked><label for="rating-general" class="ml-2 cursor-pointer">General</label></div>
-                <div class="flex items-center"><input type="checkbox" id="rating-questionable" class="checkbox-base"><label for="rating-questionable" class="ml-2 cursor-pointer">Questionable</label></div>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <!-- Left Column: Inputs -->
-            <div class="lg:col-span-4 space-y-4">
-                 <div>
-                    <label for="tagInput" class="block text-sm font-medium text-gray-300 mb-2">Enter Tags</label>
-                    <div class="relative">
-                        <textarea id="tagInput" rows="6" class="w-full input-base" placeholder="1girl, solo, masterpiece, black background..."></textarea>
-                        <div id="autocomplete-box" class="w-full"></div>
-                    </div>
-                </div>
-                 <div class="grid grid-cols-2 gap-4">
-                    <div>
-                         <label class="block text-sm font-medium text-gray-300 mb-2">Prepend</label>
-                         <input type="text" id="triggerInput" class="w-full input-base" placeholder="best quality...">
-                    </div>
-                    <div>
-                         <label class="block text-sm font-medium text-gray-300 mb-2">Append</label>
-                         <input type="text" id="appendInput" class="w-full input-base" placeholder="style_name...">
-                    </div>
-                </div>
-                 <div>
-                    <label for="swapsInput" class="block text-sm font-medium text-gray-300 mb-2">Aliases / Swaps</label>
-                    <textarea id="swapsInput" rows="3" class="w-full input-base" placeholder="girl -> 1girl, boobs -> large_breasts"></textarea>
-                 </div>
-                 <div>
-                    <label for="implicationsInput" class="block text-sm font-medium text-gray-300 mb-2">Implications</label>
-                    <textarea id="implicationsInput" rows="3" class="w-full input-base" placeholder="1girl => backlighting"></textarea>
-                 </div>
-                 <div>
-                    <label for="blacklistInput" class="block text-sm font-medium text-gray-300 mb-2">Blacklist</label>
-                    <textarea id="blacklistInput" rows="2" class="w-full input-base" placeholder="bad_anatomy, blurry, text"></textarea>
-                 </div>
-            </div>
-
-            <!-- Center Column: Processed Tags -->
-            <div class="lg:col-span-5">
-                <div class="flex flex-wrap items-center justify-between gap-4 mb-4 p-4 bg-gray-900/50 rounded-lg border border-gray-700">
-                     <div class="flex items-center gap-x-6 gap-y-2 flex-wrap">
-                        <div class="flex items-center">
-                            <input id="deduplicateToggle" type="checkbox" class="checkbox-base" checked>
-                            <label for="deduplicateToggle" class="ml-2 block text-sm text-gray-300 cursor-pointer">Deduplicate</label>
-                        </div>
-                        <div class="flex items-center">
-                            <input id="underscoreToggle" type="checkbox" class="checkbox-base" checked>
-                            <label for="underscoreToggle" class="ml-2 block text-sm text-gray-300 cursor-pointer">Use_Underscores</label>
-                        </div>
-                         <div class="flex items-center">
-                            <input id="enableWeightingToggle" type="checkbox" class="checkbox-base">
-                            <label for="enableWeightingToggle" class="ml-2 block text-sm text-gray-300 cursor-pointer">Enable Weighting</label>
-                        </div>
-                     </div>
-                     <div class="flex items-center gap-x-4">
-                         <select id="sortSelect" class="input-base text-sm">
-                             <option value="danbooru" selected>Sort: Danbooru</option>
-                             <option value="manual">Sort: Manual</option>
-                             <option value="none">Sort: None</option>
-                             <option value="az">Sort: A-Z</option>
-                             <option value="za">Sort: Z-A</option>
-                         </select>
-                         <input type="number" id="maxTagsInput" value="75" min="1" max="500" class="input-base text-sm w-20" aria-label="Maximum Tags">
-                    </div>
-                </div>
-                <div>
-                    <div class="flex justify-between items-center mb-2">
-                         <h2 id="processedTagsLabel" class="text-lg font-semibold text-gray-200">
-                            Processed Tags (<span id="tagCount">0</span>/<span id="maxTagCount">75</span>)
-                        </h2>
-                    </div>
-                    <div id="tagOutput" class="p-4 bg-gray-900/50 border border-gray-700 rounded-lg min-h-[400px] space-y-4">
-                        <span class="text-gray-500 italic">Start typing or paste tags above...</span>
-                    </div>
-                </div>
-                 <div class="mt-4">
-                    <button id="copyButton" class="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white disabled:opacity-50 disabled:cursor-not-allowed" style="background-color: var(--accent-color);">
-                        Copy All Tags
-                    </button>
-                    <p id="copyMessage" class="text-sm text-green-400 mt-2 h-5 text-center"></p>
-                </div>
-            </div>
-            
-            <!-- Right Column: History -->
-            <div class="lg:col-span-3">
-                 <h3 class="text-lg font-semibold tracking-wide text-gray-200 mb-4">Copy History</h3>
-                 <div id="history-container" class="space-y-2">
-                     <p class="text-sm text-gray-500 italic">No history yet.</p>
-                 </div>
-            </div>
-        </div>
+        <!-- The rest of your HTML body is unchanged -->
+        <div class="absolute top-4 right-4 flex items-center gap-2"> <button class="theme-button bg-indigo-600" data-theme="theme-indigo" title="Indigo Theme"></button> <button class="theme-button bg-blue-600" data-theme="theme-blue" title="Blue Theme"></button> <button class="theme-button bg-teal-600" data-theme="theme-teal" title="Teal Theme"></button> <button class="theme-button bg-red-600" data-theme="theme-crimson" title="Crimson Theme"></button> </div> <h1 class="text-3xl font-bold mb-4 text-gray-100 text-center">Danbooru Tag Helper</h1> <div class="flex justify-center items-center gap-6 mb-8 text-sm text-gray-300"> <div class="flex items-center gap-2"> <label for="suggestionCountInput">Suggest:</label> <input type="number" id="suggestionCountInput" value="15" min="5" max="50" class="input-base text-sm w-20"> <button id="suggest-btn" class="px-3 py-1 font-semibold rounded-md text-white" style="background-color: var(--accent-color); transition: background-color 0.2s;" onmouseover="this.style.backgroundColor=getComputedStyle(this).getPropertyValue('--accent-color-hover')" onmouseout="this.style.backgroundColor=getComputedStyle(this).getPropertyValue('--accent-color')">Go</button> </div> <div class="flex items-center gap-4" id="suggestion-ratings"> <span>Ratings:</span> <div class="flex items-center"><input type="checkbox" id="rating-safe" class="checkbox-base" checked><label for="rating-safe" class="ml-2 cursor-pointer">Safe</label></div> <div class="flex items-center"><input type="checkbox" id="rating-general" class="checkbox-base" checked><label for="rating-general" class="ml-2 cursor-pointer">General</label></div> <div class="flex items-center"><input type="checkbox" id="rating-questionable" class="checkbox-base"><label for="rating-questionable" class="ml-2 cursor-pointer">Questionable</label></div> </div> </div> <div class="grid grid-cols-1 lg:grid-cols-12 gap-8"> <div class="lg:col-span-4 space-y-4"> <div> <label for="tagInput" class="block text-sm font-medium text-gray-300 mb-2">Enter Tags</label> <div class="relative"> <textarea id="tagInput" rows="6" class="w-full input-base" placeholder="1girl, solo, masterpiece, black background..."></textarea> <div id="autocomplete-box" class="w-full"></div> </div> </div> <div class="grid grid-cols-2 gap-4"> <div> <label class="block text-sm font-medium text-gray-300 mb-2">Prepend</label> <input type="text" id="triggerInput" class="w-full input-base" placeholder="best quality..."> </div> <div> <label class="block text-sm font-medium text-gray-300 mb-2">Append</label> <input type="text" id="appendInput" class="w-full input-base" placeholder="style_name..."> </div> </div> <div> <label for="swapsInput" class="block text-sm font-medium text-gray-300 mb-2">Aliases / Swaps</label> <textarea id="swapsInput" rows="3" class="w-full input-base" placeholder="girl -> 1girl, boobs -> large_breasts"></textarea> </div> <div> <label for="implicationsInput" class="block text-sm font-medium text-gray-300 mb-2">Implications</label> <textarea id="implicationsInput" rows="3" class="w-full input-base" placeholder="1girl => backlighting"></textarea> </div> <div> <label for="blacklistInput" class="block text-sm font-medium text-gray-300 mb-2">Blacklist</label> <textarea id="blacklistInput" rows="2" class="w-full input-base" placeholder="bad_anatomy, blurry, text"></textarea> </div> </div> <div class="lg:col-span-5"> <div class="flex flex-wrap items-center justify-between gap-4 mb-4 p-4 bg-gray-900/50 rounded-lg border border-gray-700"> <div class="flex items-center gap-x-6 gap-y-2 flex-wrap"> <div class="flex items-center"> <input id="deduplicateToggle" type="checkbox" class="checkbox-base" checked> <label for="deduplicateToggle" class="ml-2 block text-sm text-gray-300 cursor-pointer">Deduplicate</label> </div> <div class="flex items-center"> <input id="underscoreToggle" type="checkbox" class="checkbox-base" checked> <label for="underscoreToggle" class="ml-2 block text-sm text-gray-300 cursor-pointer">Use_Underscores</label> </div> <div class="flex items-center"> <input id="enableWeightingToggle" type="checkbox" class="checkbox-base"> <label for="enableWeightingToggle" class="ml-2 block text-sm text-gray-300 cursor-pointer">Enable Weighting</label> </div> </div> <div class="flex items-center gap-x-4"> <select id="sortSelect" class="input-base text-sm"> <option value="danbooru" selected>Sort: Danbooru</option> <option value="manual">Sort: Manual</option> <option value="none">Sort: None</option> <option value="az">Sort: A-Z</option> <option value="za">Sort: Z-A</option> </select> <input type="number" id="maxTagsInput" value="75" min="1" max="500" class="input-base text-sm w-20" aria-label="Maximum Tags"> </div> </div> <div> <div class="flex justify-between items-center mb-2"> <h2 id="processedTagsLabel" class="text-lg font-semibold text-gray-200"> Processed Tags (<span id="tagCount">0</span>/<span id="maxTagCount">75</span>) </h2> </div> <div id="tagOutput" class="p-4 bg-gray-900/50 border border-gray-700 rounded-lg min-h-[400px] space-y-4"> <span class="text-gray-500 italic">Start typing or paste tags above...</span> </div> </div> <div class="mt-4"> <button id="copyButton" class="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white disabled:opacity-50 disabled:cursor-not-allowed" style="background-color: var(--accent-color);"> Copy All Tags </button> <p id="copyMessage" class="text-sm text-green-400 mt-2 h-5 text-center"></p> </div> </div> <div class="lg:col-span-3"> <h3 class="text-lg font-semibold tracking-wide text-gray-200 mb-4">Copy History</h3> <div id="history-container" class="space-y-2"> <p class="text-sm text-gray-500 italic">No history yet.</p> </div> </div> </div>
     </div>
-
+    
     <script>
-    let TAG_DATABASE = [];
+    let TAG_DATABASE = []; 
+    let TAG_MAP = {};     
     let tagIdCounter = 0;
 
     const QUESTIONABLE_KEYWORDS = ['bikini', 'swimsuit', 'cleavage', 'breasts', 'ass', 'thighs', 'pantyhose', 'leotard', 'garter_belt', 'panty_shot', 'sideboob', 'topless', 'bra', 'panties', 'lingerie', 'seductive', 'bondage', 'shibari', 'partially_nude', 'armpits', 'bottomless'];
     const EXPLICIT_KEYWORDS = ['pussy', 'penis', 'sex', 'oral', 'ahegao', 'nude', 'naked', 'cum', 'masturbation', 'fellatio', 'cunnilingus', 'prolapse'];
     
-    // --- NEW: More specific, granular categories for accurate sorting ---
-    const TAG_CATEGORIES = [
-        { name: 'Quality', keywords: ['masterpiece', 'best quality', 'highres', 'absurdres', '4k', '8k', 'extremely detailed', 'best quality'] },
-        { name: 'Composition', keywords: ['solo', '1girl', '1boy', '2girls', 'duo', 'trio', 'group', 'portrait', 'full body', 'upper body', 'cowboy shot', 'close-up', 'from side', 'from behind', 'from above', 'from below', 'profile', 'dutch angle', 'wide shot', 'upper_body'] },
-        { name: 'Subject & Creatures', keywords: ['hatsune miku', 'gawr gura', 'rem (re:zero)', 'remilia scarlet', 'ganyu (genshin impact)', 'hu tao (genshin impact)', 'raiden shogun (genshin impact)', 'yae miko (genshin impact)', 'flandre scarlet', 'cirno', 'hakurei reimu', 'monika (doki doki literature club!)', 'tokisaki kurumi', 'honshou kaede', 'zero two (darling in the franxx)', 'hololive', 'genshin impact', 'touhou', 'kantai collection', 'azur lane', 'fate/grand order', 'the idolm@ster', 'original', 'monster girl', 'slime girl', 'personification'] },
-        { name: 'Face', keywords: [':d', ':3', 'blush', 'closed mouth', 'open mouth', 'smile', 'face', 'facial mark', 'fangs', 'lips', 'nose', 'parted bangs', 'short eyebrows', 'bags under eyes', 'blush stickers', 'one eye closed', 'pout', 'tongue', 'green tongue', 'colored tongue'] },
-        { name: 'Eyes', keywords: ['closed eyes', 'eyelashes', 'eyes', 'blue eyes', 'red eyes', 'green eyes', 'brown eyes', 'purple eyes', 'yellow eyes', 'orange eyes', 'aqua eyes', 'hair between eyes'] },
-        { name: 'Hair', keywords: ['ahoge', 'hair', 'blonde hair', 'long hair', 'brown hair', 'black hair', 'short hair', 'white hair', 'silver hair', 'pink hair', 'purple hair', 'blue hair', 'red hair', 'green hair', 'orange hair', 'grey hair', 'hair between eyes', 'very long hair', 'multicolored hair', 'streaked hair', 'two-tone hair', 'braid', 'colored inner hair'] },
-        { name: 'Body Parts', keywords: ['breasts', 'large breasts', 'medium breasts', 'small breasts', 'collarbone', 'ears', 'cat ears', 'elf ears', 'pointy ears', 'hands', 'head', 'horns', 'navel', 'skin', 'pale skin', 'dark skin', 'tan', 'thighs', 'wings', 'chibi', 'colored skin', 'yellow skin'] },
-        { name: 'Attire', keywords: ['apron', 'armor', 'bandaid', 'bare shoulders', 'barefoot', 'bloomers', 'boots', 'cape', 'cleavage', 'cleavage cutout', 'clothing', 'coat', 'dress', 'japanese clothes', 'kimono', 'leotard', 'lingerie', 'miniskirt', 'navel cutout', 'pantyhose', 'panties', 'puffy sleeves', 'school uniform', 'seifuku', 'serafuku', 'shirt', 'white shirt', 'collared shirt', 'shoes', 'sneakers', 'shorts', 'skirt', 'sleeveless', 'slippers', 'socks', 'stockings', 'suit', 'sweater', 'swimsuit', 'turtleneck', 'uniform', 'zettai ryouiki', 'hood', 'hood down', 'hooded jacket', 'pink jacket', 'jacket', 'sleeves', 'long sleeves', 'sleeves past wrists', 'bottomless'] },
-        { name: 'Accessories', keywords: ['animal ears', 'bell', 'belt', 'bow', 'bracelet', 'chain', 'choker', 'red choker', 'collar', 'crown', 'detached sleeves', 'earrings', 'elbow gloves', 'eyewear', 'frills', 'glasses', 'gloves', 'goggles', 'hair ornament', 'hairband', 'hairpin', 'hat', 'headband', 'headphones', 'headdress', 'hoodie', 'jewelry', 'maid headdress', 'mask', 'necklace', 'neckerchief', 'necktie', 'ribbon', 'tie'] },
-        { name: 'Held Items & Objects', keywords: ['holding', 'weapon', 'sword', 'gun', 'chopsticks', 'holding chopsticks', 'food', 'cup ramen', 'nissin cup noodle', 'stuffed animal', 'stuffed toy', 'hugging doll', 'hugging object', 'stuffed cat', 'liquid hair'] },
-        { name: 'Actions & Poses', keywords: ['ass grab', 'bending over', 'crossed arms', 'crouching', 'dancing', 'fighting', 'fingers in mouth', 'flying', 'hand in own hair', 'hands on hips', 'hands up', 'hugging', 'animal hug', 'jumping', 'kicking', 'kissing', 'kneeling', 'leaning forward', 'licking', 'lying', 'on back', 'on stomach', 'pointing', 'punching', 'reaching', 'running', 'sitting', 'sleeping', 'spread arms', 'spread legs', 'standing', 'stretching', 'waving', 'yawning', 'looking at viewer', 'looking away', 'looking back', 'looking down', 'looking up', 'eating'] },
-        { name: 'Setting & Environment', keywords: ['indoors', 'outdoors', 'background', 'simple background', 'white background', 'black background', 'colored background', 'grey background', 'transparent background', 'gradient background', 'blurry background', 'beach', 'bed', 'building', 'chair', 'city', 'clouds', 'day', 'desk', 'forest', 'moon', 'nature', 'night', 'ocean', 'park', 'rain', 'river', 'road', 'room', 'school', 'sea', 'sky', 'snow', 'stars', 'street', 'sun', 'sunset', 'tree', 'underwater', 'water', 'window', 'pink background', 'scenery'] },
-        { name: 'Style & Meta', keywords: ['2d', '3d', 'absurdres', 'artbook', 'artist name', 'bad anatomy', 'bad artist', 'bad hands', 'bad id', 'bad pixiv id', 'bad twitter id', 'bad uri', 'comic', 'commentary', 'commentary request', 'conditional parent', 'deletethis', 'drawing', 'extra digits', 'fanart', 'greyscale', 'hi res', 'jpeg artifacts', 'lineart', 'low res', 'monochrome', 'photo', 'pixel art', 'realistic', 'scanned', 'signature', 'sketch', 'tagme', 'text', 'traditional media', 'translation request', 'watermark', 'web bro', 'heart', 'backlighting', 'steam', '(steaming food:1.2)', 'wariza', 'faux traditional media', 'painting (medium)'] }
-    ];
-
     const element = (id) => document.getElementById(id);
     const body = document.body;
     const allInputs = document.querySelectorAll('input, textarea, select');
@@ -240,28 +115,29 @@
             copyButton.disabled = true; return;
         }
         const sortOrder = sortSelect.value;
-        let tagsToDisplay = [...baseTags];
         if (sortOrder === 'danbooru') {
-            const groups = tagsToDisplay.reduce((acc, tag) => {
+            const groups = baseTags.reduce((acc, tag) => {
                 const categoryName = getTagCategoryName(tag);
                 if (!acc[categoryName]) acc[categoryName] = [];
                 acc[categoryName].push(tag);
                 return acc;
             }, {});
-            const sortedCategoryNames = TAG_CATEGORIES.map(c => c.name).filter(name => groups[name]);
-            if (groups['Other']) sortedCategoryNames.push('Other');
-            sortedCategoryNames.forEach(categoryName => {
-                const groupDiv = document.createElement('div');
-                groupDiv.className = 'tag-group';
-                groupDiv.innerHTML = `<h3 class="tag-group-title">${categoryName}</h3>`;
-                const container = document.createElement('div');
-                container.className = 'tag-group-container';
-                container.dataset.groupName = categoryName;
-                groups[categoryName].forEach(tag => container.appendChild(createTagElement(tag)));
-                groupDiv.appendChild(container);
-                tagOutput.appendChild(groupDiv);
+            const displayOrder = ['Quality', 'Composition', 'Subject & Creatures', 'Face', 'Eyes', 'Hair', 'Body Parts', 'Attire', 'Accessories', 'Held Items & Objects', 'Actions & Poses', 'Setting & Environment', 'Style & Meta', 'Other'];
+            displayOrder.forEach(categoryName => {
+                if (groups[categoryName]) {
+                    const groupDiv = document.createElement('div');
+                    groupDiv.className = 'tag-group';
+                    groupDiv.innerHTML = `<h3 class="tag-group-title">${categoryName}</h3>`;
+                    const container = document.createElement('div');
+                    container.className = 'tag-group-container';
+                    container.dataset.groupName = categoryName;
+                    groups[categoryName].forEach(tag => container.appendChild(createTagElement(tag)));
+                    groupDiv.appendChild(container);
+                    tagOutput.appendChild(groupDiv);
+                }
             });
         } else {
+            let tagsToDisplay = [...baseTags];
             if (sortOrder === 'az') tagsToDisplay.sort((a, b) => a.original.localeCompare(b.original));
             else if (sortOrder === 'za') tagsToDisplay.sort((a, b) => b.original.localeCompare(a.original));
             const container = document.createElement('div');
@@ -274,6 +150,11 @@
         initSortable();
     }
     
+    function getTagCategoryName(tag) {
+        const tagWithUnderscores = (tag.original || tag).toLowerCase().replace(/ /g, '_');
+        return TAG_MAP[tagWithUnderscores] || 'Other';
+    }
+
     function createTagElement(tag) {
         const el = document.createElement('div');
         el.className = 'tag-base processed-tag';
@@ -314,14 +195,6 @@
         tag.weighted = current; displayTags();
     };
 
-    function getTagCategoryName(tag) {
-        const tagWithSpaces = (tag.original || tag).toLowerCase().replace(/_/g, ' ');
-        for (const category of TAG_CATEGORIES) {
-            if (category.keywords.includes(tagWithSpaces)) return category.name;
-        }
-        return 'Other';
-    }
-
     function initSortable() {
         if (sortableInstances.length) sortableInstances.forEach(s => s.destroy());
         sortableInstances = [];
@@ -339,30 +212,25 @@
         });
     }
 
-    // --- MODIFIED: Added 'Tab' key logic ---
     function handleAutocomplete(e) {
         const text = tagInput.value; const cursorPos = tagInput.selectionStart;
         const lastComma = text.lastIndexOf(',', cursorPos - 1);
         autocomplete.currentWord = text.substring(lastComma + 1, cursorPos).trim();
-
         if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === 'Tab') {
             if (!autocomplete.active) return;
             e.preventDefault();
-
             if (e.key === 'Enter' || e.key === 'Tab') {
-                if (autocomplete.index === -1) autocomplete.index = 0; // Default to first item if none selected
+                if (autocomplete.index === -1) autocomplete.index = 0;
                 if (autocomplete.suggestions[autocomplete.index]) {
                     selectAutocompleteItem(autocomplete.suggestions[autocomplete.index]);
                 }
                 return;
             }
-            
             if (e.key === 'ArrowDown') autocomplete.index = (autocomplete.index + 1) % autocomplete.suggestions.length;
             if (e.key === 'ArrowUp') autocomplete.index = (autocomplete.index - 1 + autocomplete.suggestions.length) % autocomplete.suggestions.length;
             updateAutocompleteSelection();
             return;
         }
-
         if (!autocomplete.currentWord) { hideAutocomplete(); return; }
         autocomplete.suggestions = TAG_DATABASE.filter(t => t.startsWith(autocomplete.currentWord.replace(/ /g, '_'))).slice(0, 5);
         if (autocomplete.suggestions.length > 0) {
@@ -423,7 +291,7 @@
     }
 
     function suggestCoherentTags() {
-        if (TAG_DATABASE.length < 2) return;
+        if (Object.keys(TAG_MAP).length === 0) return;
         const numToSuggest = parseInt(suggestionCountInput.value, 10);
         const existingTags = new Set(baseTags.map(t => t.original.toLowerCase().replace(/ /g, '_')));
         const isAllowed = (tag) => {
@@ -434,12 +302,13 @@
         };
         const suggestions = new Set();
         const categoryPools = {};
-        TAG_CATEGORIES.forEach(c => categoryPools[c.name] = []);
-        for (const tag of TAG_DATABASE) {
-            if (existingTags.has(tag) || !isAllowed(tag)) continue;
-            const categoryName = getTagCategoryName({ original: tag });
-            if (categoryPools[categoryName]) categoryPools[categoryName].push(tag);
-        }
+        Object.keys(TAG_MAP).forEach(tag => {
+            const categoryName = TAG_MAP[tag];
+            if (!categoryPools[categoryName]) categoryPools[categoryName] = [];
+            if (!existingTags.has(tag) && isAllowed(tag)) {
+                categoryPools[categoryName].push(tag);
+            }
+        });
 
         const plan = (existingTags.size === 0) 
             ? [ { name: 'Quality', count: 1 }, { name: 'Composition', count: 2 }, { name: 'Subject & Creatures', count: 1 }, { name: 'Face', count: 2 }, { name: 'Eyes', count: 1 }, { name: 'Hair', count: 2 }, { name: 'Body Parts', count: 1 }, { name: 'Attire', count: 1 }, { name: 'Actions & Poses', count: 2 }, { name: 'Setting & Environment', count: 2 } ]
@@ -473,24 +342,25 @@
         }
     }
     
-    async function loadExternalTags() {
+    async function loadExternalData() {
         document.title = 'Danbooru Tag Helper (Loading...)';
         try {
-            const response = await fetch('tags.json');
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            TAG_DATABASE = await response.json();
-            console.log(`Successfully loaded ${TAG_DATABASE.length} tags.`);
+            const [tagsResponse, mapResponse] = await Promise.all([ fetch('tags.json'), fetch('tag_map.json') ]);
+            if (!tagsResponse.ok) throw new Error(`HTTP error fetching tags.json! status: ${tagsResponse.status}`);
+            if (!mapResponse.ok) throw new Error(`HTTP error fetching tag_map.json! status: ${mapResponse.status}`);
+            TAG_DATABASE = await tagsResponse.json();
+            TAG_MAP = await mapResponse.json();
+            console.log(`Successfully loaded ${TAG_DATABASE.length} tags and ${Object.keys(TAG_MAP).length} category mappings.`);
             document.title = 'Danbooru Tag Helper (Ready)';
         } catch (error) {
-            console.error("--- FATAL ERROR: Could not load 'tags.json' ---", error);
+            console.error("--- FATAL ERROR: Could not load data files ---", error);
             document.title = 'Danbooru Tag Helper (ERROR)';
-            tagInput.placeholder = "ERROR: Could not load tag database. Autocomplete is disabled.";
-            TAG_DATABASE = ['error_loading_tags'];
+            tagInput.placeholder = "ERROR: Could not load data. Features disabled.";
         }
     }
     
     document.addEventListener('DOMContentLoaded', async () => {
-        await loadExternalTags();
+        await loadExternalData();
         allInputs.forEach(input => {
             const isSuggestControl = input.id.startsWith('rating-') || input.id === 'suggestionCountInput';
             if (isSuggestControl) return;
@@ -499,7 +369,7 @@
             if(input.tagName !== 'SELECT' && input.type !== 'checkbox') input.addEventListener('input', processAll);
         });
         tagInput.addEventListener('keyup', handleAutocomplete);
-        tagInput.addEventListener('keydown', handleAutocomplete); // Keydown is important for Tab
+        tagInput.addEventListener('keydown', handleAutocomplete);
         tagInput.addEventListener('blur', () => setTimeout(hideAutocomplete, 150));
         copyButton.addEventListener('click', copyTagsToClipboard);
         suggestBtn.addEventListener('click', suggestCoherentTags);
