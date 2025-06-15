@@ -1,4 +1,170 @@
-    <!-- (Your body HTML remains the same) -->
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danbooru Tag Helper</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --accent-color: #4f46e5; /* Indigo */
+        --accent-color-hover: #4338ca;
+        --processed-tag-bg: rgba(79, 70, 229, 0.2);
+        --processed-tag-text: rgba(199, 210, 254, 1);
+        --processed-tag-border: #4f46e5;
+      }
+      .theme-blue {
+        --accent-color: #2563eb; --accent-color-hover: #1d4ed8;
+        --processed-tag-bg: rgba(37, 99, 235, 0.2); --processed-tag-text: rgba(191, 219, 254, 1); --processed-tag-border: #2563eb;
+      }
+      .theme-teal {
+        --accent-color: #0d9488; --accent-color-hover: #0f766e;
+        --processed-tag-bg: rgba(13, 148, 136, 0.2); --processed-tag-text: rgba(153, 246, 228, 1); --processed-tag-border: #0d9488;
+      }
+      .theme-crimson {
+        --accent-color: #dc2626; --accent-color-hover: #b91c1c;
+        --processed-tag-bg: rgba(220, 38, 38, 0.2); --processed-tag-text: rgba(254, 202, 202, 1); --processed-tag-border: #dc2626;
+      }
+      body { font-family: 'Inter', sans-serif; background-color: #111827; color: #f9fafb; }
+      .main-container { background-color: #1f2937; border: 1px solid #374151; }
+      .input-base { border: 1px solid #4b5563; background-color: #374151; color: #f9fafb; border-radius: 0.5rem; padding: 0.5rem 0.75rem; transition: all 0.15s ease-in-out; }
+      .input-base:focus { outline: 2px solid transparent; outline-offset: 2px; border-color: var(--accent-color); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-color) 50%, transparent); }
+      .checkbox-base { height: 1rem; width: 1rem; border-radius: 0.25rem; cursor: pointer; background-color: #4b5563; border-color: #6b7280; color: var(--accent-color);}
+      .tag-base { font-size: 0.875rem; font-weight: 500; padding: 0.25rem 0.75rem; border-radius: 9999px; border-width: 1px; display: inline-flex; align-items: center; gap: 0.5rem; cursor: grab; background-color: var(--processed-tag-bg); color: var(--processed-tag-text); border-color: var(--processed-tag-border); }
+      .tag-base:active { cursor: grabbing; }
+      .tag-group-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #9ca3af; margin-bottom: 0.75rem; font-weight: 600; }
+      .tag-group-container { display: flex; flex-wrap: wrap; gap: 0.5rem; min-height: 38px; padding: 0.5rem; background-color: rgba(0,0,0,0.1); border-radius: 0.5rem;}
+      #autocomplete-box { position: absolute; z-index: 10; background-color: #374151; border: 1px solid #4b5563; border-radius: 0.5rem; max-height: 150px; overflow-y: auto; }
+      .autocomplete-item:hover, .autocomplete-item.selected { background-color: var(--accent-color); }
+      #history-container .history-item { background-color: #374151; }
+      .copy-btn-sm:hover { background-color: var(--accent-color); }
+      .theme-button { width: 1.25rem; height: 1.25rem; border-radius: 9999px; border: 2px solid transparent; cursor: pointer; }
+      .theme-button.active { border-color: white; }
+      .tag-weight-btn { font-size: 0.875rem; line-height: 1; background-color: rgba(0,0,0,0.2); border-radius: 50%; width: 1.25rem; height: 1.25rem; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; transition: background-color 0.2s; border: none; color: white; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="main-container max-w-7xl mx-auto p-8 rounded-xl shadow-2xl relative">
+        <div class="absolute top-4 right-4 flex items-center gap-2">
+            <button class="theme-button bg-indigo-600" data-theme="theme-indigo" title="Indigo Theme"></button>
+            <button class="theme-button bg-blue-600" data-theme="theme-blue" title="Blue Theme"></button>
+            <button class="theme-button bg-teal-600" data-theme="theme-teal" title="Teal Theme"></button>
+            <button class="theme-button bg-red-600" data-theme="theme-crimson" title="Crimson Theme"></button>
+        </div>
+        <h1 class="text-3xl font-bold mb-4 text-gray-100 text-center">Danbooru Tag Helper</h1>
+        
+        <!-- --- NEW: Suggestion options --- -->
+        <div class="flex justify-center items-center gap-6 mb-8 text-sm text-gray-300">
+            <div class="flex items-center gap-2">
+                <label for="suggestionCountInput">Suggest:</label>
+                <input type="number" id="suggestionCountInput" value="15" min="5" max="50" class="input-base text-sm w-20">
+                <button id="suggest-btn" class="px-3 py-1 font-semibold rounded-md text-white" style="background-color: var(--accent-color); transition: background-color 0.2s;" onmouseover="this.style.backgroundColor=getComputedStyle(this).getPropertyValue('--accent-color-hover')" onmouseout="this.style.backgroundColor=getComputedStyle(this).getPropertyValue('--accent-color')">Go</button>
+            </div>
+            <div class="flex items-center gap-4" id="suggestion-ratings">
+                <span>Ratings:</span>
+                <div class="flex items-center"><input type="checkbox" id="rating-safe" class="checkbox-base" checked><label for="rating-safe" class="ml-2 cursor-pointer">Safe</label></div>
+                <div class="flex items-center"><input type="checkbox" id="rating-general" class="checkbox-base" checked><label for="rating-general" class="ml-2 cursor-pointer">General</label></div>
+                <div class="flex items-center"><input type="checkbox" id="rating-questionable" class="checkbox-base"><label for="rating-questionable" class="ml-2 cursor-pointer">Questionable</label></div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Left Column: Inputs -->
+            <div class="lg:col-span-4 space-y-4">
+                 <div>
+                    <label for="tagInput" class="block text-sm font-medium text-gray-300 mb-2">Enter Tags</label>
+                    <div class="relative">
+                        <textarea id="tagInput" rows="6" class="w-full input-base" placeholder="1girl, solo, masterpiece, black background..."></textarea>
+                        <div id="autocomplete-box" class="w-full"></div>
+                    </div>
+                </div>
+                 <div class="grid grid-cols-2 gap-4">
+                    <div>
+                         <label class="block text-sm font-medium text-gray-300 mb-2">Prepend</label>
+                         <input type="text" id="triggerInput" class="w-full input-base" placeholder="best quality...">
+                    </div>
+                    <div>
+                         <label class="block text-sm font-medium text-gray-300 mb-2">Append</label>
+                         <input type="text" id="appendInput" class="w-full input-base" placeholder="style_name...">
+                    </div>
+                </div>
+                 <div>
+                    <label for="swapsInput" class="block text-sm font-medium text-gray-300 mb-2">Aliases / Swaps</label>
+                    <textarea id="swapsInput" rows="3" class="w-full input-base" placeholder="girl -> 1girl, boobs -> large_breasts"></textarea>
+                 </div>
+                 <div>
+                    <label for="implicationsInput" class="block text-sm font-medium text-gray-300 mb-2">Implications</label>
+                    <textarea id="implicationsInput" rows="3" class="w-full input-base" placeholder="2girls => duo, uniform => clothing"></textarea>
+                 </div>
+                 <div>
+                    <label for="blacklistInput" class="block text-sm font-medium text-gray-300 mb-2">Blacklist</label>
+                    <textarea id="blacklistInput" rows="2" class="w-full input-base" placeholder="bad_anatomy, blurry, text"></textarea>
+                 </div>
+            </div>
+
+            <!-- Center Column: Processed Tags -->
+            <div class="lg:col-span-5">
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-4 p-4 bg-gray-900/50 rounded-lg border border-gray-700">
+                     <div class="flex items-center gap-x-6 gap-y-2 flex-wrap">
+                        <div class="flex items-center">
+                            <input id="deduplicateToggle" type="checkbox" class="checkbox-base" checked>
+                            <label for="deduplicateToggle" class="ml-2 block text-sm text-gray-300 cursor-pointer">Deduplicate</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input id="underscoreToggle" type="checkbox" class="checkbox-base" checked>
+                            <label for="underscoreToggle" class="ml-2 block text-sm text-gray-300 cursor-pointer">Use_Underscores</label>
+                        </div>
+                         <div class="flex items-center">
+                            <input id="enableWeightingToggle" type="checkbox" class="checkbox-base">
+                            <label for="enableWeightingToggle" class="ml-2 block text-sm text-gray-300 cursor-pointer">Enable Weighting</label>
+                        </div>
+                     </div>
+                     <div class="flex items-center gap-x-4">
+                         <select id="sortSelect" class="input-base text-sm">
+                             <option value="expert" selected>Sort: Expert</option>
+                             <option value="smart">Sort: Smart</option>
+                             <option value="manual">Sort: Manual</option>
+                             <option value="none">Sort: None</option>
+                             <option value="az">Sort: A-Z</option>
+                             <option value="za">Sort: Z-A</option>
+                         </select>
+                         <input type="number" id="maxTagsInput" value="75" min="1" max="500" class="input-base text-sm w-20" aria-label="Maximum Tags">
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                         <h2 id="processedTagsLabel" class="text-lg font-semibold text-gray-200">
+                            Processed Tags (<span id="tagCount">0</span>/<span id="maxTagCount">75</span>)
+                        </h2>
+                    </div>
+                    <div id="tagOutput" class="p-4 bg-gray-900/50 border border-gray-700 rounded-lg min-h-[400px] space-y-4">
+                        <span class="text-gray-500 italic">Start typing or paste tags above...</span>
+                    </div>
+                </div>
+                 <div class="mt-4">
+                    <button id="copyButton" class="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white disabled:opacity-50 disabled:cursor-not-allowed" style="background-color: var(--accent-color);">
+                        Copy All Tags
+                    </button>
+                    <p id="copyMessage" class="text-sm text-green-400 mt-2 h-5 text-center"></p>
+                </div>
+            </div>
+            
+            <!-- Right Column: History -->
+            <div class="lg:col-span-3">
+                 <h3 class="text-lg font-semibold tracking-wide text-gray-200 mb-4">Copy History</h3>
+                 <div id="history-container" class="space-y-2">
+                     <p class="text-sm text-gray-500 italic">No history yet.</p>
+                 </div>
+            </div>
+        </div>
+    </div>
+
+        <!-- ( body HTML remains the same) -->
 
     <script>
     let TAG_DATABASE = [];
@@ -380,5 +546,7 @@
         updateCopyHistory();
     });
     </script>
+</body>
+</html>
 </body>
 </html>
