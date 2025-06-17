@@ -50,21 +50,14 @@
     const GITHUB_USER = 'isaacwach234';
     const GITHUB_REPO = 'isaacwach234.github.io';
 
-    let TAG_DATABASE = [], gitHubPat = null;
-    let tagCategorizer, tagIdCounter = 0;
-
+    let TAG_DATABASE = [], gitHubPat = null, tagCategorizer, tagIdCounter = 0;
     const element = (id) => document.getElementById(id);
     const body = document.body, tagInput = element('tagInput'), swapsInput = element('swapsInput'), implicationsInput = element('implicationsInput'), blacklistInput = element('blacklistInput'), triggerInput = element('triggerInput'), appendInput = element('appendInput');
-    const deduplicateToggle = element('deduplicateToggle'), underscoreToggle = element('underscoreToggle'), enableWeightingToggle = element('enableWeightingToggle');
-    const sortSelect = element('sortSelect'), maxTagsInput = element('maxTagsInput'), tagOutput = element('tagOutput'), processedTagsLabel = element('processedTagsLabel');
-    const copyButton = element('copyButton'), copyMessage = element('copyMessage'), historyContainer = element('history-container'), autocompleteBox = element('autocomplete-box');
-    const suggestBtn = element('suggest-btn'), themeButtons = document.querySelectorAll('.theme-button');
-    
-    let baseTags = [], copyHistory = [], selectedTagIds = new Set(), autocomplete = { active: false, index: -1, currentWord: '', suggestions: [] }, sortableInstances = [];
+    const sortSelect = element('sortSelect'), tagOutput = element('tagOutput'), processedTagsLabel = element('processedTagsLabel'), copyButton = element('copyButton'), copyMessage = element('copyMessage');
+    let baseTags = [], selectedTagIds = new Set(), sortableInstances = [];
 
     class TagCategorizer {
         constructor(tagMap, allTags, categoryOrder) {
-            this.originalMap = { ...tagMap };
             this.primaryIndex = tagMap;
             this.categoryOrder = categoryOrder;
             this.categories = [...new Set([...Object.values(tagMap), ...categoryOrder])];
@@ -72,8 +65,7 @@
             this.keywordIndex = {};
             this.buildHeuristicIndexes(allTags);
         }
-
-        buildHeuristicIndexes(allTags) { /* No changes */ const keywordCategoryCounts={},suffixCategoryCounts={};allTags.forEach(tag=>{const category=this.primaryIndex[tag];if(!category)return;const words=tag.split('_');if(words.length>1){words.forEach(word=>{if(word.length<3)return;if(!keywordCategoryCounts[word])keywordCategoryCounts[word]={};keywordCategoryCounts[word][category]=(keywordCategoryCounts[word][category]||0)+1;});const suffix=words[words.length-1];if(!suffixCategoryCounts[suffix])suffixCategoryCounts[suffix]={};suffixCategoryCounts[suffix][category]=(suffixCategoryCounts[suffix][category]||0)+1;}});for(const keyword in keywordCategoryCounts){const counts=keywordCategoryCounts[keyword];const mostLikelyCategory=Object.keys(counts).reduce((a,b)=>counts[a]>counts[b]?a:b);if(counts[mostLikelyCategory]>1)this.keywordIndex[keyword]=mostLikelyCategory;}for(const suffix in suffixCategoryCounts){const counts=suffixCategoryCounts[suffix];const total=Object.values(counts).reduce((s,c)=>s+c,0);const mostLikelyCategory=Object.keys(counts).reduce((a,b)=>counts[a]>counts[b]?a:b);if(total>5&&(counts[mostLikelyCategory]/total)>0.7)this.patternIndex.ends[`_${suffix}`]=mostLikelyCategory;}console.log(`Built heuristic indexes.`); }
+        buildHeuristicIndexes(allTags) { const keywordCategoryCounts={},suffixCategoryCounts={};allTags.forEach(tag=>{const category=this.primaryIndex[tag];if(!category)return;const words=tag.split('_');if(words.length>1){words.forEach(word=>{if(word.length<3)return;if(!keywordCategoryCounts[word])keywordCategoryCounts[word]={};keywordCategoryCounts[word][category]=(keywordCategoryCounts[word][category]||0)+1;});const suffix=words[words.length-1];if(!suffixCategoryCounts[suffix])suffixCategoryCounts[suffix]={};suffixCategoryCounts[suffix][category]=(suffixCategoryCounts[suffix][category]||0)+1;}});for(const keyword in keywordCategoryCounts){const counts=keywordCategoryCounts[keyword];const mostLikelyCategory=Object.keys(counts).reduce((a,b)=>counts[a]>counts[b]?a:b);if(counts[mostLikelyCategory]>1)this.keywordIndex[keyword]=mostLikelyCategory;}for(const suffix in suffixCategoryCounts){const counts=suffixCategoryCounts[suffix];const total=Object.values(counts).reduce((s,c)=>s+c,0);const mostLikelyCategory=Object.keys(counts).reduce((a,b)=>counts[a]>counts[b]?a:b);if(total>5&&(counts[mostLikelyCategory]/total)>0.7)this.patternIndex.ends[`_${suffix}`]=mostLikelyCategory;}console.log(`Built heuristic indexes.`); }
         
         updateIndex(tag, newCategory) {
             this.primaryIndex[tag.toLowerCase().replace(/ /g, '_')] = newCategory;
@@ -82,77 +74,67 @@
         categorize(tagString) {
             const tag = tagString.toLowerCase().replace(/ /g, '_');
             
-            // Priority 1: Character Heuristic (Override)
+            // **FIXED LOGIC**: Priority 1: Check for Character tags FIRST.
             if (tag.includes('(') && tag.includes(')')) {
                 return { category: 'Characters', source: 'Heuristic' };
             }
-
-            // Priority 2: Primary Index (includes runtime updates)
             if (this.primaryIndex[tag]) {
                 return { category: this.primaryIndex[tag], source: 'Primary' };
             }
-
-            // Priority 3: Pattern Index
             for (const suffix in this.patternIndex.ends) if (tag.endsWith(suffix)) return { category: this.patternIndex.ends[suffix], source: 'Pattern' };
-
-            // Priority 4: Keyword Index
             const words = tag.split('_'), categoryScores = {};
             words.forEach(word => { if (this.keywordIndex[word]) categoryScores[this.keywordIndex[word]] = (categoryScores[this.keywordIndex[word]] || 0) + 1; });
             if (Object.keys(categoryScores).length > 0) return { category: Object.keys(categoryScores).reduce((a, b) => categoryScores[a] > categoryScores[b] ? a : b), source: 'Heuristic' };
-
-            // Fallback
             return { category: 'Other', source: 'Fallback' };
         }
     }
     
-    // **REWRITTEN** This function is now simpler and more robust, fixing the "correction not sticking" bug.
+    // **FIXED LOGIC**: This function is rewritten to be stateless and robust.
     function processAll() {
         if (!tagCategorizer) return;
-        
-        // 1. Get all raw tags from the input box and apply swaps/implications
+        const deduplicateToggle = element('deduplicateToggle');
+        const maxTagsInput = element('maxTagsInput');
+        const enableWeightingToggle = element('enableWeightingToggle');
+
+        // 1. Get a clean list of tags from the input, applying all text-based rules.
         const swaps = new Map(swapsInput.value.split(',').map(s => s.split('->').map(p => p.trim())).filter(p => p.length === 2 && p[0]));
         const implications = new Map(implicationsInput.value.split(',').map(s => s.split('=>').map(p => p.trim())).filter(p => p.length === 2 && p[0]));
         const blacklist = new Set(blacklistInput.value.replace(/[\n\s]+/g, ',').split(',').map(w => w.trim().toLowerCase()).filter(Boolean));
         let rawTags = tagInput.value.replace(/[\n]+/g, ',').split(',').map(t => t.trim()).filter(Boolean);
         rawTags = rawTags.map(tag => swaps.get(tag.toLowerCase().replace(/_/g, ' ')) || tag);
         const tagsToAdd = new Set();
-        rawTags.forEach(tag => {
-            const lowerTag = tag.toLowerCase();
-            if (implications.has(lowerTag)) implications.get(lowerTag).split(',').forEach(imp => tagsToAdd.add(imp.trim()));
-        });
+        rawTags.forEach(tag => { const lowerTag = tag.toLowerCase(); if (implications.has(lowerTag)) implications.get(lowerTag).split(',').forEach(imp => tagsToAdd.add(imp.trim())); });
         rawTags = [...rawTags, ...tagsToAdd];
-
-        // 2. Deduplicate and filter blacklisted tags
         if (deduplicateToggle.checked) {
             const seen = new Set();
             rawTags = rawTags.filter(tag => { const lower = tag.toLowerCase().replace(/_/g, ' '); if (seen.has(lower)) return false; seen.add(lower); return true; });
         }
         let filteredTags = rawTags.filter(tag => ![...blacklist].some(b => tag.toLowerCase().includes(b)));
         const maxTags = parseInt(maxTagsInput.value, 10) || 75;
+        filteredTags = filteredTags.slice(0, maxTags);
 
-        // 3. Create a fresh `baseTags` array every time. This is the key fix.
+        // 2. Create the new `baseTags` array from scratch every time.
         const newBaseTags = [];
-        const existingTagsMap = new Map(baseTags.map(t => [t.original, t])); // Preserve old IDs and weights if possible
-        
-        filteredTags.slice(0, maxTags).forEach(tag => {
-            const { category, source } = tagCategorizer.categorize(tag); // Always re-categorize
-            const existingTag = existingTagsMap.get(tag);
-            
+        const oldTagsMeta = new Map(baseTags.map(t => [t.original, { id: t.id, weighted: t.weighted }]));
+
+        for (const tag of filteredTags) {
+            const { category, source } = tagCategorizer.categorize(tag);
+            const oldMeta = oldTagsMeta.get(tag);
             newBaseTags.push({
                 original: tag,
-                weighted: existingTag ? existingTag.weighted : tag, // Keep old weight if it exists
-                id: existingTag ? existingTag.id : `tag-${tagIdCounter++}`, // Keep old ID
+                weighted: oldMeta ? oldMeta.weighted : tag,
+                id: oldMeta ? oldMeta.id : `tag-${tagIdCounter++}`,
                 category,
-                categorySource: source
+                categorySource: source,
             });
-        });
-
+        }
         if (!enableWeightingToggle.checked) newBaseTags.forEach(t => t.weighted = t.original);
         baseTags = newBaseTags;
         displayTags();
     }
 
     function displayTags() {
+        const maxTagsInput = element('maxTagsInput');
         processedTagsLabel.querySelector('#tagCount').textContent = baseTags.length;
         processedTagsLabel.querySelector('#maxTagCount').textContent = maxTagsInput.value;
         tagOutput.innerHTML = '';
@@ -162,9 +144,8 @@
             tagOutput.innerHTML = '<span class="text-gray-500 italic">Start typing or paste tags above...</span>';
             return;
         }
-        const sortOrder = sortSelect.value;
-        if (sortOrder === 'danbooru') {
-            const groups = baseTags.reduce((acc, tag) => { const categoryName = tag.category || 'Other'; if (!acc[categoryName]) acc[categoryName] = []; acc[categoryName].push(tag); return acc; }, {});
+        if (sortSelect.value === 'danbooru') {
+            const groups = baseTags.reduce((acc, tag) => { const c = tag.category || 'Other'; if (!acc[c]) acc[c] = []; acc[c].push(tag); return acc; }, {});
             tagCategorizer.categoryOrder.forEach(categoryName => {
                 const groupDiv = document.createElement('div');
                 groupDiv.className = 'tag-group';
@@ -179,8 +160,8 @@
             });
         } else {
             let tagsToDisplay = [...baseTags];
-            if (sortOrder === 'az') tagsToDisplay.sort((a, b) => a.original.localeCompare(b.original));
-            else if (sortOrder === 'za') tagsToDisplay.sort((a, b) => b.original.localeCompare(a.original));
+            if (sortSelect.value === 'az') tagsToDisplay.sort((a, b) => a.original.localeCompare(b.original));
+            else if (sortSelect.value === 'za') tagsToDisplay.sort((a, b) => b.original.localeCompare(a.original));
             const container = document.createElement('div');
             container.className = 'tag-group-container';
             container.dataset.groupName = 'all';
@@ -189,10 +170,10 @@
         }
         initSortable();
     }
-
-    function createTagElement(tag) { /* No changes */ const el=document.createElement('div');el.className='tag-base processed-tag';if(selectedTagIds.has(tag.id))el.classList.add('selected');el.dataset.id=tag.id;el.style.borderStyle=tag.categorySource!=='Primary'?'dashed':'solid';el.title=`(${tag.categorySource}) ${tag.original}\nCategory: ${tag.category}\n\nCtrl+Click to multi-select.\nRight-click for options.`;const useUnderscores=underscoreToggle.checked;const displayTag=useUnderscores?tag.weighted.replace(/\s/g,'_'):tag.weighted.replace(/_/g,' ');if(enableWeightingToggle.checked){el.innerHTML=`<button class="tag-weight-btn" onclick="updateTagWeight('${tag.id}','decrease')" title="Decrease weight">-</button><span class="tag-text px-1">${displayTag}</span><button class="tag-weight-btn" onclick="updateTagWeight('${tag.id}','increase')" title="Increase weight">+</button>`;}else{el.innerHTML=`<span class="tag-text">${displayTag}</span>`;}el.addEventListener('click',(e)=>handleTagClick(e,tag.id));el.addEventListener('contextmenu',(e)=>{e.preventDefault();showCorrectionMenu(e,tag);});return el; }
-    function handleTagClick(event, tagId) { /* No changes */ const tagElement=event.currentTarget;if(event.ctrlKey||event.metaKey){if(selectedTagIds.has(tagId)){selectedTagIds.delete(tagId);tagElement.classList.remove('selected');}else{selectedTagIds.add(tagId);tagElement.classList.add('selected');}}else{document.querySelectorAll('.tag-base.selected').forEach(el=>el.classList.remove('selected'));selectedTagIds.clear();selectedTagIds.add(tagId);tagElement.classList.add('selected');} }
-    function showCorrectionMenu(event, clickedTag) { /* No changes */ if(selectedTagIds.size===0||!selectedTagIds.has(clickedTag.id)){document.querySelectorAll('.tag-base.selected').forEach(el=>el.classList.remove('selected'));selectedTagIds.clear();selectedTagIds.add(clickedTag.id);document.querySelector(`[data-id="${clickedTag.id}"]`).classList.add('selected');}const existingMenu=document.getElementById('correction-menu');if(existingMenu)existingMenu.remove();const menu=document.createElement('div');menu.id='correction-menu';menu.className='absolute z-20 bg-gray-800 border border-gray-600 rounded-md shadow-lg py-1 text-sm';menu.style.left=`${event.pageX}px`;menu.style.top=`${event.pageY}px`;let title=selectedTagIds.size>1?`Correct ${selectedTagIds.size} Tags`:`Correct '${clickedTag.original}'`;let menuHTML=`<div class="px-3 py-1 text-gray-400 border-b border-gray-700">${title}</div>`;tagCategorizer.categories.forEach(cat=>{menuHTML+=`<a href="#" class="block px-3 py-1 text-gray-200 hover:bg-indigo-600" onclick="submitCategoryUpdate(event,'${cat}')">${cat}</a>`;});menu.innerHTML=menuHTML;document.body.appendChild(menu);document.addEventListener('click',()=>menu.remove(),{once:true}); }
+    
+    function createTagElement(tag) { const el = document.createElement('div'); const underscoreToggle = element('underscoreToggle'); const enableWeightingToggle = element('enableWeightingToggle'); el.className = 'tag-base processed-tag'; if (selectedTagIds.has(tag.id)) el.classList.add('selected'); el.dataset.id = tag.id; el.style.borderStyle = tag.categorySource !== 'Primary' ? 'dashed' : 'solid'; el.title = `(${tag.categorySource}) ${tag.original}\nCategory: ${tag.category}\n\nCtrl+Click to multi-select.\nRight-click for options.`; const useUnderscores = underscoreToggle.checked; const displayTag = useUnderscores ? tag.weighted.replace(/\s/g, '_') : tag.weighted.replace(/_/g, ' '); if (enableWeightingToggle.checked) { el.innerHTML = `<button class="tag-weight-btn" onclick="updateTagWeight('${tag.id}','decrease')">-</button><span class="tag-text px-1">${displayTag}</span><button class="tag-weight-btn" onclick="updateTagWeight('${tag.id}','increase')">+</button>`; } else { el.innerHTML = `<span class="tag-text">${displayTag}</span>`; } el.addEventListener('click', (e) => handleTagClick(e, tag.id)); el.addEventListener('contextmenu', (e) => { e.preventDefault(); showCorrectionMenu(e, tag); }); return el; }
+    function handleTagClick(event, tagId) { const tagElement = event.currentTarget; if (event.ctrlKey || event.metaKey) { if (selectedTagIds.has(tagId)) { selectedTagIds.delete(tagId); tagElement.classList.remove('selected'); } else { selectedTagIds.add(tagId); tagElement.classList.add('selected'); } } else { document.querySelectorAll('.tag-base.selected').forEach(el => el.classList.remove('selected')); selectedTagIds.clear(); selectedTagIds.add(tagId); tagElement.classList.add('selected'); } }
+    function showCorrectionMenu(event, clickedTag) { const menuId = 'correction-menu'; document.getElementById(menuId)?.remove(); if (selectedTagIds.size === 0 || !selectedTagIds.has(clickedTag.id)) { selectedTagIds.clear(); document.querySelectorAll('.tag-base.selected').forEach(el => el.classList.remove('selected')); selectedTagIds.add(clickedTag.id); document.querySelector(`[data-id="${clickedTag.id}"]`)?.classList.add('selected'); } const menu = document.createElement('div'); menu.id = menuId; menu.className = 'absolute z-20 bg-gray-800 border border-gray-600 rounded-md shadow-lg py-1 text-sm'; menu.style.left = `${event.pageX}px`; menu.style.top = `${event.pageY}px`; let title = selectedTagIds.size > 1 ? `Correct ${selectedTagIds.size} Tags` : `Correct '${clickedTag.original}'`; let menuHTML = `<div class="px-3 py-1 text-gray-400 border-b border-gray-700">${title}</div>`; tagCategorizer.categories.forEach(cat => { menuHTML += `<a href="#" class="block px-3 py-1 text-gray-200 hover:bg-indigo-600" onclick="submitCategoryUpdate(event,'${cat}')">${cat}</a>`; }); menu.innerHTML = menuHTML; document.body.appendChild(menu); document.addEventListener('click', () => menu.remove(), { once: true }); }
 
     async function submitCategoryUpdate(event, newCategory) {
         event.preventDefault();
@@ -214,14 +195,9 @@
             if (!response.ok) { const errorData = await response.json(); throw new Error(`GitHub API Error: ${errorData.message}`); }
             const issueData = await response.json();
             copyMessage.textContent = `Success! Issue #${issueData.number} created.`;
-            
-            // **MODIFIED**: This now correctly makes the change stick.
-            tagsToUpdate.forEach(tag => {
-                tagCategorizer.updateIndex(tag.original, newCategory);
-            });
+            tagsToUpdate.forEach(tag => tagCategorizer.updateIndex(tag.original, newCategory));
             selectedTagIds.clear();
             processAll(); // Re-process all tags with the updated knowledge
-
         } catch (error) {
             console.error("Failed to submit GitHub issue:", error);
             copyMessage.textContent = `Error: ${error.message}`;
@@ -235,17 +211,14 @@
         document.title = 'Danbooru Tag Helper (Loading...)';
         try {
             const [tagsResponse, mapResponse] = await Promise.all([
-                fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/tags.json`), 
-                fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/tag_map.json`)
+                fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/tags.json?t=${new Date().getTime()}`), 
+                fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/tag_map.json?t=${new Date().getTime()}`)
             ]);
             if (!tagsResponse.ok) throw new Error(`Failed to fetch tags.json: ${tagsResponse.statusText}`);
             if (!mapResponse.ok) throw new Error(`Failed to fetch tag_map.json: ${mapResponse.statusText}`);
             TAG_DATABASE = await tagsResponse.json();
             const tagMap = await mapResponse.json();
-            
-            // **MODIFIED**: 'Characters' is now a first-class citizen in the category order.
             const categoryOrder = ['Quality', 'Composition', 'Characters', 'Subject & Creatures', 'Face', 'Eyes', 'Hair', 'Body Parts', 'Attire', 'Accessories', 'Held Items & Objects', 'Actions & Poses', 'Setting & Environment', 'Style & Meta', 'Other'];
-            
             tagCategorizer = new TagCategorizer(tagMap, TAG_DATABASE, categoryOrder);
             document.title = 'Danbooru Tag Helper (Ready)';
         } catch (error) {
@@ -261,34 +234,39 @@
     // --- All other utility functions (unchanged) ---
     window.updateTagWeight = (id, action) => { const tag = baseTags.find(t => t.id === id); if (!tag) return; let current = tag.weighted, original = tag.original; if (action === 'increase') { if (current.startsWith('((')) current = `(((${original})))`; else if (current.startsWith('(')) current = `((${original}))`; else if (current.startsWith('[')) current = original; else current = `(${original})`; } else { if (current.startsWith('[[')) current = `[[[${original}]]]`; else if (current.startsWith('[')) current = `[[${original}]]`; else if (current.startsWith('(')) current = original; else current = `[${original}]`; } tag.weighted = current; displayTags(); };
     function initSortable() { if (sortableInstances.length) sortableInstances.forEach(s => s.destroy()); sortableInstances = []; tagOutput.querySelectorAll('.tag-group-container').forEach(container => { sortableInstances.push(new Sortable(container, { group: 'shared', animation: 150, ghostClass: 'opacity-50', onEnd: () => { sortSelect.value = 'manual'; const allTagElements = Array.from(tagOutput.querySelectorAll('.tag-base')); baseTags = allTagElements.map(el => baseTags.find(t => t.id === el.dataset.id)).filter(Boolean); }, })); }); }
-    function handleAutocomplete(e) { if (!tagCategorizer) return; const text = tagInput.value, cursorPos = tagInput.selectionStart; const lastComma = text.lastIndexOf(',', cursorPos - 1); autocomplete.currentWord = text.substring(lastComma + 1, cursorPos).trim(); const items = autocompleteBox.children; if (autocomplete.active && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === 'Tab')) { e.preventDefault(); if (e.key === 'Enter' || e.key === 'Tab') { if (autocomplete.index > -1 && items[autocomplete.index]) { selectAutocompleteItem(items[autocomplete.index].dataset.tag); } return; } items[autocomplete.index]?.classList.remove('selected'); if (e.key === 'ArrowDown') autocomplete.index = (autocomplete.index + 1) % items.length; if (e.key === 'ArrowUp') autocomplete.index = (autocomplete.index - 1 + items.length) % items.length; items[autocomplete.index]?.classList.add('selected'); return; } if (!autocomplete.currentWord) { hideAutocomplete(); return; } autocomplete.suggestions = TAG_DATABASE.filter(t => t.startsWith(autocomplete.currentWord.replace(/ /g, '_'))).slice(0, 5); if (autocomplete.suggestions.length > 0) { renderAutocomplete(); } else { hideAutocomplete(); } }
-    function renderAutocomplete() { autocompleteBox.innerHTML = autocomplete.suggestions.map((s, i) => `<div class="autocomplete-item p-2 cursor-pointer" data-tag="${s}" onmousedown="selectAutocompleteItem('${s}')">${s.replace(/_/g, ' ')}</div>`).join(''); autocomplete.active = true; autocomplete.index = -1; autocompleteBox.style.display = 'block'; }
+    function handleAutocomplete(e) { const autocompleteBox = element('autocomplete-box'); if (!tagCategorizer) return; const text = tagInput.value, cursorPos = tagInput.selectionStart; const lastComma = text.lastIndexOf(',', cursorPos - 1); autocomplete.currentWord = text.substring(lastComma + 1, cursorPos).trim(); const items = autocompleteBox.children; if (autocomplete.active && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === 'Tab')) { e.preventDefault(); if (e.key === 'Enter' || e.key === 'Tab') { if (autocomplete.index > -1 && items[autocomplete.index]) { selectAutocompleteItem(items[autocomplete.index].dataset.tag); } return; } items[autocomplete.index]?.classList.remove('selected'); if (e.key === 'ArrowDown') autocomplete.index = (autocomplete.index + 1) % items.length; if (e.key === 'ArrowUp') autocomplete.index = (autocomplete.index - 1 + items.length) % items.length; items[autocomplete.index]?.classList.add('selected'); return; } if (!autocomplete.currentWord) { hideAutocomplete(); return; } autocomplete.suggestions = TAG_DATABASE.filter(t => t.startsWith(autocomplete.currentWord.replace(/ /g, '_'))).slice(0, 5); if (autocomplete.suggestions.length > 0) { renderAutocomplete(); } else { hideAutocomplete(); } }
+    function renderAutocomplete() { const autocompleteBox = element('autocomplete-box'); autocompleteBox.innerHTML = autocomplete.suggestions.map((s) => `<div class="autocomplete-item p-2 cursor-pointer" data-tag="${s}" onmousedown="selectAutocompleteItem('${s}')">${s.replace(/_/g, ' ')}</div>`).join(''); autocomplete.active = true; autocomplete.index = -1; autocompleteBox.style.display = 'block'; }
     window.selectAutocompleteItem = (tag) => { const text = tagInput.value, cursorPos = tagInput.selectionStart; const lastComma = text.lastIndexOf(',', cursorPos - 1); const before = text.substring(0, lastComma + 1); tagInput.value = `${before} ${tag.replace(/_/g, ' ')}, ${text.substring(cursorPos)}`; hideAutocomplete(); tagInput.focus(); processAll(); };
-    function hideAutocomplete() { autocomplete.active = false; autocompleteBox.style.display = 'none'; }
-    function copyTagsToClipboard() { const useUnderscores = underscoreToggle.checked; const triggers = triggerInput.value.split(',').map(t => t.trim()).filter(Boolean); const appends = appendInput.value.split(',').map(t => t.trim()).filter(Boolean); const processed = baseTags.map(tag => useUnderscores ? tag.weighted.replace(/\s/g, '_') : tag.weighted.replace(/_/g, ' ')); const finalString = [...triggers, ...processed, ...appends].join(', '); navigator.clipboard.writeText(finalString).then(() => { copyMessage.textContent = 'Tags copied!'; updateCopyHistory(finalString); setTimeout(() => copyMessage.textContent = '', 2000); }).catch(err => copyMessage.textContent = 'Copy failed!'); }
-    function updateCopyHistory(text) { if(text){ copyHistory.unshift(text); if (copyHistory.length > 10) copyHistory.pop(); localStorage.setItem('danbooru-tag-history', JSON.stringify(copyHistory)); } historyContainer.innerHTML = ''; if (copyHistory.length === 0) { historyContainer.innerHTML = `<p class="text-sm text-gray-500 italic">No history yet.</p>`; return; } copyHistory.forEach(item => { const el = document.createElement('div'); el.className = 'history-item p-2 rounded-md flex items-center justify-between gap-2'; el.innerHTML = `<span class="history-item-text text-gray-400 text-xs flex-grow overflow-hidden whitespace-nowrap text-ellipsis">${item}</span><button class="copy-btn-sm p-1 rounded" onclick="navigator.clipboard.writeText(\`${item.replace(/`/g, '\\`')}\`)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-300"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>`; historyContainer.appendChild(el); }); }
-    function applyTheme(theme) { document.documentElement.className = 'dark'; body.className = `p-4 md:p-8 ${theme}`; themeButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.theme === theme)); localStorage.setItem('danbooru-tag-helper-theme', theme); }
-    function suggestCoherentTags() { /* No changes */ const suggestionCountInput = element('suggestionCountInput'); const ratingQuestionable = element('rating-questionable'); const ratingGeneral = element('rating-general'); const ratingSafe = element('rating-safe'); if (!tagCategorizer) return; const QUESTIONABLE_KEYWORDS = ['bikini', 'swimsuit', 'cleavage', 'breasts', 'ass', 'thighs', 'pantyhose', 'leotard', 'garter_belt', 'panty_shot', 'sideboob', 'topless', 'bra', 'panties', 'lingerie', 'seductive', 'bondage', 'shibari', 'partially_nude', 'armpits', 'bottomless']; const EXPLICIT_KEYWORDS = ['pussy', 'penis', 'sex', 'oral', 'ahegao', 'nude', 'naked', 'cum', 'masturbation', 'fellatio', 'cunnilingus', 'prolapse']; const numToSuggest = parseInt(suggestionCountInput.value, 10); const existingTags = new Set(baseTags.map(t => t.original.toLowerCase().replace(/ /g, '_'))); const isAllowed = (tag) => { if (EXPLICIT_KEYWORDS.some(kw => tag.includes(kw))) return false; if (!ratingQuestionable.checked && QUESTIONABLE_KEYWORDS.some(kw => tag.includes(kw))) return false; if (!ratingGeneral.checked && !ratingSafe.checked && !ratingQuestionable.checked) return false; return true; }; const suggestions = new Set(), categoryPools = {}; TAG_DATABASE.forEach(tag => { const { category } = tagCategorizer.categorize(tag); if (!categoryPools[category]) categoryPools[category] = []; if (!existingTags.has(tag) && isAllowed(tag)) categoryPools[category].push(tag); }); const plan = (existingTags.size === 0) ? [ { name: 'Quality', count: 1 }, { name: 'Composition', count: 2 }, { name: 'Characters', count: 1 }, { name: 'Face', count: 2 }, { name: 'Eyes', count: 1 }, { name: 'Hair', count: 2 } ] : Object.entries(baseTags.reduce((acc, tag) => { acc[tag.category] = (acc[tag.category] || 0) + 1; return acc; }, {})).map(([name, count]) => ({name, count})); let suggestionsNeeded = numToSuggest; while(suggestionsNeeded > 0) { let madeSuggestion = false; for(const p of plan) { if(suggestionsNeeded <= 0) break; const pool = categoryPools[p.name] || []; for(let i=0; i < p.count; ++i) { if(pool.length > 0) { const [suggestion] = pool.splice(Math.floor(Math.random() * pool.length), 1); if(suggestion && !suggestions.has(suggestion)) { suggestions.add(suggestion); suggestionsNeeded--; madeSuggestion = true; } } } } if(!madeSuggestion) break; } const suggestionsToAdd = [...suggestions]; if (suggestionsToAdd.length > 0) { const separator = tagInput.value.trim().length > 0 && !tagInput.value.trim().endsWith(',') ? ', ' : ''; tagInput.value += separator + suggestionsToAdd.join(', ').replace(/_/g, ' '); processAll(); } }
+    function hideAutocomplete() { const autocompleteBox = element('autocomplete-box'); autocomplete.active = false; autocompleteBox.style.display = 'none'; }
+    function copyTagsToClipboard() { const underscoreToggle = element('underscoreToggle'); const triggers = triggerInput.value.split(',').map(t => t.trim()).filter(Boolean); const appends = appendInput.value.split(',').map(t => t.trim()).filter(Boolean); const processed = baseTags.map(tag => (underscoreToggle.checked ? tag.weighted.replace(/\s/g, '_') : tag.weighted.replace(/_/g, ' '))); const finalString = [...triggers, ...processed, ...appends].join(', '); navigator.clipboard.writeText(finalString).then(() => { copyMessage.textContent = 'Tags copied!'; updateCopyHistory(finalString); setTimeout(() => copyMessage.textContent = '', 2000); }).catch(err => copyMessage.textContent = 'Copy failed!'); }
+    function updateCopyHistory(text) { const historyContainer = element('history-container'); if(text){ copyHistory.unshift(text); if (copyHistory.length > 10) copyHistory.pop(); localStorage.setItem('danbooru-tag-history', JSON.stringify(copyHistory)); } historyContainer.innerHTML = ''; if (copyHistory.length === 0) { historyContainer.innerHTML = `<p class="text-sm text-gray-500 italic">No history yet.</p>`; return; } copyHistory.forEach(item => { const el = document.createElement('div'); el.className = 'history-item p-2 rounded-md flex items-center justify-between gap-2'; el.innerHTML = `<span class="history-item-text text-gray-400 text-xs flex-grow overflow-hidden whitespace-nowrap text-ellipsis">${item}</span><button class="copy-btn-sm p-1 rounded" onclick="navigator.clipboard.writeText(\`${item.replace(/`/g, '\\`')}\`)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-300"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>`; historyContainer.appendChild(el); }); }
+    function applyTheme(theme) { const themeButtons = document.querySelectorAll('.theme-button'); document.documentElement.className = 'dark'; body.className = `p-4 md:p-8 ${theme}`; themeButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.theme === theme)); localStorage.setItem('danbooru-tag-helper-theme', theme); }
+    function suggestCoherentTags() { const suggestionCountInput = element('suggestionCountInput'); const ratingQuestionable = element('rating-questionable'); const ratingGeneral = element('rating-general'); const ratingSafe = element('rating-safe'); if (!tagCategorizer) return; const QUESTIONABLE_KEYWORDS = ['bikini', 'swimsuit', 'cleavage', 'breasts', 'ass', 'thighs', 'pantyhose', 'leotard', 'garter_belt', 'panty_shot', 'sideboob', 'topless', 'bra', 'panties', 'lingerie', 'seductive', 'bondage', 'shibari', 'partially_nude', 'armpits', 'bottomless']; const EXPLICIT_KEYWORDS = ['pussy', 'penis', 'sex', 'oral', 'ahegao', 'nude', 'naked', 'cum', 'masturbation', 'fellatio', 'cunnilingus', 'prolapse']; const numToSuggest = parseInt(suggestionCountInput.value, 10); const existingTags = new Set(baseTags.map(t => t.original.toLowerCase().replace(/ /g, '_'))); const isAllowed = (tag) => { if (EXPLICIT_KEYWORDS.some(kw => tag.includes(kw))) return false; if (!ratingQuestionable.checked && QUESTIONABLE_KEYWORDS.some(kw => tag.includes(kw))) return false; if (!ratingGeneral.checked && !ratingSafe.checked && !ratingQuestionable.checked) return false; return true; }; const suggestions = new Set(), categoryPools = {}; TAG_DATABASE.forEach(tag => { const { category } = tagCategorizer.categorize(tag); if (!categoryPools[category]) categoryPools[category] = []; if (!existingTags.has(tag) && isAllowed(tag)) categoryPools[category].push(tag); }); const plan = (existingTags.size === 0) ? [ { name: 'Quality', count: 1 }, { name: 'Composition', count: 2 }, { name: 'Characters', count: 1 }, { name: 'Face', count: 2 }, { name: 'Eyes', count: 1 }, { name: 'Hair', count: 2 } ] : Object.entries(baseTags.reduce((acc, tag) => { acc[tag.category] = (acc[tag.category] || 0) + 1; return acc; }, {})).map(([name, count]) => ({name, count})); let suggestionsNeeded = numToSuggest; while(suggestionsNeeded > 0) { let madeSuggestion = false; for(const p of plan) { if(suggestionsNeeded <= 0) break; const pool = categoryPools[p.name] || []; for(let i=0; i < p.count; ++i) { if(pool.length > 0) { const [suggestion] = pool.splice(Math.floor(Math.random() * pool.length), 1); if(suggestion && !suggestions.has(suggestion)) { suggestions.add(suggestion); suggestionsNeeded--; madeSuggestion = true; } } } } if(!madeSuggestion) break; } const suggestionsToAdd = [...suggestions]; if (suggestionsToAdd.length > 0) { const separator = tagInput.value.trim().length > 0 && !tagInput.value.trim().endsWith(',') ? ', ' : ''; tagInput.value += separator + suggestionsToAdd.join(', ').replace(/_/g, ' '); processAll(); } }
 
-    // --- INITIALIZATION ---
     document.addEventListener('DOMContentLoaded', async () => {
         await loadExternalData();
-        const inputsForProcessing = [tagInput, swapsInput, implicationsInput, blacklistInput, triggerInput, appendInput, maxTagsInput];
-        inputsForProcessing.forEach(input => input.addEventListener('input', processAll));
-        const inputsForDisplay = [deduplicateToggle, underscoreToggle, enableWeightingToggle, sortSelect];
-        inputsForDisplay.forEach(input => input.addEventListener('change', displayTags));
-        tagInput.addEventListener('keyup', handleAutocomplete);
-        tagInput.addEventListener('keydown', handleAutocomplete);
-        tagInput.addEventListener('blur', () => setTimeout(hideAutocomplete, 150));
+        const allInputs = document.querySelectorAll('input, textarea, select');
+        allInputs.forEach(input => {
+            if (input.id.startsWith('rating-') || input.id === 'suggestionCountInput' || input.id === 'suggest-btn') return;
+            const handler = (input.tagName === 'SELECT' || input.type === 'checkbox') ? displayTags : processAll;
+            input.addEventListener('change', handler);
+            if (input.tagName !== 'SELECT' && input.type !== 'checkbox') {
+                input.addEventListener('input', processAll);
+            }
+        });
+        const autocompleteBox = element('autocomplete-box');
+        tagInput.addEventListener('keyup', (e) => handleAutocomplete(e));
+        tagInput.addEventListener('keydown', (e) => handleAutocomplete(e));
+        tagInput.addEventListener('blur', () => setTimeout(() => hideAutocomplete(), 150));
         copyButton.addEventListener('click', copyTagsToClipboard);
-        suggestBtn.addEventListener('click', suggestCoherentTags);
-        themeButtons.forEach(btn => btn.addEventListener('click', () => applyTheme(btn.dataset.theme)));
+        element('suggest-btn').addEventListener('click', suggestCoherentTags);
+        document.querySelectorAll('.theme-button').forEach(btn => btn.addEventListener('click', () => applyTheme(btn.dataset.theme)));
         const savedTheme = localStorage.getItem('danbooru-tag-helper-theme') || 'theme-indigo';
         const savedHistory = localStorage.getItem('danbooru-tag-history');
         if (savedHistory) copyHistory = JSON.parse(savedHistory);
         applyTheme(savedTheme);
         processAll();
-        updateCopyHistory();
+        updateCopyHistory(null);
     });
     </script>
 </body>
