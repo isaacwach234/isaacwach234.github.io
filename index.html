@@ -42,19 +42,28 @@
 </head>
 <body class="p-4 md:p-8">
     <div class="main-container max-w-7xl mx-auto p-8 rounded-xl shadow-2xl relative">
-        <!-- HTML is unchanged -->
+        <!-- HTML layout is unchanged -->
         <div class="absolute top-4 right-4 flex items-center gap-2"> <button class="theme-button bg-indigo-600" data-theme="theme-indigo" title="Indigo Theme"></button> <button class="theme-button bg-blue-600" data-theme="theme-blue" title="Blue Theme"></button> <button class="theme-button bg-teal-600" data-theme="theme-teal" title="Teal Theme"></button> <button class="theme-button bg-red-600" data-theme="theme-crimson" title="Crimson Theme"></button> </div> <h1 class="text-3xl font-bold mb-4 text-gray-100 text-center">Danbooru Tag Helper</h1> <div class="flex justify-center items-center gap-6 mb-8 text-sm text-gray-300"> <div class="flex items-center gap-2"> <label for="suggestionCountInput">Suggest:</label> <input type="number" id="suggestionCountInput" value="15" min="5" max="50" class="input-base text-sm w-20"> <button id="suggest-btn" class="px-3 py-1 font-semibold rounded-md text-white" style="background-color: var(--accent-color); transition: background-color 0.2s;" onmouseover="this.style.backgroundColor=getComputedStyle(this).getPropertyValue('--accent-color-hover')" onmouseout="this.style.backgroundColor=getComputedStyle(this).getPropertyValue('--accent-color')">Go</button> </div> <div class="flex items-center gap-4" id="suggestion-ratings"> <span>Ratings:</span> <div class="flex items-center"><input type="checkbox" id="rating-safe" class="checkbox-base" checked><label for="rating-safe" class="ml-2 cursor-pointer">Safe</label></div> <div class="flex items-center"><input type="checkbox" id="rating-general" class="checkbox-base" checked><label for="rating-general" class="ml-2 cursor-pointer">General</label></div> <div class="flex items-center"><input type="checkbox" id="rating-questionable" class="checkbox-base"><label for="rating-questionable" class="ml-2 cursor-pointer">Questionable</label></div> </div> </div> <div class="grid grid-cols-1 lg:grid-cols-12 gap-8"> <div class="lg:col-span-4 space-y-4"> <div> <label for="tagInput" class="block text-sm font-medium text-gray-300 mb-2">Enter Tags</label> <div class="relative"> <textarea id="tagInput" rows="6" class="w-full input-base" placeholder="1girl, solo, masterpiece, black background..."></textarea> <div id="autocomplete-box" class="w-full"></div> </div> </div> <div class="grid grid-cols-2 gap-4"> <div> <label class="block text-sm font-medium text-gray-300 mb-2">Prepend</label> <input type="text" id="triggerInput" class="w-full input-base" placeholder="best quality..."> </div> <div> <label class="block text-sm font-medium text-gray-300 mb-2">Append</label> <input type="text" id="appendInput" class="w-full input-base" placeholder="style_name..."> </div> </div> <div> <label for="swapsInput" class="block text-sm font-medium text-gray-300 mb-2">Aliases / Swaps</label> <textarea id="swapsInput" rows="3" class="w-full input-base" placeholder="girl -> 1girl, boobs -> large_breasts"></textarea> </div> <div> <label for="implicationsInput" class="block text-sm font-medium text-gray-300 mb-2">Implications</label> <textarea id="implicationsInput" rows="3" class="w-full input-base" placeholder="1girl => backlighting"></textarea> </div> <div> <label for="blacklistInput" class="block text-sm font-medium text-gray-300 mb-2">Blacklist</label> <textarea id="blacklistInput" rows="2" class="w-full input-base" placeholder="bad_anatomy, blurry, text"></textarea> </div> </div> <div class="lg:col-span-5"> <div class="flex flex-wrap items-center justify-between gap-4 mb-4 p-4 bg-gray-900/50 rounded-lg border border-gray-700"> <div class="flex items-center gap-x-6 gap-y-2 flex-wrap"> <div class="flex items-center"> <input id="deduplicateToggle" type="checkbox" class="checkbox-base" checked> <label for="deduplicateToggle" class="ml-2 block text-sm text-gray-300 cursor-pointer">Deduplicate</label> </div> <div class="flex items-center"> <input id="underscoreToggle" type="checkbox" class="checkbox-base" checked> <label for="underscoreToggle" class="ml-2 block text-sm text-gray-300 cursor-pointer">Use_Underscores</label> </div> <div class="flex items-center"> <input id="enableWeightingToggle" type="checkbox" class="checkbox-base"> <label for="enableWeightingToggle" class="ml-2 block text-sm text-gray-300 cursor-pointer">Enable Weighting</label> </div> </div> <div class="flex items-center gap-x-4"> <select id="sortSelect" class="input-base text-sm"> <option value="danbooru" selected>Sort: Danbooru</option> <option value="manual">Sort: Manual</option> <option value="none">Sort: None</option> <option value="az">Sort: A-Z</option> <option value="za">Sort: Z-A</option> </select> <input type="number" id="maxTagsInput" value="75" min="1" max="500" class="input-base text-sm w-20" aria-label="Maximum Tags"> </div> </div> <div> <div class="flex justify-between items-center mb-2"> <h2 id="processedTagsLabel" class="text-lg font-semibold text-gray-200"> Processed Tags (<span id="tagCount">0</span>/<span id="maxTagCount">75</span>) </h2> </div> <div id="tagOutput" class="p-4 bg-gray-900/50 border border-gray-700 rounded-lg min-h-[400px] space-y-4"> </div> </div> <div class="mt-4"> <button id="copyButton" class="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white disabled:opacity-50 disabled:cursor-not-allowed" style="background-color: var(--accent-color);"> Copy All Tags </button> <p id="copyMessage" class="text-sm text-green-400 mt-2 h-5 text-center"></p> </div> </div> <div class="lg:col-span-3"> <h3 class="text-lg font-semibold tracking-wide text-gray-200 mb-4">Copy History</h3> <div id="history-container" class="space-y-2"> <p class="text-sm text-gray-500 italic">No history yet.</p> </div> </div> </div>
     </div>
     
     <script>
+    // --- SCRIPT SCOPE VARIABLES ---
     const GITHUB_USER = 'isaacwach234';
     const GITHUB_REPO = 'isaacwach234.github.io';
-
+    
     let TAG_DATABASE = [], gitHubPat = null, tagCategorizer, tagIdCounter = 0;
+    let baseTags = [], copyHistory = [], selectedTagIds = new Set(), sortableInstances = [];
+    let autocomplete = { active: false, index: -1, currentWord: '', suggestions: [] };
+    
+    // --- DOM ELEMENT CONSTANTS (defined once) ---
     const element = (id) => document.getElementById(id);
-    const body = document.body, tagInput = element('tagInput'), swapsInput = element('swapsInput'), implicationsInput = element('implicationsInput'), blacklistInput = element('blacklistInput'), triggerInput = element('triggerInput'), appendInput = element('appendInput');
-    const sortSelect = element('sortSelect'), tagOutput = element('tagOutput'), processedTagsLabel = element('processedTagsLabel'), copyButton = element('copyButton'), copyMessage = element('copyMessage');
-    let baseTags = [], selectedTagIds = new Set(), sortableInstances = [];
+    const body = document.body;
+    const tagInput = element('tagInput'), swapsInput = element('swapsInput'), implicationsInput = element('implicationsInput'), blacklistInput = element('blacklistInput'), triggerInput = element('triggerInput'), appendInput = element('appendInput');
+    const deduplicateToggle = element('deduplicateToggle'), underscoreToggle = element('underscoreToggle'), enableWeightingToggle = element('enableWeightingToggle');
+    const sortSelect = element('sortSelect'), maxTagsInput = element('maxTagsInput'), tagOutput = element('tagOutput'), processedTagsLabel = element('processedTagsLabel');
+    const copyButton = element('copyButton'), copyMessage = element('copyMessage'), historyContainer = element('history-container'), autocompleteBox = element('autocomplete-box');
+    const suggestBtn = element('suggest-btn'), themeButtons = document.querySelectorAll('.theme-button'), suggestionCountInput = element('suggestionCountInput');
+    const ratingSafe = element('rating-safe'), ratingGeneral = element('rating-general'), ratingQuestionable = element('rating-questionable');
 
     class TagCategorizer {
         constructor(tagMap, allTags, categoryOrder) {
@@ -73,30 +82,24 @@
 
         categorize(tagString) {
             const tag = tagString.toLowerCase().replace(/ /g, '_');
-            
-            // **FIXED LOGIC**: Priority 1: Check for Character tags FIRST.
-            if (tag.includes('(') && tag.includes(')')) {
-                return { category: 'Characters', source: 'Heuristic' };
-            }
-            if (this.primaryIndex[tag]) {
-                return { category: this.primaryIndex[tag], source: 'Primary' };
-            }
+            // **FIXED LOGIC**: Priority 1: Character Heuristic (Override)
+            if (tag.includes('(') && tag.includes(')')) return { category: 'Characters', source: 'Heuristic' };
+            // Priority 2: Primary Index (includes runtime updates)
+            if (this.primaryIndex[tag]) return { category: this.primaryIndex[tag], source: 'Primary' };
+            // Priority 3: Pattern Index
             for (const suffix in this.patternIndex.ends) if (tag.endsWith(suffix)) return { category: this.patternIndex.ends[suffix], source: 'Pattern' };
+            // Priority 4: Keyword Index
             const words = tag.split('_'), categoryScores = {};
             words.forEach(word => { if (this.keywordIndex[word]) categoryScores[this.keywordIndex[word]] = (categoryScores[this.keywordIndex[word]] || 0) + 1; });
             if (Object.keys(categoryScores).length > 0) return { category: Object.keys(categoryScores).reduce((a, b) => categoryScores[a] > categoryScores[b] ? a : b), source: 'Heuristic' };
+            // Fallback
             return { category: 'Other', source: 'Fallback' };
         }
     }
     
-    // **FIXED LOGIC**: This function is rewritten to be stateless and robust.
+    // **FIXED LOGIC**: This function is robust and stateless.
     function processAll() {
         if (!tagCategorizer) return;
-        const deduplicateToggle = element('deduplicateToggle');
-        const maxTagsInput = element('maxTagsInput');
-        const enableWeightingToggle = element('enableWeightingToggle');
-
-        // 1. Get a clean list of tags from the input, applying all text-based rules.
         const swaps = new Map(swapsInput.value.split(',').map(s => s.split('->').map(p => p.trim())).filter(p => p.length === 2 && p[0]));
         const implications = new Map(implicationsInput.value.split(',').map(s => s.split('=>').map(p => p.trim())).filter(p => p.length === 2 && p[0]));
         const blacklist = new Set(blacklistInput.value.replace(/[\n\s]+/g, ',').split(',').map(w => w.trim().toLowerCase()).filter(Boolean));
@@ -110,13 +113,10 @@
             rawTags = rawTags.filter(tag => { const lower = tag.toLowerCase().replace(/_/g, ' '); if (seen.has(lower)) return false; seen.add(lower); return true; });
         }
         let filteredTags = rawTags.filter(tag => ![...blacklist].some(b => tag.toLowerCase().includes(b)));
-        const maxTags = parseInt(maxTagsInput.value, 10) || 75;
-        filteredTags = filteredTags.slice(0, maxTags);
+        filteredTags = filteredTags.slice(0, parseInt(maxTagsInput.value, 10) || 75);
 
-        // 2. Create the new `baseTags` array from scratch every time.
         const newBaseTags = [];
         const oldTagsMeta = new Map(baseTags.map(t => [t.original, { id: t.id, weighted: t.weighted }]));
-
         for (const tag of filteredTags) {
             const { category, source } = tagCategorizer.categorize(tag);
             const oldMeta = oldTagsMeta.get(tag);
@@ -134,7 +134,6 @@
     }
 
     function displayTags() {
-        const maxTagsInput = element('maxTagsInput');
         processedTagsLabel.querySelector('#tagCount').textContent = baseTags.length;
         processedTagsLabel.querySelector('#maxTagCount').textContent = maxTagsInput.value;
         tagOutput.innerHTML = '';
@@ -171,102 +170,51 @@
         initSortable();
     }
     
-    function createTagElement(tag) { const el = document.createElement('div'); const underscoreToggle = element('underscoreToggle'); const enableWeightingToggle = element('enableWeightingToggle'); el.className = 'tag-base processed-tag'; if (selectedTagIds.has(tag.id)) el.classList.add('selected'); el.dataset.id = tag.id; el.style.borderStyle = tag.categorySource !== 'Primary' ? 'dashed' : 'solid'; el.title = `(${tag.categorySource}) ${tag.original}\nCategory: ${tag.category}\n\nCtrl+Click to multi-select.\nRight-click for options.`; const useUnderscores = underscoreToggle.checked; const displayTag = useUnderscores ? tag.weighted.replace(/\s/g, '_') : tag.weighted.replace(/_/g, ' '); if (enableWeightingToggle.checked) { el.innerHTML = `<button class="tag-weight-btn" onclick="updateTagWeight('${tag.id}','decrease')">-</button><span class="tag-text px-1">${displayTag}</span><button class="tag-weight-btn" onclick="updateTagWeight('${tag.id}','increase')">+</button>`; } else { el.innerHTML = `<span class="tag-text">${displayTag}</span>`; } el.addEventListener('click', (e) => handleTagClick(e, tag.id)); el.addEventListener('contextmenu', (e) => { e.preventDefault(); showCorrectionMenu(e, tag); }); return el; }
+    function createTagElement(tag) { const el = document.createElement('div'); el.className = 'tag-base processed-tag'; if (selectedTagIds.has(tag.id)) el.classList.add('selected'); el.dataset.id = tag.id; el.style.borderStyle = tag.categorySource !== 'Primary' ? 'dashed' : 'solid'; el.title = `(${tag.categorySource}) ${tag.original}\nCategory: ${tag.category}\n\nCtrl+Click to multi-select.\nRight-click for options.`; const useUnderscores = underscoreToggle.checked; const displayTag = useUnderscores ? tag.weighted.replace(/\s/g, '_') : tag.weighted.replace(/_/g, ' '); if (enableWeightingToggle.checked) { el.innerHTML = `<button class="tag-weight-btn" onclick="updateTagWeight('${tag.id}','decrease')">-</button><span class="tag-text px-1">${displayTag}</span><button class="tag-weight-btn" onclick="updateTagWeight('${tag.id}','increase')">+</button>`; } else { el.innerHTML = `<span class="tag-text">${displayTag}</span>`; } el.addEventListener('click', (e) => handleTagClick(e, tag.id)); el.addEventListener('contextmenu', (e) => { e.preventDefault(); showCorrectionMenu(e, tag); }); return el; }
     function handleTagClick(event, tagId) { const tagElement = event.currentTarget; if (event.ctrlKey || event.metaKey) { if (selectedTagIds.has(tagId)) { selectedTagIds.delete(tagId); tagElement.classList.remove('selected'); } else { selectedTagIds.add(tagId); tagElement.classList.add('selected'); } } else { document.querySelectorAll('.tag-base.selected').forEach(el => el.classList.remove('selected')); selectedTagIds.clear(); selectedTagIds.add(tagId); tagElement.classList.add('selected'); } }
     function showCorrectionMenu(event, clickedTag) { const menuId = 'correction-menu'; document.getElementById(menuId)?.remove(); if (selectedTagIds.size === 0 || !selectedTagIds.has(clickedTag.id)) { selectedTagIds.clear(); document.querySelectorAll('.tag-base.selected').forEach(el => el.classList.remove('selected')); selectedTagIds.add(clickedTag.id); document.querySelector(`[data-id="${clickedTag.id}"]`)?.classList.add('selected'); } const menu = document.createElement('div'); menu.id = menuId; menu.className = 'absolute z-20 bg-gray-800 border border-gray-600 rounded-md shadow-lg py-1 text-sm'; menu.style.left = `${event.pageX}px`; menu.style.top = `${event.pageY}px`; let title = selectedTagIds.size > 1 ? `Correct ${selectedTagIds.size} Tags` : `Correct '${clickedTag.original}'`; let menuHTML = `<div class="px-3 py-1 text-gray-400 border-b border-gray-700">${title}</div>`; tagCategorizer.categories.forEach(cat => { menuHTML += `<a href="#" class="block px-3 py-1 text-gray-200 hover:bg-indigo-600" onclick="submitCategoryUpdate(event,'${cat}')">${cat}</a>`; }); menu.innerHTML = menuHTML; document.body.appendChild(menu); document.addEventListener('click', () => menu.remove(), { once: true }); }
-
-    async function submitCategoryUpdate(event, newCategory) {
-        event.preventDefault();
-        if (!gitHubPat) {
-            gitHubPat = prompt("Please enter your GitHub Personal Access Token (PAT) with `public_repo` scope.", "");
-            if (!gitHubPat) { copyMessage.textContent = 'Submission cancelled.'; setTimeout(() => copyMessage.textContent = '', 3000); return; }
-        }
-        const tagsToUpdate = baseTags.filter(t => selectedTagIds.has(t.id));
-        if (tagsToUpdate.length === 0) return;
-        copyMessage.textContent = `Submitting issue for ${tagsToUpdate.length} tag(s)...`;
-        const title = `[Auto-Submission] Category Update for ${tagsToUpdate.length} Tag(s)`;
-        let body = `**User suggests moving the following tags to the '${newCategory}' category:**\n\n${tagsToUpdate.map(t=>`- \`${t.original}\` (from \`${t.category}\`)`).join('\n')}\n\n---\n*This issue was submitted by the Tag Helper Copilot.*`;
-        try {
-            const response = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/issues`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${gitHubPat}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, body }),
-            });
-            if (!response.ok) { const errorData = await response.json(); throw new Error(`GitHub API Error: ${errorData.message}`); }
-            const issueData = await response.json();
-            copyMessage.textContent = `Success! Issue #${issueData.number} created.`;
-            tagsToUpdate.forEach(tag => tagCategorizer.updateIndex(tag.original, newCategory));
-            selectedTagIds.clear();
-            processAll(); // Re-process all tags with the updated knowledge
-        } catch (error) {
-            console.error("Failed to submit GitHub issue:", error);
-            copyMessage.textContent = `Error: ${error.message}`;
-            gitHubPat = null;
-        } finally {
-            setTimeout(() => copyMessage.textContent = '', 5000);
-        }
-    }
-
-    async function loadExternalData() {
-        document.title = 'Danbooru Tag Helper (Loading...)';
-        try {
-            const [tagsResponse, mapResponse] = await Promise.all([
-                fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/tags.json?t=${new Date().getTime()}`), 
-                fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/tag_map.json?t=${new Date().getTime()}`)
-            ]);
-            if (!tagsResponse.ok) throw new Error(`Failed to fetch tags.json: ${tagsResponse.statusText}`);
-            if (!mapResponse.ok) throw new Error(`Failed to fetch tag_map.json: ${mapResponse.statusText}`);
-            TAG_DATABASE = await tagsResponse.json();
-            const tagMap = await mapResponse.json();
-            const categoryOrder = ['Quality', 'Composition', 'Characters', 'Subject & Creatures', 'Face', 'Eyes', 'Hair', 'Body Parts', 'Attire', 'Accessories', 'Held Items & Objects', 'Actions & Poses', 'Setting & Environment', 'Style & Meta', 'Other'];
-            tagCategorizer = new TagCategorizer(tagMap, TAG_DATABASE, categoryOrder);
-            document.title = 'Danbooru Tag Helper (Ready)';
-        } catch (error) {
-            console.error("FATAL ERROR:", error);
-            document.title = 'Danbooru Tag Helper (ERROR)';
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'p-4 mb-4 text-sm text-red-200 bg-red-800/50 rounded-lg';
-            errorDiv.innerHTML = `<strong>Error loading data:</strong> ${error.message}. Please check the console (F12) for details.`;
-            document.querySelector('.main-container').prepend(errorDiv);
-        }
-    }
+    async function submitCategoryUpdate(event, newCategory) { event.preventDefault(); if (!gitHubPat) { gitHubPat = prompt("Please enter your GitHub Personal Access Token (PAT) with `public_repo` scope.", ""); if (!gitHubPat) { copyMessage.textContent = 'Submission cancelled.'; setTimeout(() => copyMessage.textContent = '', 3000); return; } } const tagsToUpdate = baseTags.filter(t => selectedTagIds.has(t.id)); if (tagsToUpdate.length === 0) return; copyMessage.textContent = `Submitting issue for ${tagsToUpdate.length} tag(s)...`; const title = `[Auto-Submission] Category Update for ${tagsToUpdate.length} Tag(s)`; let body = `**User suggests moving the following tags to the '${newCategory}' category:**\n\n${tagsToUpdate.map(t=>`- \`${t.original}\` (from \`${t.category}\`)`).join('\n')}\n\n---\n*This issue was submitted by the Tag Helper Copilot.*`; try { const response = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/issues`, { method: 'POST', headers: { 'Authorization': `Bearer ${gitHubPat}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' }, body: JSON.stringify({ title, body }), }); if (!response.ok) { const errorData = await response.json(); throw new Error(`GitHub API Error: ${errorData.message}`); } const issueData = await response.json(); copyMessage.textContent = `Success! Issue #${issueData.number} created.`; tagsToUpdate.forEach(tag => tagCategorizer.updateIndex(tag.original, newCategory)); selectedTagIds.clear(); processAll(); } catch (error) { console.error("Failed to submit GitHub issue:", error); copyMessage.textContent = `Error: ${error.message}`; gitHubPat = null; } finally { setTimeout(() => copyMessage.textContent = '', 5000); } }
+    async function loadExternalData() { document.title = 'Danbooru Tag Helper (Loading...)'; try { const [tagsResponse, mapResponse] = await Promise.all([ fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/tags.json?t=${new Date().getTime()}`), fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/tag_map.json?t=${new Date().getTime()}`) ]); if (!tagsResponse.ok) throw new Error(`Failed to fetch tags.json: ${tagsResponse.statusText}`); if (!mapResponse.ok) throw new Error(`Failed to fetch tag_map.json: ${mapResponse.statusText}`); TAG_DATABASE = await tagsResponse.json(); const tagMap = await mapResponse.json(); const categoryOrder = ['Quality', 'Composition', 'Characters', 'Subject & Creatures', 'Face', 'Eyes', 'Hair', 'Body Parts', 'Attire', 'Accessories', 'Held Items & Objects', 'Actions & Poses', 'Setting & Environment', 'Style & Meta', 'Other']; tagCategorizer = new TagCategorizer(tagMap, TAG_DATABASE, categoryOrder); document.title = 'Danbooru Tag Helper (Ready)'; } catch (error) { console.error("FATAL ERROR:", error); document.title = 'Danbooru Tag Helper (ERROR)'; const errorDiv = document.createElement('div'); errorDiv.className = 'p-4 mb-4 text-sm text-red-200 bg-red-800/50 rounded-lg'; errorDiv.innerHTML = `<strong>Error loading data:</strong> ${error.message}. Please check the console (F12) for details.`; document.querySelector('.main-container').prepend(errorDiv); } }
+    function copyTagsToClipboard() { const processed = baseTags.map(tag => (underscoreToggle.checked ? tag.weighted.replace(/\s/g, '_') : tag.weighted.replace(/_/g, ' '))); const finalString = [...triggerInput.value.split(',').map(t => t.trim()).filter(Boolean), ...processed, ...appendInput.value.split(',').map(t => t.trim()).filter(Boolean)].join(', '); navigator.clipboard.writeText(finalString).then(() => { copyMessage.textContent = 'Tags copied!'; updateCopyHistory(finalString); setTimeout(() => copyMessage.textContent = '', 2000); }).catch(err => { copyMessage.textContent = 'Copy failed!'; console.error("Clipboard write failed: ", err); }); }
 
     // --- All other utility functions (unchanged) ---
     window.updateTagWeight = (id, action) => { const tag = baseTags.find(t => t.id === id); if (!tag) return; let current = tag.weighted, original = tag.original; if (action === 'increase') { if (current.startsWith('((')) current = `(((${original})))`; else if (current.startsWith('(')) current = `((${original}))`; else if (current.startsWith('[')) current = original; else current = `(${original})`; } else { if (current.startsWith('[[')) current = `[[[${original}]]]`; else if (current.startsWith('[')) current = `[[${original}]]`; else if (current.startsWith('(')) current = original; else current = `[${original}]`; } tag.weighted = current; displayTags(); };
     function initSortable() { if (sortableInstances.length) sortableInstances.forEach(s => s.destroy()); sortableInstances = []; tagOutput.querySelectorAll('.tag-group-container').forEach(container => { sortableInstances.push(new Sortable(container, { group: 'shared', animation: 150, ghostClass: 'opacity-50', onEnd: () => { sortSelect.value = 'manual'; const allTagElements = Array.from(tagOutput.querySelectorAll('.tag-base')); baseTags = allTagElements.map(el => baseTags.find(t => t.id === el.dataset.id)).filter(Boolean); }, })); }); }
-    function handleAutocomplete(e) { const autocompleteBox = element('autocomplete-box'); if (!tagCategorizer) return; const text = tagInput.value, cursorPos = tagInput.selectionStart; const lastComma = text.lastIndexOf(',', cursorPos - 1); autocomplete.currentWord = text.substring(lastComma + 1, cursorPos).trim(); const items = autocompleteBox.children; if (autocomplete.active && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === 'Tab')) { e.preventDefault(); if (e.key === 'Enter' || e.key === 'Tab') { if (autocomplete.index > -1 && items[autocomplete.index]) { selectAutocompleteItem(items[autocomplete.index].dataset.tag); } return; } items[autocomplete.index]?.classList.remove('selected'); if (e.key === 'ArrowDown') autocomplete.index = (autocomplete.index + 1) % items.length; if (e.key === 'ArrowUp') autocomplete.index = (autocomplete.index - 1 + items.length) % items.length; items[autocomplete.index]?.classList.add('selected'); return; } if (!autocomplete.currentWord) { hideAutocomplete(); return; } autocomplete.suggestions = TAG_DATABASE.filter(t => t.startsWith(autocomplete.currentWord.replace(/ /g, '_'))).slice(0, 5); if (autocomplete.suggestions.length > 0) { renderAutocomplete(); } else { hideAutocomplete(); } }
-    function renderAutocomplete() { const autocompleteBox = element('autocomplete-box'); autocompleteBox.innerHTML = autocomplete.suggestions.map((s) => `<div class="autocomplete-item p-2 cursor-pointer" data-tag="${s}" onmousedown="selectAutocompleteItem('${s}')">${s.replace(/_/g, ' ')}</div>`).join(''); autocomplete.active = true; autocomplete.index = -1; autocompleteBox.style.display = 'block'; }
+    function handleAutocomplete(e) { if (!tagCategorizer) return; const text = tagInput.value, cursorPos = tagInput.selectionStart; const lastComma = text.lastIndexOf(',', cursorPos - 1); autocomplete.currentWord = text.substring(lastComma + 1, cursorPos).trim(); const items = autocompleteBox.children; if (autocomplete.active && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === 'Tab')) { e.preventDefault(); if (e.key === 'Enter' || e.key === 'Tab') { if (autocomplete.index > -1 && items[autocomplete.index]) { selectAutocompleteItem(items[autocomplete.index].dataset.tag); } return; } items[autocomplete.index]?.classList.remove('selected'); if (e.key === 'ArrowDown') autocomplete.index = (autocomplete.index + 1) % items.length; if (e.key === 'ArrowUp') autocomplete.index = (autocomplete.index - 1 + items.length) % items.length; items[autocomplete.index]?.classList.add('selected'); return; } if (!autocomplete.currentWord) { hideAutocomplete(); return; } autocomplete.suggestions = TAG_DATABASE.filter(t => t.startsWith(autocomplete.currentWord.replace(/ /g, '_'))).slice(0, 5); if (autocomplete.suggestions.length > 0) { renderAutocomplete(); } else { hideAutocomplete(); } }
+    function renderAutocomplete() { autocompleteBox.innerHTML = autocomplete.suggestions.map((s) => `<div class="autocomplete-item p-2 cursor-pointer" data-tag="${s}" onmousedown="selectAutocompleteItem('${s}')">${s.replace(/_/g, ' ')}</div>`).join(''); autocomplete.active = true; autocomplete.index = -1; autocompleteBox.style.display = 'block'; }
     window.selectAutocompleteItem = (tag) => { const text = tagInput.value, cursorPos = tagInput.selectionStart; const lastComma = text.lastIndexOf(',', cursorPos - 1); const before = text.substring(0, lastComma + 1); tagInput.value = `${before} ${tag.replace(/_/g, ' ')}, ${text.substring(cursorPos)}`; hideAutocomplete(); tagInput.focus(); processAll(); };
-    function hideAutocomplete() { const autocompleteBox = element('autocomplete-box'); autocomplete.active = false; autocompleteBox.style.display = 'none'; }
-    function copyTagsToClipboard() { const underscoreToggle = element('underscoreToggle'); const triggers = triggerInput.value.split(',').map(t => t.trim()).filter(Boolean); const appends = appendInput.value.split(',').map(t => t.trim()).filter(Boolean); const processed = baseTags.map(tag => (underscoreToggle.checked ? tag.weighted.replace(/\s/g, '_') : tag.weighted.replace(/_/g, ' '))); const finalString = [...triggers, ...processed, ...appends].join(', '); navigator.clipboard.writeText(finalString).then(() => { copyMessage.textContent = 'Tags copied!'; updateCopyHistory(finalString); setTimeout(() => copyMessage.textContent = '', 2000); }).catch(err => copyMessage.textContent = 'Copy failed!'); }
-    function updateCopyHistory(text) { const historyContainer = element('history-container'); if(text){ copyHistory.unshift(text); if (copyHistory.length > 10) copyHistory.pop(); localStorage.setItem('danbooru-tag-history', JSON.stringify(copyHistory)); } historyContainer.innerHTML = ''; if (copyHistory.length === 0) { historyContainer.innerHTML = `<p class="text-sm text-gray-500 italic">No history yet.</p>`; return; } copyHistory.forEach(item => { const el = document.createElement('div'); el.className = 'history-item p-2 rounded-md flex items-center justify-between gap-2'; el.innerHTML = `<span class="history-item-text text-gray-400 text-xs flex-grow overflow-hidden whitespace-nowrap text-ellipsis">${item}</span><button class="copy-btn-sm p-1 rounded" onclick="navigator.clipboard.writeText(\`${item.replace(/`/g, '\\`')}\`)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-300"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>`; historyContainer.appendChild(el); }); }
-    function applyTheme(theme) { const themeButtons = document.querySelectorAll('.theme-button'); document.documentElement.className = 'dark'; body.className = `p-4 md:p-8 ${theme}`; themeButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.theme === theme)); localStorage.setItem('danbooru-tag-helper-theme', theme); }
-    function suggestCoherentTags() { const suggestionCountInput = element('suggestionCountInput'); const ratingQuestionable = element('rating-questionable'); const ratingGeneral = element('rating-general'); const ratingSafe = element('rating-safe'); if (!tagCategorizer) return; const QUESTIONABLE_KEYWORDS = ['bikini', 'swimsuit', 'cleavage', 'breasts', 'ass', 'thighs', 'pantyhose', 'leotard', 'garter_belt', 'panty_shot', 'sideboob', 'topless', 'bra', 'panties', 'lingerie', 'seductive', 'bondage', 'shibari', 'partially_nude', 'armpits', 'bottomless']; const EXPLICIT_KEYWORDS = ['pussy', 'penis', 'sex', 'oral', 'ahegao', 'nude', 'naked', 'cum', 'masturbation', 'fellatio', 'cunnilingus', 'prolapse']; const numToSuggest = parseInt(suggestionCountInput.value, 10); const existingTags = new Set(baseTags.map(t => t.original.toLowerCase().replace(/ /g, '_'))); const isAllowed = (tag) => { if (EXPLICIT_KEYWORDS.some(kw => tag.includes(kw))) return false; if (!ratingQuestionable.checked && QUESTIONABLE_KEYWORDS.some(kw => tag.includes(kw))) return false; if (!ratingGeneral.checked && !ratingSafe.checked && !ratingQuestionable.checked) return false; return true; }; const suggestions = new Set(), categoryPools = {}; TAG_DATABASE.forEach(tag => { const { category } = tagCategorizer.categorize(tag); if (!categoryPools[category]) categoryPools[category] = []; if (!existingTags.has(tag) && isAllowed(tag)) categoryPools[category].push(tag); }); const plan = (existingTags.size === 0) ? [ { name: 'Quality', count: 1 }, { name: 'Composition', count: 2 }, { name: 'Characters', count: 1 }, { name: 'Face', count: 2 }, { name: 'Eyes', count: 1 }, { name: 'Hair', count: 2 } ] : Object.entries(baseTags.reduce((acc, tag) => { acc[tag.category] = (acc[tag.category] || 0) + 1; return acc; }, {})).map(([name, count]) => ({name, count})); let suggestionsNeeded = numToSuggest; while(suggestionsNeeded > 0) { let madeSuggestion = false; for(const p of plan) { if(suggestionsNeeded <= 0) break; const pool = categoryPools[p.name] || []; for(let i=0; i < p.count; ++i) { if(pool.length > 0) { const [suggestion] = pool.splice(Math.floor(Math.random() * pool.length), 1); if(suggestion && !suggestions.has(suggestion)) { suggestions.add(suggestion); suggestionsNeeded--; madeSuggestion = true; } } } } if(!madeSuggestion) break; } const suggestionsToAdd = [...suggestions]; if (suggestionsToAdd.length > 0) { const separator = tagInput.value.trim().length > 0 && !tagInput.value.trim().endsWith(',') ? ', ' : ''; tagInput.value += separator + suggestionsToAdd.join(', ').replace(/_/g, ' '); processAll(); } }
+    function hideAutocomplete() { autocomplete.active = false; autocompleteBox.style.display = 'none'; }
+    function updateCopyHistory(text) { if(text){ copyHistory.unshift(text); if (copyHistory.length > 10) copyHistory.pop(); localStorage.setItem('danbooru-tag-history', JSON.stringify(copyHistory)); } historyContainer.innerHTML = ''; if (copyHistory.length === 0) { historyContainer.innerHTML = `<p class="text-sm text-gray-500 italic">No history yet.</p>`; return; } copyHistory.forEach(item => { const el = document.createElement('div'); el.className = 'history-item p-2 rounded-md flex items-center justify-between gap-2'; el.innerHTML = `<span class="history-item-text text-gray-400 text-xs flex-grow overflow-hidden whitespace-nowrap text-ellipsis">${item}</span><button class="copy-btn-sm p-1 rounded" onclick="navigator.clipboard.writeText(\`${item.replace(/`/g, '\\`')}\`)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-300"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>`; historyContainer.appendChild(el); }); }
+    function applyTheme(theme) { document.documentElement.className = 'dark'; body.className = `p-4 md:p-8 ${theme}`; themeButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.theme === theme)); localStorage.setItem('danbooru-tag-helper-theme', theme); }
+    function suggestCoherentTags() { if (!tagCategorizer) return; const QUESTIONABLE_KEYWORDS = ['bikini', 'swimsuit', 'cleavage', 'breasts', 'ass', 'thighs', 'pantyhose', 'leotard', 'garter_belt', 'panty_shot', 'sideboob', 'topless', 'bra', 'panties', 'lingerie', 'seductive', 'bondage', 'shibari', 'partially_nude', 'armpits', 'bottomless']; const EXPLICIT_KEYWORDS = ['pussy', 'penis', 'sex', 'oral', 'ahegao', 'nude', 'naked', 'cum', 'masturbation', 'fellatio', 'cunnilingus', 'prolapse']; const numToSuggest = parseInt(suggestionCountInput.value, 10); const existingTags = new Set(baseTags.map(t => t.original.toLowerCase().replace(/ /g, '_'))); const isAllowed = (tag) => { if (EXPLICIT_KEYWORDS.some(kw => tag.includes(kw))) return false; if (!ratingQuestionable.checked && QUESTIONABLE_KEYWORDS.some(kw => tag.includes(kw))) return false; if (!ratingGeneral.checked && !ratingSafe.checked && !ratingQuestionable.checked) return false; return true; }; const suggestions = new Set(), categoryPools = {}; TAG_DATABASE.forEach(tag => { const { category } = tagCategorizer.categorize(tag); if (!categoryPools[category]) categoryPools[category] = []; if (!existingTags.has(tag) && isAllowed(tag)) categoryPools[category].push(tag); }); const plan = (existingTags.size === 0) ? [ { name: 'Quality', count: 1 }, { name: 'Composition', count: 2 }, { name: 'Characters', count: 1 }, { name: 'Face', count: 2 }, { name: 'Eyes', count: 1 }, { name: 'Hair', count: 2 } ] : Object.entries(baseTags.reduce((acc, tag) => { acc[tag.category] = (acc[tag.category] || 0) + 1; return acc; }, {})).map(([name, count]) => ({name, count})); let suggestionsNeeded = numToSuggest; while(suggestionsNeeded > 0) { let madeSuggestion = false; for(const p of plan) { if(suggestionsNeeded <= 0) break; const pool = categoryPools[p.name] || []; for(let i=0; i < p.count; ++i) { if(pool.length > 0) { const [suggestion] = pool.splice(Math.floor(Math.random() * pool.length), 1); if(suggestion && !suggestions.has(suggestion)) { suggestions.add(suggestion); suggestionsNeeded--; madeSuggestion = true; } } } } if(!madeSuggestion) break; } const suggestionsToAdd = [...suggestions]; if (suggestionsToAdd.length > 0) { const separator = tagInput.value.trim().length > 0 && !tagInput.value.trim().endsWith(',') ? ', ' : ''; tagInput.value += separator + suggestionsToAdd.join(', ').replace(/_/g, ' '); processAll(); } }
 
+    // --- INITIALIZATION (Cleaned and Corrected) ---
     document.addEventListener('DOMContentLoaded', async () => {
         await loadExternalData();
-        const allInputs = document.querySelectorAll('input, textarea, select');
-        allInputs.forEach(input => {
-            if (input.id.startsWith('rating-') || input.id === 'suggestionCountInput' || input.id === 'suggest-btn') return;
-            const handler = (input.tagName === 'SELECT' || input.type === 'checkbox') ? displayTags : processAll;
-            input.addEventListener('change', handler);
-            if (input.tagName !== 'SELECT' && input.type !== 'checkbox') {
-                input.addEventListener('input', processAll);
-            }
-        });
-        const autocompleteBox = element('autocomplete-box');
-        tagInput.addEventListener('keyup', (e) => handleAutocomplete(e));
-        tagInput.addEventListener('keydown', (e) => handleAutocomplete(e));
-        tagInput.addEventListener('blur', () => setTimeout(() => hideAutocomplete(), 150));
+        
+        // Setup explicit event listeners
+        const inputsForProcessing = [tagInput, swapsInput, implicationsInput, blacklistInput, triggerInput, appendInput, maxTagsInput];
+        inputsForProcessing.forEach(input => input.addEventListener('input', processAll));
+        
+        const inputsForDisplay = [deduplicateToggle, underscoreToggle, enableWeightingToggle, sortSelect];
+        inputsForDisplay.forEach(input => input.addEventListener('change', displayTags));
+
+        tagInput.addEventListener('keyup', handleAutocomplete);
+        tagInput.addEventListener('keydown', handleAutocomplete);
+        tagInput.addEventListener('blur', () => setTimeout(hideAutocomplete, 150));
+        
         copyButton.addEventListener('click', copyTagsToClipboard);
-        element('suggest-btn').addEventListener('click', suggestCoherentTags);
-        document.querySelectorAll('.theme-button').forEach(btn => btn.addEventListener('click', () => applyTheme(btn.dataset.theme)));
+        suggestBtn.addEventListener('click', suggestCoherentTags);
+        themeButtons.forEach(btn => btn.addEventListener('click', () => applyTheme(btn.dataset.theme)));
+        
+        // Load settings and history
         const savedTheme = localStorage.getItem('danbooru-tag-helper-theme') || 'theme-indigo';
         const savedHistory = localStorage.getItem('danbooru-tag-history');
         if (savedHistory) copyHistory = JSON.parse(savedHistory);
+        
         applyTheme(savedTheme);
-        processAll();
-        updateCopyHistory(null);
+        processAll(); // Initial run
+        updateCopyHistory(null); // Initial render
     });
     </script>
 </body>
