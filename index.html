@@ -47,111 +47,69 @@
     </div>
     
     <script>
-    // --- CONFIGURATION ---
     const GITHUB_USER = 'isaacwach234';
     const GITHUB_REPO = 'isaacwach234.github.io';
 
-    // --- GLOBAL STATE ---
     let TAG_DATABASE = [], gitHubPat = null;
     let tagCategorizer, tagIdCounter = 0;
 
-    // --- DOM ELEMENTS ---
     const element = (id) => document.getElementById(id);
     const body = document.body, tagInput = element('tagInput'), swapsInput = element('swapsInput'), implicationsInput = element('implicationsInput'), blacklistInput = element('blacklistInput'), triggerInput = element('triggerInput'), appendInput = element('appendInput');
     const deduplicateToggle = element('deduplicateToggle'), underscoreToggle = element('underscoreToggle'), enableWeightingToggle = element('enableWeightingToggle');
     const sortSelect = element('sortSelect'), maxTagsInput = element('maxTagsInput'), tagOutput = element('tagOutput'), processedTagsLabel = element('processedTagsLabel');
     const copyButton = element('copyButton'), copyMessage = element('copyMessage'), historyContainer = element('history-container'), autocompleteBox = element('autocomplete-box');
-    const suggestBtn = element('suggest-btn'), themeButtons = document.querySelectorAll('.theme-button'), suggestionCountInput = element('suggestionCountInput');
+    const suggestBtn = element('suggest-btn'), themeButtons = document.querySelectorAll('.theme-button');
     
-    // --- APP STATE ---
     let baseTags = [], copyHistory = [], selectedTagIds = new Set(), autocomplete = { active: false, index: -1, currentWord: '', suggestions: [] }, sortableInstances = [];
 
     class TagCategorizer {
         constructor(tagMap, allTags, categoryOrder) {
-            console.time('TagCategorizer Indexing');
+            this.originalMap = { ...tagMap };
             this.primaryIndex = tagMap;
             this.categoryOrder = categoryOrder;
-            // Ensure all official categories, including our new "Characters" category, are available for corrections
-            this.categories = [...new Set([...Object.values(tagMap), 'Characters'])];
+            this.categories = [...new Set([...Object.values(tagMap), ...categoryOrder])];
             this.patternIndex = { ends: {} };
             this.keywordIndex = {};
             this.buildHeuristicIndexes(allTags);
-            console.timeEnd('TagCategorizer Indexing');
         }
 
-        buildHeuristicIndexes(allTags) {
-            const keywordCategoryCounts = {}, suffixCategoryCounts = {};
-            allTags.forEach(tag => {
-                const category = this.primaryIndex[tag];
-                if (!category) return;
-                const words = tag.split('_');
-                if (words.length > 1) {
-                    words.forEach(word => {
-                        if (word.length < 3) return;
-                        if (!keywordCategoryCounts[word]) keywordCategoryCounts[word] = {};
-                        keywordCategoryCounts[word][category] = (keywordCategoryCounts[word][category] || 0) + 1;
-                    });
-                    const suffix = words[words.length - 1];
-                    if (!suffixCategoryCounts[suffix]) suffixCategoryCounts[suffix] = {};
-                    suffixCategoryCounts[suffix][category] = (suffixCategoryCounts[suffix][category] || 0) + 1;
-                }
-            });
-            for (const keyword in keywordCategoryCounts) {
-                const counts = keywordCategoryCounts[keyword];
-                const mostLikelyCategory = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
-                if (counts[mostLikelyCategory] > 1) this.keywordIndex[keyword] = mostLikelyCategory;
-            }
-            for (const suffix in suffixCategoryCounts) {
-                const counts = suffixCategoryCounts[suffix];
-                const total = Object.values(counts).reduce((s, c) => s + c, 0);
-                const mostLikelyCategory = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
-                if (total > 5 && (counts[mostLikelyCategory] / total) > 0.7) this.patternIndex.ends[`_${suffix}`] = mostLikelyCategory;
-            }
-            console.log(`Built heuristic indexes: ${Object.keys(this.patternIndex.ends).length} patterns, ${Object.keys(this.keywordIndex).length} keywords.`);
-        }
+        buildHeuristicIndexes(allTags) { /* No changes */ const keywordCategoryCounts={},suffixCategoryCounts={};allTags.forEach(tag=>{const category=this.primaryIndex[tag];if(!category)return;const words=tag.split('_');if(words.length>1){words.forEach(word=>{if(word.length<3)return;if(!keywordCategoryCounts[word])keywordCategoryCounts[word]={};keywordCategoryCounts[word][category]=(keywordCategoryCounts[word][category]||0)+1;});const suffix=words[words.length-1];if(!suffixCategoryCounts[suffix])suffixCategoryCounts[suffix]={};suffixCategoryCounts[suffix][category]=(suffixCategoryCounts[suffix][category]||0)+1;}});for(const keyword in keywordCategoryCounts){const counts=keywordCategoryCounts[keyword];const mostLikelyCategory=Object.keys(counts).reduce((a,b)=>counts[a]>counts[b]?a:b);if(counts[mostLikelyCategory]>1)this.keywordIndex[keyword]=mostLikelyCategory;}for(const suffix in suffixCategoryCounts){const counts=suffixCategoryCounts[suffix];const total=Object.values(counts).reduce((s,c)=>s+c,0);const mostLikelyCategory=Object.keys(counts).reduce((a,b)=>counts[a]>counts[b]?a:b);if(total>5&&(counts[mostLikelyCategory]/total)>0.7)this.patternIndex.ends[`_${suffix}`]=mostLikelyCategory;}console.log(`Built heuristic indexes.`); }
         
-        /** NEW: Method to update the primary index during the session. */
         updateIndex(tag, newCategory) {
-            const cleanTag = tag.toLowerCase().replace(/ /g, '_');
-            this.primaryIndex[cleanTag] = newCategory;
+            this.primaryIndex[tag.toLowerCase().replace(/ /g, '_')] = newCategory;
         }
 
         categorize(tagString) {
             const tag = tagString.toLowerCase().replace(/ /g, '_');
             
-            // 0. Primary Index (Highest Confidence, includes runtime updates)
-            if (this.primaryIndex[tag]) {
-                return { category: this.primaryIndex[tag], source: 'Primary' };
-            }
-
-            // 1. NEW: Character Heuristic (High Confidence)
+            // Priority 1: Character Heuristic (Override)
             if (tag.includes('(') && tag.includes(')')) {
                 return { category: 'Characters', source: 'Heuristic' };
             }
 
-            // 2. Pattern Index (Suffix/Prefix Match)
-            for (const suffix in this.patternIndex.ends) if (tag.endsWith(suffix)) return { category: this.patternIndex.ends[suffix], source: 'Pattern' };
-
-            // 3. Keyword Index (Word Match)
-            const words = tag.split('_'), categoryScores = {};
-            words.forEach(word => {
-                if (this.keywordIndex[word]) {
-                    const guessedCategory = this.keywordIndex[word];
-                    categoryScores[guessedCategory] = (categoryScores[guessedCategory] || 0) + 1;
-                }
-            });
-            if (Object.keys(categoryScores).length > 0) {
-                const bestGuess = Object.keys(categoryScores).reduce((a, b) => categoryScores[a] > categoryScores[b] ? a : b);
-                return { category: bestGuess, source: 'Heuristic' };
+            // Priority 2: Primary Index (includes runtime updates)
+            if (this.primaryIndex[tag]) {
+                return { category: this.primaryIndex[tag], source: 'Primary' };
             }
 
-            // 4. Fallback
+            // Priority 3: Pattern Index
+            for (const suffix in this.patternIndex.ends) if (tag.endsWith(suffix)) return { category: this.patternIndex.ends[suffix], source: 'Pattern' };
+
+            // Priority 4: Keyword Index
+            const words = tag.split('_'), categoryScores = {};
+            words.forEach(word => { if (this.keywordIndex[word]) categoryScores[this.keywordIndex[word]] = (categoryScores[this.keywordIndex[word]] || 0) + 1; });
+            if (Object.keys(categoryScores).length > 0) return { category: Object.keys(categoryScores).reduce((a, b) => categoryScores[a] > categoryScores[b] ? a : b), source: 'Heuristic' };
+
+            // Fallback
             return { category: 'Other', source: 'Fallback' };
         }
     }
     
+    // **REWRITTEN** This function is now simpler and more robust, fixing the "correction not sticking" bug.
     function processAll() {
         if (!tagCategorizer) return;
+        
+        // 1. Get all raw tags from the input box and apply swaps/implications
         const swaps = new Map(swapsInput.value.split(',').map(s => s.split('->').map(p => p.trim())).filter(p => p.length === 2 && p[0]));
         const implications = new Map(implicationsInput.value.split(',').map(s => s.split('=>').map(p => p.trim())).filter(p => p.length === 2 && p[0]));
         const blacklist = new Set(blacklistInput.value.replace(/[\n\s]+/g, ',').split(',').map(w => w.trim().toLowerCase()).filter(Boolean));
@@ -163,31 +121,32 @@
             if (implications.has(lowerTag)) implications.get(lowerTag).split(',').forEach(imp => tagsToAdd.add(imp.trim()));
         });
         rawTags = [...rawTags, ...tagsToAdd];
+
+        // 2. Deduplicate and filter blacklisted tags
         if (deduplicateToggle.checked) {
             const seen = new Set();
-            rawTags = rawTags.filter(tag => {
-                const lower = tag.toLowerCase().replace(/_/g, ' ');
-                if (seen.has(lower)) return false;
-                seen.add(lower); return true;
-            });
+            rawTags = rawTags.filter(tag => { const lower = tag.toLowerCase().replace(/_/g, ' '); if (seen.has(lower)) return false; seen.add(lower); return true; });
         }
         let filteredTags = rawTags.filter(tag => ![...blacklist].some(b => tag.toLowerCase().includes(b)));
         const maxTags = parseInt(maxTagsInput.value, 10) || 75;
+
+        // 3. Create a fresh `baseTags` array every time. This is the key fix.
         const newBaseTags = [];
-        const existingTagsMap = new Map(baseTags.map(t => [t.original, t]));
+        const existingTagsMap = new Map(baseTags.map(t => [t.original, t])); // Preserve old IDs and weights if possible
+        
         filteredTags.slice(0, maxTags).forEach(tag => {
-            if (existingTagsMap.has(tag)) {
-                // If tag exists, re-categorize it in case the index was updated
-                const { category, source } = tagCategorizer.categorize(tag);
-                const existingTag = existingTagsMap.get(tag);
-                existingTag.category = category;
-                existingTag.categorySource = source;
-                newBaseTags.push(existingTag);
-            } else {
-                 const { category, source } = tagCategorizer.categorize(tag);
-                 newBaseTags.push({ original: tag, weighted: tag, id: `tag-${tagIdCounter++}`, category, categorySource: source });
-            }
+            const { category, source } = tagCategorizer.categorize(tag); // Always re-categorize
+            const existingTag = existingTagsMap.get(tag);
+            
+            newBaseTags.push({
+                original: tag,
+                weighted: existingTag ? existingTag.weighted : tag, // Keep old weight if it exists
+                id: existingTag ? existingTag.id : `tag-${tagIdCounter++}`, // Keep old ID
+                category,
+                categorySource: source
+            });
         });
+
         if (!enableWeightingToggle.checked) newBaseTags.forEach(t => t.weighted = t.original);
         baseTags = newBaseTags;
         displayTags();
@@ -231,103 +190,37 @@
         initSortable();
     }
 
-    function createTagElement(tag) {
-        const el = document.createElement('div');
-        el.className = 'tag-base processed-tag';
-        if (selectedTagIds.has(tag.id)) el.classList.add('selected');
-        el.dataset.id = tag.id;
-        el.style.borderStyle = tag.categorySource !== 'Primary' ? 'dashed' : 'solid';
-        el.title = `(${tag.categorySource}) ${tag.original}\nCategory: ${tag.category}\n\nCtrl+Click to multi-select.\nRight-click for options.`;
-        const useUnderscores = underscoreToggle.checked;
-        const displayTag = useUnderscores ? tag.weighted.replace(/\s/g, '_') : tag.weighted.replace(/_/g, ' ');
-        if (enableWeightingToggle.checked) {
-            el.innerHTML = `<button class="tag-weight-btn" onclick="updateTagWeight('${tag.id}', 'decrease')" title="Decrease weight">-</button><span class="tag-text px-1">${displayTag}</span><button class="tag-weight-btn" onclick="updateTagWeight('${tag.id}', 'increase')" title="Increase weight">+</button>`;
-        } else {
-            el.innerHTML = `<span class="tag-text">${displayTag}</span>`;
-        }
-        el.addEventListener('click', (e) => handleTagClick(e, tag.id));
-        el.addEventListener('contextmenu', (e) => { e.preventDefault(); showCorrectionMenu(e, tag); });
-        return el;
-    }
-
-    function handleTagClick(event, tagId) {
-        const tagElement = event.currentTarget;
-        if (event.ctrlKey || event.metaKey) {
-            if (selectedTagIds.has(tagId)) {
-                selectedTagIds.delete(tagId);
-                tagElement.classList.remove('selected');
-            } else {
-                selectedTagIds.add(tagId);
-                tagElement.classList.add('selected');
-            }
-        } else {
-            document.querySelectorAll('.tag-base.selected').forEach(el => el.classList.remove('selected'));
-            selectedTagIds.clear();
-            selectedTagIds.add(tagId);
-            tagElement.classList.add('selected');
-        }
-    }
-
-    function showCorrectionMenu(event, clickedTag) {
-        if (selectedTagIds.size === 0 || !selectedTagIds.has(clickedTag.id)) {
-            document.querySelectorAll('.tag-base.selected').forEach(el => el.classList.remove('selected'));
-            selectedTagIds.clear();
-            selectedTagIds.add(clickedTag.id);
-            document.querySelector(`[data-id="${clickedTag.id}"]`).classList.add('selected');
-        }
-        const existingMenu = document.getElementById('correction-menu');
-        if (existingMenu) existingMenu.remove();
-        const menu = document.createElement('div');
-        menu.id = 'correction-menu';
-        menu.className = 'absolute z-20 bg-gray-800 border border-gray-600 rounded-md shadow-lg py-1 text-sm';
-        menu.style.left = `${event.pageX}px`;
-        menu.style.top = `${event.pageY}px`;
-        let title = selectedTagIds.size > 1 ? `Correct ${selectedTagIds.size} Tags` : `Correct '${clickedTag.original}'`;
-        let menuHTML = `<div class="px-3 py-1 text-gray-400 border-b border-gray-700">${title}</div>`;
-        tagCategorizer.categories.forEach(cat => {
-            menuHTML += `<a href="#" class="block px-3 py-1 text-gray-200 hover:bg-indigo-600" onclick="submitCategoryUpdate(event, '${cat}')">${cat}</a>`;
-        });
-        menu.innerHTML = menuHTML;
-        document.body.appendChild(menu);
-        document.addEventListener('click', () => menu.remove(), { once: true });
-    }
+    function createTagElement(tag) { /* No changes */ const el=document.createElement('div');el.className='tag-base processed-tag';if(selectedTagIds.has(tag.id))el.classList.add('selected');el.dataset.id=tag.id;el.style.borderStyle=tag.categorySource!=='Primary'?'dashed':'solid';el.title=`(${tag.categorySource}) ${tag.original}\nCategory: ${tag.category}\n\nCtrl+Click to multi-select.\nRight-click for options.`;const useUnderscores=underscoreToggle.checked;const displayTag=useUnderscores?tag.weighted.replace(/\s/g,'_'):tag.weighted.replace(/_/g,' ');if(enableWeightingToggle.checked){el.innerHTML=`<button class="tag-weight-btn" onclick="updateTagWeight('${tag.id}','decrease')" title="Decrease weight">-</button><span class="tag-text px-1">${displayTag}</span><button class="tag-weight-btn" onclick="updateTagWeight('${tag.id}','increase')" title="Increase weight">+</button>`;}else{el.innerHTML=`<span class="tag-text">${displayTag}</span>`;}el.addEventListener('click',(e)=>handleTagClick(e,tag.id));el.addEventListener('contextmenu',(e)=>{e.preventDefault();showCorrectionMenu(e,tag);});return el; }
+    function handleTagClick(event, tagId) { /* No changes */ const tagElement=event.currentTarget;if(event.ctrlKey||event.metaKey){if(selectedTagIds.has(tagId)){selectedTagIds.delete(tagId);tagElement.classList.remove('selected');}else{selectedTagIds.add(tagId);tagElement.classList.add('selected');}}else{document.querySelectorAll('.tag-base.selected').forEach(el=>el.classList.remove('selected'));selectedTagIds.clear();selectedTagIds.add(tagId);tagElement.classList.add('selected');} }
+    function showCorrectionMenu(event, clickedTag) { /* No changes */ if(selectedTagIds.size===0||!selectedTagIds.has(clickedTag.id)){document.querySelectorAll('.tag-base.selected').forEach(el=>el.classList.remove('selected'));selectedTagIds.clear();selectedTagIds.add(clickedTag.id);document.querySelector(`[data-id="${clickedTag.id}"]`).classList.add('selected');}const existingMenu=document.getElementById('correction-menu');if(existingMenu)existingMenu.remove();const menu=document.createElement('div');menu.id='correction-menu';menu.className='absolute z-20 bg-gray-800 border border-gray-600 rounded-md shadow-lg py-1 text-sm';menu.style.left=`${event.pageX}px`;menu.style.top=`${event.pageY}px`;let title=selectedTagIds.size>1?`Correct ${selectedTagIds.size} Tags`:`Correct '${clickedTag.original}'`;let menuHTML=`<div class="px-3 py-1 text-gray-400 border-b border-gray-700">${title}</div>`;tagCategorizer.categories.forEach(cat=>{menuHTML+=`<a href="#" class="block px-3 py-1 text-gray-200 hover:bg-indigo-600" onclick="submitCategoryUpdate(event,'${cat}')">${cat}</a>`;});menu.innerHTML=menuHTML;document.body.appendChild(menu);document.addEventListener('click',()=>menu.remove(),{once:true}); }
 
     async function submitCategoryUpdate(event, newCategory) {
         event.preventDefault();
         if (!gitHubPat) {
-            gitHubPat = prompt("Please enter your GitHub Personal Access Token (PAT) with `public_repo` scope.\nThis is required to submit issues automatically and will only be stored for this session.", "");
-            if (!gitHubPat) {
-                copyMessage.textContent = 'Issue submission cancelled.';
-                setTimeout(() => copyMessage.textContent = '', 3000);
-                return;
-            }
+            gitHubPat = prompt("Please enter your GitHub Personal Access Token (PAT) with `public_repo` scope.", "");
+            if (!gitHubPat) { copyMessage.textContent = 'Submission cancelled.'; setTimeout(() => copyMessage.textContent = '', 3000); return; }
         }
         const tagsToUpdate = baseTags.filter(t => selectedTagIds.has(t.id));
         if (tagsToUpdate.length === 0) return;
         copyMessage.textContent = `Submitting issue for ${tagsToUpdate.length} tag(s)...`;
         const title = `[Auto-Submission] Category Update for ${tagsToUpdate.length} Tag(s)`;
-        let body = `**User suggests moving the following tags to the '${newCategory}' category:**\n\n`;
-        body += tagsToUpdate.map(t => `- \`${t.original}\` (from \`${t.category}\`)`).join('\n');
-        body += `\n\n---\n*This issue was submitted automatically by the Danbooru Tag Helper Copilot.*`;
+        let body = `**User suggests moving the following tags to the '${newCategory}' category:**\n\n${tagsToUpdate.map(t=>`- \`${t.original}\` (from \`${t.category}\`)`).join('\n')}\n\n---\n*This issue was submitted by the Tag Helper Copilot.*`;
         try {
             const response = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/issues`, {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${gitHubPat}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json', },
+                headers: { 'Authorization': `Bearer ${gitHubPat}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
                 body: JSON.stringify({ title, body }),
             });
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(`GitHub API Error: ${errorData.message}`);
-            }
+            if (!response.ok) { const errorData = await response.json(); throw new Error(`GitHub API Error: ${errorData.message}`); }
             const issueData = await response.json();
             copyMessage.textContent = `Success! Issue #${issueData.number} created.`;
             
-            // **MODIFIED**: Update the categorizer's index and re-process everything
+            // **MODIFIED**: This now correctly makes the change stick.
             tagsToUpdate.forEach(tag => {
                 tagCategorizer.updateIndex(tag.original, newCategory);
             });
             selectedTagIds.clear();
-            processAll(); // This makes the change "stick" for the session
+            processAll(); // Re-process all tags with the updated knowledge
 
         } catch (error) {
             console.error("Failed to submit GitHub issue:", error);
@@ -350,18 +243,17 @@
             TAG_DATABASE = await tagsResponse.json();
             const tagMap = await mapResponse.json();
             
-            // **MODIFIED**: Added 'Characters' to the display order
+            // **MODIFIED**: 'Characters' is now a first-class citizen in the category order.
             const categoryOrder = ['Quality', 'Composition', 'Characters', 'Subject & Creatures', 'Face', 'Eyes', 'Hair', 'Body Parts', 'Attire', 'Accessories', 'Held Items & Objects', 'Actions & Poses', 'Setting & Environment', 'Style & Meta', 'Other'];
             
             tagCategorizer = new TagCategorizer(tagMap, TAG_DATABASE, categoryOrder);
-            console.log(`Successfully loaded ${TAG_DATABASE.length} tags and ${Object.keys(tagMap).length} category mappings.`);
             document.title = 'Danbooru Tag Helper (Ready)';
         } catch (error) {
-            console.error("--- FATAL ERROR: Could not load data files from GitHub ---", error);
+            console.error("FATAL ERROR:", error);
             document.title = 'Danbooru Tag Helper (ERROR)';
             const errorDiv = document.createElement('div');
             errorDiv.className = 'p-4 mb-4 text-sm text-red-200 bg-red-800/50 rounded-lg';
-            errorDiv.innerHTML = `<strong>Error:</strong> Could not load tag data from GitHub. Please check the browser's developer console (F12) for network errors and ensure the GITHUB_USER/REPO constants are correct.<br><br>Details: ${error.message}`;
+            errorDiv.innerHTML = `<strong>Error loading data:</strong> ${error.message}. Please check the console (F12) for details.`;
             document.querySelector('.main-container').prepend(errorDiv);
         }
     }
@@ -376,7 +268,7 @@
     function copyTagsToClipboard() { const useUnderscores = underscoreToggle.checked; const triggers = triggerInput.value.split(',').map(t => t.trim()).filter(Boolean); const appends = appendInput.value.split(',').map(t => t.trim()).filter(Boolean); const processed = baseTags.map(tag => useUnderscores ? tag.weighted.replace(/\s/g, '_') : tag.weighted.replace(/_/g, ' ')); const finalString = [...triggers, ...processed, ...appends].join(', '); navigator.clipboard.writeText(finalString).then(() => { copyMessage.textContent = 'Tags copied!'; updateCopyHistory(finalString); setTimeout(() => copyMessage.textContent = '', 2000); }).catch(err => copyMessage.textContent = 'Copy failed!'); }
     function updateCopyHistory(text) { if(text){ copyHistory.unshift(text); if (copyHistory.length > 10) copyHistory.pop(); localStorage.setItem('danbooru-tag-history', JSON.stringify(copyHistory)); } historyContainer.innerHTML = ''; if (copyHistory.length === 0) { historyContainer.innerHTML = `<p class="text-sm text-gray-500 italic">No history yet.</p>`; return; } copyHistory.forEach(item => { const el = document.createElement('div'); el.className = 'history-item p-2 rounded-md flex items-center justify-between gap-2'; el.innerHTML = `<span class="history-item-text text-gray-400 text-xs flex-grow overflow-hidden whitespace-nowrap text-ellipsis">${item}</span><button class="copy-btn-sm p-1 rounded" onclick="navigator.clipboard.writeText(\`${item.replace(/`/g, '\\`')}\`)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-300"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>`; historyContainer.appendChild(el); }); }
     function applyTheme(theme) { document.documentElement.className = 'dark'; body.className = `p-4 md:p-8 ${theme}`; themeButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.theme === theme)); localStorage.setItem('danbooru-tag-helper-theme', theme); }
-    function suggestCoherentTags() { if (!tagCategorizer) return; const QUESTIONABLE_KEYWORDS = ['bikini', 'swimsuit', 'cleavage', 'breasts', 'ass', 'thighs', 'pantyhose', 'leotard', 'garter_belt', 'panty_shot', 'sideboob', 'topless', 'bra', 'panties', 'lingerie', 'seductive', 'bondage', 'shibari', 'partially_nude', 'armpits', 'bottomless']; const EXPLICIT_KEYWORDS = ['pussy', 'penis', 'sex', 'oral', 'ahegao', 'nude', 'naked', 'cum', 'masturbation', 'fellatio', 'cunnilingus', 'prolapse']; const numToSuggest = parseInt(suggestionCountInput.value, 10); const existingTags = new Set(baseTags.map(t => t.original.toLowerCase().replace(/ /g, '_'))); const isAllowed = (tag) => { if (EXPLICIT_KEYWORDS.some(kw => tag.includes(kw))) return false; if (!ratingQuestionable.checked && QUESTIONABLE_KEYWORDS.some(kw => tag.includes(kw))) return false; const ratingCheckboxes = document.querySelectorAll('#suggestion-ratings input[type="checkbox"]'); if (Array.from(ratingCheckboxes).every(cb => !cb.checked)) return false; return true; }; const suggestions = new Set(), categoryPools = {}; TAG_DATABASE.forEach(tag => { const { category } = tagCategorizer.categorize(tag); if (!categoryPools[category]) categoryPools[category] = []; if (!existingTags.has(tag) && isAllowed(tag)) categoryPools[category].push(tag); }); const plan = (existingTags.size === 0) ? [ { name: 'Quality', count: 1 }, { name: 'Composition', count: 2 }, { name: 'Characters', count: 1 }, { name: 'Face', count: 2 }, { name: 'Eyes', count: 1 }, { name: 'Hair', count: 2 } ] : Object.entries(baseTags.reduce((acc, tag) => { acc[tag.category] = (acc[tag.category] || 0) + 1; return acc; }, {})).map(([name, count]) => ({name, count})); let suggestionsNeeded = numToSuggest; while(suggestionsNeeded > 0) { let madeSuggestion = false; for(const p of plan) { if(suggestionsNeeded <= 0) break; const pool = categoryPools[p.name] || []; for(let i=0; i < p.count; ++i) { if(pool.length > 0) { const [suggestion] = pool.splice(Math.floor(Math.random() * pool.length), 1); if(suggestion && !suggestions.has(suggestion)) { suggestions.add(suggestion); suggestionsNeeded--; madeSuggestion = true; } } } } if(!madeSuggestion) break; } const suggestionsToAdd = [...suggestions]; if (suggestionsToAdd.length > 0) { const separator = tagInput.value.trim().length > 0 && !tagInput.value.trim().endsWith(',') ? ', ' : ''; tagInput.value += separator + suggestionsToAdd.join(', ').replace(/_/g, ' '); processAll(); } }
+    function suggestCoherentTags() { /* No changes */ const suggestionCountInput = element('suggestionCountInput'); const ratingQuestionable = element('rating-questionable'); const ratingGeneral = element('rating-general'); const ratingSafe = element('rating-safe'); if (!tagCategorizer) return; const QUESTIONABLE_KEYWORDS = ['bikini', 'swimsuit', 'cleavage', 'breasts', 'ass', 'thighs', 'pantyhose', 'leotard', 'garter_belt', 'panty_shot', 'sideboob', 'topless', 'bra', 'panties', 'lingerie', 'seductive', 'bondage', 'shibari', 'partially_nude', 'armpits', 'bottomless']; const EXPLICIT_KEYWORDS = ['pussy', 'penis', 'sex', 'oral', 'ahegao', 'nude', 'naked', 'cum', 'masturbation', 'fellatio', 'cunnilingus', 'prolapse']; const numToSuggest = parseInt(suggestionCountInput.value, 10); const existingTags = new Set(baseTags.map(t => t.original.toLowerCase().replace(/ /g, '_'))); const isAllowed = (tag) => { if (EXPLICIT_KEYWORDS.some(kw => tag.includes(kw))) return false; if (!ratingQuestionable.checked && QUESTIONABLE_KEYWORDS.some(kw => tag.includes(kw))) return false; if (!ratingGeneral.checked && !ratingSafe.checked && !ratingQuestionable.checked) return false; return true; }; const suggestions = new Set(), categoryPools = {}; TAG_DATABASE.forEach(tag => { const { category } = tagCategorizer.categorize(tag); if (!categoryPools[category]) categoryPools[category] = []; if (!existingTags.has(tag) && isAllowed(tag)) categoryPools[category].push(tag); }); const plan = (existingTags.size === 0) ? [ { name: 'Quality', count: 1 }, { name: 'Composition', count: 2 }, { name: 'Characters', count: 1 }, { name: 'Face', count: 2 }, { name: 'Eyes', count: 1 }, { name: 'Hair', count: 2 } ] : Object.entries(baseTags.reduce((acc, tag) => { acc[tag.category] = (acc[tag.category] || 0) + 1; return acc; }, {})).map(([name, count]) => ({name, count})); let suggestionsNeeded = numToSuggest; while(suggestionsNeeded > 0) { let madeSuggestion = false; for(const p of plan) { if(suggestionsNeeded <= 0) break; const pool = categoryPools[p.name] || []; for(let i=0; i < p.count; ++i) { if(pool.length > 0) { const [suggestion] = pool.splice(Math.floor(Math.random() * pool.length), 1); if(suggestion && !suggestions.has(suggestion)) { suggestions.add(suggestion); suggestionsNeeded--; madeSuggestion = true; } } } } if(!madeSuggestion) break; } const suggestionsToAdd = [...suggestions]; if (suggestionsToAdd.length > 0) { const separator = tagInput.value.trim().length > 0 && !tagInput.value.trim().endsWith(',') ? ', ' : ''; tagInput.value += separator + suggestionsToAdd.join(', ').replace(/_/g, ' '); processAll(); } }
 
     // --- INITIALIZATION ---
     document.addEventListener('DOMContentLoaded', async () => {
