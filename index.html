@@ -134,7 +134,7 @@
         initSortable();
     }
     
-    function createTagElement(tag) { const el = document.createElement('div'); el.className = 'tag-base processed-tag'; if (selectedTagIds.has(tag.id)) el.classList.add('selected'); el.dataset.id = tag.id; el.style.borderStyle = tag.categorySource !== 'Primary' ? 'dashed' : 'solid'; el.title = `(${tag.categorySource}) ${tag.original}\nCategory: ${tag.category}\n\nCtrl+Click to multi-select.\nRight-click for options.`; const useUnderscores = underscoreToggle.checked; const displayTag = useUnderscores ? tag.weighted.replace(/\s/g, '_') : tag.weighted.replace(/_/g, ' '); if (enableWeightingToggle.checked) { el.innerHTML = `<button class="tag-weight-btn" onclick="updateTagWeight('${tag.id}','decrease')">-</button><span class="tag-text px-1">${displayTag}</span><button class="tag-weight-btn" onclick="updateTagWeight('${tag.id}','increase')">+</button>`; } else { el.innerHTML = `<span class="tag-text">${displayTag}</span>`; } el.addEventListener('click', (e) => handleTagClick(e, tag.id)); el.addEventListener('contextmenu', (e) => { e.preventDefault(); showCorrectionMenu(e, tag); }); return el; }
+    function createTagElement(tag) { const el = document.createElement('div'); el.className = 'tag-base processed-tag'; el.dataset.id = tag.id; el.dataset.weightedTag = tag.weighted; if (selectedTagIds.has(tag.id)) el.classList.add('selected'); el.style.borderStyle = tag.categorySource !== 'Primary' ? 'dashed' : 'solid'; el.title = `(${tag.categorySource}) ${tag.original}\nCategory: ${tag.category}\n\nCtrl+Click to multi-select.\nRight-click for options.`; const useUnderscores = underscoreToggle.checked; const displayTag = useUnderscores ? tag.weighted.replace(/\s/g, '_') : tag.weighted.replace(/_/g, ' '); if (enableWeightingToggle.checked) { el.innerHTML = `<button class="tag-weight-btn" onclick="updateTagWeight('${tag.id}','decrease')">-</button><span class="tag-text px-1">${displayTag}</span><button class="tag-weight-btn" onclick="updateTagWeight('${tag.id}','increase')">+</button>`; } else { el.innerHTML = `<span class="tag-text">${displayTag}</span>`; } el.addEventListener('click', (e) => handleTagClick(e, tag.id)); el.addEventListener('contextmenu', (e) => { e.preventDefault(); showCorrectionMenu(e, tag); }); return el; }
     function handleTagClick(event, tagId) { const tagElement = event.currentTarget; if (event.ctrlKey || event.metaKey) { if (selectedTagIds.has(tagId)) { selectedTagIds.delete(tagId); tagElement.classList.remove('selected'); } else { selectedTagIds.add(tagId); tagElement.classList.add('selected'); } } else { document.querySelectorAll('.tag-base.selected').forEach(el => el.classList.remove('selected')); selectedTagIds.clear(); selectedTagIds.add(tagId); tagElement.classList.add('selected'); } }
     function showCorrectionMenu(event, clickedTag) { const menuId = 'correction-menu'; document.getElementById(menuId)?.remove(); if (selectedTagIds.size === 0 || !selectedTagIds.has(clickedTag.id)) { selectedTagIds.clear(); document.querySelectorAll('.tag-base.selected').forEach(el => el.classList.remove('selected')); selectedTagIds.add(clickedTag.id); document.querySelector(`[data-id="${clickedTag.id}"]`)?.classList.add('selected'); } const menu = document.createElement('div'); menu.id = menuId; menu.className = 'absolute z-20 bg-gray-800 border border-gray-600 rounded-md shadow-lg py-1 text-sm'; menu.style.left = `${event.pageX}px`; menu.style.top = `${event.pageY}px`; let title = selectedTagIds.size > 1 ? `Correct ${selectedTagIds.size} Tags` : `Correct '${clickedTag.original}'`; let menuHTML = `<div class="px-3 py-1 text-gray-400 border-b border-gray-700">${title}</div>`; tagCategorizer.categories.forEach(cat => { menuHTML += `<a href="#" class="block px-3 py-1 text-gray-200 hover:bg-indigo-600" onclick="submitCategoryUpdate(event,'${cat}')">${cat}</a>`; }); menu.innerHTML = menuHTML; document.body.appendChild(menu); document.addEventListener('click', () => menu.remove(), { once: true }); }
     async function submitCategoryUpdate(event, newCategory) { event.preventDefault(); if (!gitHubPat) { gitHubPat = prompt("Please enter your GitHub Personal Access Token (PAT) with `public_repo` scope.", ""); if (!gitHubPat) { copyMessage.textContent = 'Submission cancelled.'; setTimeout(() => copyMessage.textContent = '', 3000); return; } } const tagsToUpdate = baseTags.filter(t => selectedTagIds.has(t.id)); if (tagsToUpdate.length === 0) return; copyMessage.textContent = `Submitting issue for ${tagsToUpdate.length} tag(s)...`; const title = `[Auto-Submission] Category Update for ${tagsToUpdate.length} Tag(s)`; let body = `**User suggests moving the following tags to the '${newCategory}' category:**\n\n${tagsToUpdate.map(t=>`- \`${t.original}\` (from \`${t.category}\`)`).join('\n')}\n\n---\n*This issue was submitted by the Tag Helper Copilot.*`; try { const response = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/issues`, { method: 'POST', headers: { 'Authorization': `Bearer ${gitHubPat}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' }, body: JSON.stringify({ title, body }) }); if (!response.ok) { const errorData = await response.json(); throw new Error(`GitHub API Error: ${errorData.message}`); } const issueData = await response.json(); copyMessage.textContent = `Success! Issue #${issueData.number} created.`; tagsToUpdate.forEach(tag => { tagCategorizer.updateIndex(tag.original, newCategory); }); const tagIdsToUpdate = new Set(tagsToUpdate.map(t => t.id)); baseTags.forEach(tag => { if (tagIdsToUpdate.has(tag.id)) { tag.category = newCategory; tag.categorySource = 'Primary'; } }); selectedTagIds.clear(); displayTags(); } catch (error) { console.error("Failed to submit GitHub issue:", error); copyMessage.textContent = `Error: ${error.message}`; gitHubPat = null; } finally { setTimeout(() => copyMessage.textContent = '', 5000); } }
@@ -142,18 +142,14 @@
     async function loadExternalData() {
         document.title = 'Danbooru Tag Helper (Loading...)';
         try {
-            // **FIXED**: Fetch and read each file correctly.
             const [tagsResponse, mapResponse] = await Promise.all([
                 fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/tags.json?t=${new Date().getTime()}`),
                 fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/tag_map.json?t=${new Date().getTime()}`)
             ]);
-
             if (!tagsResponse.ok) throw new Error(`Failed to fetch tags.json: ${tagsResponse.statusText}`);
             if (!mapResponse.ok) throw new Error(`Failed to fetch tag_map.json: ${mapResponse.statusText}`);
-
             TAG_DATABASE = await tagsResponse.json();
             const tagMap = await mapResponse.json();
-            
             const categoryOrder = ['Quality', 'Composition', 'Characters', 'Subject & Creatures', 'Face', 'Eyes', 'Hair', 'Body Parts', 'Attire', 'Accessories', 'Held Items & Objects', 'Actions & Poses', 'Setting & Environment', 'Style & Meta', 'Other'];
             tagCategorizer = new TagCategorizer(tagMap, TAG_DATABASE, categoryOrder);
             document.title = 'Danbooru Tag Helper (Ready)';
@@ -167,8 +163,30 @@
         }
     }
     
-    // --- All other utility functions ---
-    function copyTagsToClipboard() { const processed = baseTags.map(tag => (underscoreToggle.checked ? tag.weighted.replace(/\s/g, '_') : tag.weighted.replace(/_/g, ' '))); const finalString = [...triggerInput.value.split(',').map(t => t.trim()).filter(Boolean), ...processed, ...appendInput.value.split(',').map(t => t.trim()).filter(Boolean)].join(', '); navigator.clipboard.writeText(finalString).then(() => { copyMessage.textContent = 'Tags copied!'; updateCopyHistory(finalString); setTimeout(() => copyMessage.textContent = '', 2000); }).catch(err => { copyMessage.textContent = 'Copy failed!'; console.error("Clipboard write failed: ", err); }); }
+    // **FIXED LOGIC**: This function now reads the visual order directly from the DOM.
+    function copyTagsToClipboard() {
+        const tagElements = tagOutput.querySelectorAll('.tag-base');
+        const processed = Array.from(tagElements).map(el => {
+            const weightedTag = el.dataset.weightedTag;
+            return underscoreToggle.checked ? weightedTag.replace(/\s/g, '_') : weightedTag.replace(/_/g, ' ');
+        });
+
+        const finalString = [
+            ...triggerInput.value.split(',').map(t => t.trim()).filter(Boolean),
+            ...processed,
+            ...appendInput.value.split(',').map(t => t.trim()).filter(Boolean)
+        ].join(', ');
+        
+        navigator.clipboard.writeText(finalString).then(() => {
+            copyMessage.textContent = 'Tags copied!';
+            updateCopyHistory(finalString);
+            setTimeout(() => copyMessage.textContent = '', 2000);
+        }).catch(err => {
+            copyMessage.textContent = 'Copy failed!';
+            console.error("Clipboard write failed: ", err);
+        });
+    }
+
     window.updateTagWeight = (id, action) => { const tag = baseTags.find(t => t.id === id); if (!tag) return; let current = tag.weighted, original = tag.original; if (action === 'increase') { if (current.startsWith('((')) current = `(((${original})))`; else if (current.startsWith('(')) current = `((${original}))`; else if (current.startsWith('[')) current = original; else current = `(${original})`; } else { if (current.startsWith('[[')) current = `[[[${original}]]]`; else if (current.startsWith('[')) current = `[[${original}]]`; else if (current.startsWith('(')) current = original; else current = `[${original}]`; } tag.weighted = current; displayTags(); };
     function initSortable() { if (sortableInstances.length) sortableInstances.forEach(s => s.destroy()); sortableInstances = []; tagOutput.querySelectorAll('.tag-group-container').forEach(container => { sortableInstances.push(new Sortable(container, { group: 'shared', animation: 150, ghostClass: 'opacity-50', onEnd: (evt) => { try { const movedTag = baseTags.find(t => t.id === evt.item.dataset.id); const newCategory = evt.to.dataset.groupName; if (movedTag && newCategory) { movedTag.category = newCategory; tagCategorizer.updateIndex(movedTag.original, newCategory); } const allTagElements = Array.from(tagOutput.querySelectorAll('.tag-base')); baseTags = allTagElements.map(el => baseTags.find(t => t.id === el.dataset.id)).filter(Boolean); sortSelect.value = 'manual'; } finally { displayTags(); } }, })); }); }
     function handleAutocomplete(e) { if (!tagCategorizer) return; const text = tagInput.value, cursorPos = tagInput.selectionStart; const lastComma = text.lastIndexOf(',', cursorPos - 1); autocomplete.currentWord = text.substring(lastComma + 1, cursorPos).trim(); const items = autocompleteBox.children; if (autocomplete.active && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === 'Tab')) { e.preventDefault(); if (e.key === 'Enter' || e.key === 'Tab') { if (autocomplete.index > -1 && items[autocomplete.index]) { selectAutocompleteItem(items[autocomplete.index].dataset.tag); } return; } items[autocomplete.index]?.classList.remove('selected'); if (e.key === 'ArrowDown') autocomplete.index = (autocomplete.index + 1) % items.length; if (e.key === 'ArrowUp') autocomplete.index = (autocomplete.index - 1 + items.length) % items.length; items[autocomplete.index]?.classList.add('selected'); return; } if (!autocomplete.currentWord) { hideAutocomplete(); return; } autocomplete.suggestions = TAG_DATABASE.filter(t => t.startsWith(autocomplete.currentWord.replace(/ /g, '_'))).slice(0, 5); if (autocomplete.suggestions.length > 0) { renderAutocomplete(); } else { hideAutocomplete(); } }
