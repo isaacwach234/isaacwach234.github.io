@@ -62,119 +62,133 @@
     const ratingSafe = element('rating-safe'), ratingGeneral = element('rating-general'), ratingQuestionable = element('rating-questionable');
 
     class TagCategorizer {
-        constructor(tagMap, allTags, categoryOrder) { this.originalMap = Object.freeze({ ...tagMap }); this.primaryIndex = tagMap; this.displayOrder = categoryOrder; this.allKnownCategories = [...new Set([...Object.values(tagMap), ...categoryOrder])]; this.patternIndex = { ends: {} }; this.keywordIndex = {}; this.buildHeuristicIndexes(); }
-        buildHeuristicIndexes() {
-            const keywordCategoryCounts = {}, suffixCategoryCounts = {};
-            for (const tag in this.primaryIndex) {
-                const category = this.primaryIndex[tag];
-                const words = tag.split('_');
-                if (words.length > 1) {
-                    words.forEach(word => {
-                        if (word.length < 3) return;
-                        if (!keywordCategoryCounts[word]) keywordCategoryCounts[word] = {};
-                        keywordCategoryCounts[word][category] = (keywordCategoryCounts[word][category] || 0) + 1;
-                    });
-                    const suffix = words[words.length - 1];
-                    if (!suffixCategoryCounts[suffix]) suffixCategoryCounts[suffix] = {};
-                    suffixCategoryCounts[suffix][category] = (suffixCategoryCounts[suffix][category] || 0) + 1;
-                }
-            }
-            for (const keyword in keywordCategoryCounts) { const counts = keywordCategoryCounts[keyword]; const mostLikelyCategory = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b); if (counts[mostLikelyCategory] > 1) this.keywordIndex[keyword] = mostLikelyCategory; }
-            for (const suffix in suffixCategoryCounts) { const counts = suffixCategoryCounts[suffix]; const total = Object.values(counts).reduce((s, c) => s + c, 0); const mostLikelyCategory = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b); if (total > 5 && (counts[mostLikelyCategory] / total) > 0.7) this.patternIndex.ends[`_${suffix}`] = mostLikelyCategory; }
-            console.log(`Built heuristic indexes from ${Object.keys(this.primaryIndex).length} tags.`);
-        }
-        updateIndex(tag, newCategory) { this.primaryIndex[tag.toLowerCase().replace(/ /g, '_')] = newCategory; if (!this.allKnownCategories.includes(newCategory)) { this.allKnownCategories.push(newCategory); } if (!this.displayOrder.includes(newCategory)) { const otherIndex = this.displayOrder.indexOf('Other'); this.displayOrder.splice(otherIndex > -1 ? otherIndex : this.displayOrder.length, 0, newCategory); } }
-        resetIndexForTag(tag) { const cleanTag = tag.toLowerCase().replace(/ /g, '_'); if (this.originalMap[cleanTag]) { this.primaryIndex[cleanTag] = this.originalMap[cleanTag]; } else { delete this.primaryIndex[cleanTag]; } }
+        constructor(tagMap, allTags, categoryOrder) { this.primaryIndex = tagMap; this.categoryOrder = categoryOrder; this.categories = [...new Set([...Object.values(tagMap), ...categoryOrder])]; this.patternIndex = { ends: {} }; this.keywordIndex = {}; this.buildHeuristicIndexes(allTags); }
+        buildHeuristicIndexes(allTags) { const keywordCategoryCounts={},suffixCategoryCounts={};allTags.forEach(tag=>{const category=this.primaryIndex[tag];if(!category)return;const words=tag.split('_');if(words.length>1){words.forEach(word=>{if(word.length<3)return;if(!keywordCategoryCounts[word])keywordCategoryCounts[word]={};keywordCategoryCounts[word][category]=(keywordCategoryCounts[word][category]||0)+1;});const suffix=words[words.length-1];if(!suffixCategoryCounts[suffix])suffixCategoryCounts[suffix]={};suffixCategoryCounts[suffix][category]=(suffixCategoryCounts[suffix][category]||0)+1;}});for(const keyword in keywordCategoryCounts){const counts=keywordCategoryCounts[keyword];const mostLikelyCategory=Object.keys(counts).reduce((a,b)=>counts[a]>counts[b]?a:b);if(counts[mostLikelyCategory]>1)this.keywordIndex[keyword]=mostLikelyCategory;}for(const suffix in suffixCategoryCounts){const counts=suffixCategoryCounts[suffix];const total=Object.values(counts).reduce((s,c)=>s+c,0);const mostLikelyCategory=Object.keys(counts).reduce((a,b)=>counts[a]>counts[b]?a:b);if(total>5&&(counts[mostLikelyCategory]/total)>0.7)this.patternIndex.ends[`_${suffix}`]=mostLikelyCategory;}console.log(`Built heuristic indexes.`); }
+        updateIndex(tag, newCategory) { this.primaryIndex[tag.toLowerCase().replace(/ /g, '_')] = newCategory; }
         categorize(tagString) { const tag = tagString.toLowerCase().replace(/ /g, '_'); if (tag.includes('(') && tag.includes(')')) return { category: 'Characters', source: 'Heuristic' }; if (this.primaryIndex[tag]) return { category: this.primaryIndex[tag], source: 'Primary' }; for (const suffix in this.patternIndex.ends) if (tag.endsWith(suffix)) return { category: this.patternIndex.ends[suffix], source: 'Pattern' }; const words = tag.split('_'), categoryScores = {}; words.forEach(word => { if (this.keywordIndex[word]) categoryScores[this.keywordIndex[word]] = (categoryScores[this.keywordIndex[word]] || 0) + 1; }); if (Object.keys(categoryScores).length > 0) return { category: Object.keys(categoryScores).reduce((a, b) => categoryScores[a] > categoryScores[b] ? a : b), source: 'Heuristic' }; return { category: 'Other', source: 'Fallback' }; }
     }
     
-    // =================================================================
-    // FIXED FUNCTION STARTS HERE
-    // This new function removes hidden aliasing and fixes the
-    // deduplication logic to be predictable.
-    // =================================================================
     function processAll() {
         if (!tagCategorizer) return;
-        
-        // Step 1: Parse all user inputs (swaps, implications, blacklist).
         const swaps = new Map(swapsInput.value.split(',').map(s => s.split('->').map(p => p.trim())).filter(p => p.length === 2 && p[0]));
         const implications = new Map(implicationsInput.value.split(',').map(s => s.split('=>').map(p => p.trim())).filter(p => p.length === 2 && p[0]));
-        const blacklist = new Set(blacklistInput.value.replace(/[\n\s]+/g, ',').map(w => w.trim().toLowerCase()).filter(Boolean));
-        
-        // Step 2: Get raw tags from input and apply *only* the user-defined swaps.
-        // This is the critical change: no hidden, internal aliases are used.
+        const blacklist = new Set(blacklistInput.value.replace(/[\n\s]+/g, ',').split(',').map(w => w.trim().toLowerCase()).filter(Boolean));
         let rawTags = tagInput.value.replace(/[\n]+/g, ',').split(',').map(t => t.trim()).filter(Boolean);
-        rawTags = rawTags.map(tag => {
-            const lowerTag = tag.toLowerCase().replace(/_/g, ' ');
-            return swaps.get(lowerTag) || tag;
-        });
-
-        // Step 3: Handle user-defined implications.
+        rawTags = rawTags.map(tag => swaps.get(tag.toLowerCase().replace(/_/g, ' ')) || tag);
         const tagsToAdd = new Set();
-        rawTags.forEach(tag => {
-            const lowerTag = tag.toLowerCase();
-            if (implications.has(lowerTag)) {
-                implications.get(lowerTag).split(',').forEach(imp => tagsToAdd.add(imp.trim()));
-            }
-        });
+        rawTags.forEach(tag => { const lowerTag = tag.toLowerCase(); if (implications.has(lowerTag)) implications.get(lowerTag).split(',').forEach(imp => tagsToAdd.add(imp.trim())); });
         rawTags = [...rawTags, ...tagsToAdd];
-
-        // Step 4: Deduplicate the list if the toggle is checked.
-        // This logic is now safer and more predictable because hidden aliases are gone.
         if (deduplicateToggle.checked) {
             const seen = new Set();
-            // We process the list in reverse to ensure that if a tag and its alias
-            // are both in the list, the one that appears *later* is kept.
-            rawTags = rawTags.reverse().filter(tag => {
-                const lower = tag.toLowerCase().replace(/_/g, ' ');
-                if (seen.has(lower)) {
-                    return false;
-                }
-                seen.add(lower);
-                return true;
-            }).reverse(); // Reverse back to the original intended order.
+            rawTags = rawTags.filter(tag => { const lower = tag.toLowerCase().replace(/_/g, ' '); if (seen.has(lower)) return false; seen.add(lower); return true; });
         }
-        
-        // Step 5: Filter by blacklist, slice to max tags, and prepare for final display.
         let filteredTags = rawTags.filter(tag => ![...blacklist].some(b => tag.toLowerCase().includes(b)));
         filteredTags = filteredTags.slice(0, parseInt(maxTagsInput.value, 10) || 75);
 
         const newBaseTags = [];
-        const oldTagsMap = new Map(baseTags.map(t => [t.original, t]));
-        for (const tagString of filteredTags) {
-            const { category, source } = tagCategorizer.categorize(tagString);
-            const oldTag = oldTagsMap.get(tagString);
-            newBaseTags.push({
-                original: tagString,
-                weighted: oldTag ? oldTag.weighted : tagString,
-                id: oldTag ? oldTag.id : `tag-${tagIdCounter++}`,
-                category,
-                categorySource: source
-            });
+        const oldTagsMeta = new Map(baseTags.map(t => [t.original, { id: t.id, weighted: t.weighted }]));
+        for (const tag of filteredTags) {
+            const { category, source } = tagCategorizer.categorize(tag);
+            const oldMeta = oldTagsMeta.get(tag);
+            newBaseTags.push({ original: tag, weighted: oldMeta ? oldMeta.weighted : tag, id: oldMeta ? oldMeta.id : `tag-${tagIdCounter++}`, category, categorySource: source });
         }
-        
-        if (!enableWeightingToggle.checked) {
-            newBaseTags.forEach(t => t.weighted = t.original);
-        }
+        if (!enableWeightingToggle.checked) newBaseTags.forEach(t => t.weighted = t.original);
         baseTags = newBaseTags;
         displayTags();
     }
-    // =================================================================
-    // FIXED FUNCTION ENDS HERE
-    // =================================================================
 
-    function displayTags() { /* No changes */ processedTagsLabel.querySelector('#tagCount').textContent = baseTags.length; processedTagsLabel.querySelector('#maxTagCount').textContent = maxTagsInput.value; tagOutput.innerHTML = ''; copyButton.disabled = baseTags.length === 0; if (baseTags.length === 0 && sortSelect.value !== 'danbooru') { tagOutput.innerHTML = '<span class="text-gray-500 italic">Start typing or paste tags above...</span>'; return; } if (sortSelect.value === 'danbooru') { const groups = baseTags.reduce((acc, tag) => { const c = tag.category || 'Other'; if (!acc[c]) acc[c] = []; acc[c].push(tag); return acc; }, {}); tagCategorizer.displayOrder.forEach(categoryName => { const groupDiv = document.createElement('div'); groupDiv.className = 'tag-group'; groupDiv.innerHTML = `<h3 class="tag-group-title">${categoryName}</h3>`; const container = document.createElement('div'); container.className = 'tag-group-container'; container.dataset.groupName = categoryName; const tagsForCategory = groups[categoryName]; if (tagsForCategory?.length > 0) { tagsForCategory.forEach(tag => container.appendChild(createTagElement(tag))); } groupDiv.appendChild(container); tagOutput.appendChild(groupDiv); }); } else { let tagsToDisplay = [...baseTags]; if (sortSelect.value === 'az') tagsToDisplay.sort((a, b) => a.original.localeCompare(b.original)); else if (sortSelect.value === 'za') tagsToDisplay.sort((a, b) => b.original.localeCompare(a.original)); const container = document.createElement('div'); container.className = 'tag-group-container'; container.dataset.groupName = 'all'; tagsToDisplay.forEach(tag => container.appendChild(createTagElement(tag))); tagOutput.appendChild(container); } initSortable(); }
-    function createTagElement(tag) { /* No changes */ const el = document.createElement('div'); el.className = 'tag-base processed-tag'; el.dataset.id = tag.id; el.dataset.weightedTag = tag.weighted; if (selectedTagIds.has(tag.id)) el.classList.add('selected'); el.style.borderStyle = tag.categorySource !== 'Primary' ? 'dashed' : 'solid'; el.title = `(${tag.categorySource}) ${tag.original}\nCategory: ${tag.category}\n\nCtrl+Click to multi-select.\nRight-click for options.`; const useUnderscores = underscoreToggle.checked; const displayTag = useUnderscores ? tag.weighted.replace(/\s/g, '_') : tag.weighted.replace(/_/g, ' '); if (enableWeightingToggle.checked) { el.innerHTML = `<button class="tag-weight-btn" onclick="updateTagWeight('${tag.id}','decrease')">-</button><span class="tag-text px-1">${displayTag}</span><button class="tag-weight-btn" onclick="updateTagWeight('${tag.id}','increase')">+</button>`; } else { el.innerHTML = `<span class="tag-text">${displayTag}</span>`; } el.addEventListener('click', (e) => handleTagClick(e, tag.id)); el.addEventListener('contextmenu', (e) => { e.preventDefault(); showCorrectionMenu(e, tag); }); return el; }
-    function handleTagClick(event, tagId) { /* No changes */ const tagElement = event.currentTarget; if (event.ctrlKey || event.metaKey) { if (selectedTagIds.has(tagId)) { selectedTagIds.delete(tagId); tagElement.classList.remove('selected'); } else { selectedTagIds.add(tagId); tagElement.classList.add('selected'); } } else { document.querySelectorAll('.tag-base.selected').forEach(el => el.classList.remove('selected')); selectedTagIds.clear(); selectedTagIds.add(tagId); tagElement.classList.add('selected'); } }
-    async function submitCategoryUpdate(event, newCategory) { /* No changes */ event.preventDefault(); if (!gitHubPat) { gitHubPat = prompt("Please enter your GitHub Personal Access Token (PAT) with `public_repo` scope.", ""); if (!gitHubPat) { copyMessage.textContent = 'Submission cancelled.'; setTimeout(() => copyMessage.textContent = '', 3000); return; } } const tagsToUpdate = baseTags.filter(t => selectedTagIds.has(t.id)); if (tagsToUpdate.length === 0) return; copyMessage.textContent = `Submitting issue for ${tagsToUpdate.length} tag(s)...`; const title = `[Auto-Submission] Category Update for ${tagsToUpdate.length} Tag(s)`; let body = `**User suggests moving the following tags to the '${newCategory}' category:**\n\n${tagsToUpdate.map(t=>`- \`${t.original}\` (from \`${t.category}\`)`).join('\n')}\n\n---\n*This issue was submitted by the Tag Helper Copilot.*`; try { const response = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/issues`, { method: 'POST', headers: { 'Authorization': `Bearer ${gitHubPat}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' }, body: JSON.stringify({ title, body }) }); if (!response.ok) { const errorData = await response.json(); throw new Error(`GitHub API Error: ${errorData.message}`); } const issueData = await response.json(); copyMessage.textContent = `Success! Issue #${issueData.number} created.`; tagsToUpdate.forEach(tag => tagCategorizer.updateIndex(tag.original, newCategory)); const tagIdsToUpdate = new Set(tagsToUpdate.map(t => t.id)); baseTags.forEach(tag => { if (tagIdsToUpdate.has(tag.id)) { tag.category = newCategory; tag.categorySource = 'Primary'; } }); selectedTagIds.clear(); displayTags(); } catch (error) { console.error("Failed to submit GitHub issue:", error); copyMessage.textContent = `Error: ${error.message}`; gitHubPat = null; } finally { setTimeout(() => copyMessage.textContent = '', 5000); } }
+    function displayTags() {
+        processedTagsLabel.querySelector('#tagCount').textContent = baseTags.length;
+        processedTagsLabel.querySelector('#maxTagCount').textContent = maxTagsInput.value;
+        tagOutput.innerHTML = '';
+        copyButton.disabled = baseTags.length === 0;
+
+        if (baseTags.length === 0 && sortSelect.value !== 'danbooru') {
+            tagOutput.innerHTML = '<span class="text-gray-500 italic">Start typing or paste tags above...</span>';
+            return;
+        }
+        if (sortSelect.value === 'danbooru') {
+            const groups = baseTags.reduce((acc, tag) => { const c = tag.category || 'Other'; if (!acc[c]) acc[c] = []; acc[c].push(tag); return acc; }, {});
+            tagCategorizer.categoryOrder.forEach(categoryName => {
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'tag-group';
+                groupDiv.innerHTML = `<h3 class="tag-group-title">${categoryName}</h3>`;
+                const container = document.createElement('div');
+                container.className = 'tag-group-container';
+                container.dataset.groupName = categoryName;
+                const tagsForCategory = groups[categoryName];
+                if (tagsForCategory?.length > 0) tagsForCategory.forEach(tag => container.appendChild(createTagElement(tag)));
+                groupDiv.appendChild(container);
+                tagOutput.appendChild(groupDiv);
+            });
+        } else {
+            let tagsToDisplay = [...baseTags];
+            if (sortSelect.value === 'az') tagsToDisplay.sort((a, b) => a.original.localeCompare(b.original));
+            else if (sortSelect.value === 'za') tagsToDisplay.sort((a, b) => b.original.localeCompare(a.original));
+            const container = document.createElement('div');
+            container.className = 'tag-group-container';
+            container.dataset.groupName = 'all';
+            tagsToDisplay.forEach(tag => container.appendChild(createTagElement(tag)));
+            tagOutput.appendChild(container);
+        }
+        initSortable();
+    }
     
-    // --- All other utility functions ---
-    function showCorrectionMenu(event, clickedTag) { const menuId = 'correction-menu'; document.getElementById(menuId)?.remove(); if (selectedTagIds.size === 0 || !selectedTagIds.has(clickedTag.id)) { selectedTagIds.clear(); document.querySelectorAll('.tag-base.selected').forEach(el => el.classList.remove('selected')); selectedTagIds.add(clickedTag.id); document.querySelector(`[data-id="${clickedTag.id}"]`)?.classList.add('selected'); } const menu = document.createElement('div'); menu.id = menuId; menu.className = 'absolute z-20 bg-gray-800 border border-gray-600 rounded-md shadow-lg py-1 text-sm'; menu.style.left = `${event.pageX}px`; menu.style.top = `${event.pageY}px`; let title = selectedTagIds.size > 1 ? `Correct ${selectedTagIds.size} Tags` : `Correct '${clickedTag.original}'`; let menuHTML = `<div class="px-3 py-1 text-gray-400 border-b border-gray-700">${title}</div>`; menuHTML += `<a href="#" class="block px-3 py-1 text-amber-400 hover:bg-amber-600/50" onclick="resetTagCategory(event)">Reset to Default Category</a>`; menuHTML += `<div class="border-t border-gray-700 my-1"></div>`; tagCategorizer.allKnownCategories.sort().forEach(cat => { menuHTML += `<a href="#" class="block px-3 py-1 text-gray-200 hover:bg-indigo-600" onclick="submitCategoryUpdate(event,'${cat}')">${cat}</a>`; }); menu.innerHTML = menuHTML; document.body.appendChild(menu); document.addEventListener('click', () => menu.remove(), { once: true }); }
-    async function resetTagCategory(event) { event.preventDefault(); const tagsToReset = baseTags.filter(t => selectedTagIds.has(t.id)); tagsToReset.forEach(tag => { tagCategorizer.resetIndexForTag(tag.original); const { category, source } = tagCategorizer.categorize(tag.original); tag.category = category; tag.categorySource = source; }); selectedTagIds.clear(); displayTags(); }
-    async function loadExternalData() { document.title = 'Danbooru Tag Helper (Loading...)'; try { const [tagsResponse, mapResponse] = await Promise.all([ fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/tags.json?t=${new Date().getTime()}`), fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/tag_map.json?t=${new Date().getTime()}`) ]); if (!tagsResponse.ok) throw new Error(`Failed to fetch tags.json: ${tagsResponse.statusText}`); if (!mapResponse.ok) throw new Error(`Failed to fetch tag_map.json: ${mapResponse.statusText}`); TAG_DATABASE = await tagsResponse.json(); const tagMap = await mapResponse.json(); const categoryOrder = ['Quality', 'Composition', 'Characters', 'Subject & Creatures', 'Face', 'Eyes', 'Hair', 'Body Parts', 'Attire', 'Accessories', 'Held Items & Objects', 'Actions & Poses', 'Setting & Environment', 'Style & Meta', 'Other']; tagCategorizer = new TagCategorizer(tagMap, TAG_DATABASE, categoryOrder); document.title = 'Danbooru Tag Helper (Ready)'; } catch (error) { console.error("FATAL ERROR:", error); document.title = 'Danbooru Tag Helper (ERROR)'; const errorDiv = document.createElement('div'); errorDiv.className = 'p-4 mb-4 text-sm text-red-200 bg-red-800/50 rounded-lg'; errorDiv.innerHTML = `<strong>Error loading data:</strong> ${error.message}. Please check the console (F12) for details.`; document.querySelector('.main-container').prepend(errorDiv); } }
-    function copyTagsToClipboard() { const tagElements = tagOutput.querySelectorAll('.tag-base'); const processed = Array.from(tagElements).map(el => { const weightedTag = el.dataset.weightedTag; return underscoreToggle.checked ? weightedTag.replace(/\s/g, '_') : weightedTag.replace(/_/g, ' '); }); const finalString = [ ...triggerInput.value.split(',').map(t => t.trim()).filter(Boolean), ...processed, ...appendInput.value.split(',').map(t => t.trim()).filter(Boolean) ].join(', '); navigator.clipboard.writeText(finalString).then(() => { copyMessage.textContent = 'Tags copied!'; updateCopyHistory(finalString); setTimeout(() => copyMessage.textContent = '', 2000); }).catch(err => { copyMessage.textContent = 'Copy failed!'; console.error("Clipboard write failed: ", err); }); }
+    function createTagElement(tag) { const el = document.createElement('div'); el.className = 'tag-base processed-tag'; el.dataset.id = tag.id; el.dataset.weightedTag = tag.weighted; if (selectedTagIds.has(tag.id)) el.classList.add('selected'); el.style.borderStyle = tag.categorySource !== 'Primary' ? 'dashed' : 'solid'; el.title = `(${tag.categorySource}) ${tag.original}\nCategory: ${tag.category}\n\nCtrl+Click to multi-select.\nRight-click for options.`; const useUnderscores = underscoreToggle.checked; const displayTag = useUnderscores ? tag.weighted.replace(/\s/g, '_') : tag.weighted.replace(/_/g, ' '); if (enableWeightingToggle.checked) { el.innerHTML = `<button class="tag-weight-btn" onclick="updateTagWeight('${tag.id}','decrease')">-</button><span class="tag-text px-1">${displayTag}</span><button class="tag-weight-btn" onclick="updateTagWeight('${tag.id}','increase')">+</button>`; } else { el.innerHTML = `<span class="tag-text">${displayTag}</span>`; } el.addEventListener('click', (e) => handleTagClick(e, tag.id)); el.addEventListener('contextmenu', (e) => { e.preventDefault(); showCorrectionMenu(e, tag); }); return el; }
+    function handleTagClick(event, tagId) { const tagElement = event.currentTarget; if (event.ctrlKey || event.metaKey) { if (selectedTagIds.has(tagId)) { selectedTagIds.delete(tagId); tagElement.classList.remove('selected'); } else { selectedTagIds.add(tagId); tagElement.classList.add('selected'); } } else { document.querySelectorAll('.tag-base.selected').forEach(el => el.classList.remove('selected')); selectedTagIds.clear(); selectedTagIds.add(tagId); tagElement.classList.add('selected'); } }
+    function showCorrectionMenu(event, clickedTag) { const menuId = 'correction-menu'; document.getElementById(menuId)?.remove(); if (selectedTagIds.size === 0 || !selectedTagIds.has(clickedTag.id)) { selectedTagIds.clear(); document.querySelectorAll('.tag-base.selected').forEach(el => el.classList.remove('selected')); selectedTagIds.add(clickedTag.id); document.querySelector(`[data-id="${clickedTag.id}"]`)?.classList.add('selected'); } const menu = document.createElement('div'); menu.id = menuId; menu.className = 'absolute z-20 bg-gray-800 border border-gray-600 rounded-md shadow-lg py-1 text-sm'; menu.style.left = `${event.pageX}px`; menu.style.top = `${event.pageY}px`; let title = selectedTagIds.size > 1 ? `Correct ${selectedTagIds.size} Tags` : `Correct '${clickedTag.original}'`; let menuHTML = `<div class="px-3 py-1 text-gray-400 border-b border-gray-700">${title}</div>`; tagCategorizer.categories.forEach(cat => { menuHTML += `<a href="#" class="block px-3 py-1 text-gray-200 hover:bg-indigo-600" onclick="submitCategoryUpdate(event,'${cat}')">${cat}</a>`; }); menu.innerHTML = menuHTML; document.body.appendChild(menu); document.addEventListener('click', () => menu.remove(), { once: true }); }
+    async function submitCategoryUpdate(event, newCategory) { event.preventDefault(); if (!gitHubPat) { gitHubPat = prompt("Please enter your GitHub Personal Access Token (PAT) with `public_repo` scope.", ""); if (!gitHubPat) { copyMessage.textContent = 'Submission cancelled.'; setTimeout(() => copyMessage.textContent = '', 3000); return; } } const tagsToUpdate = baseTags.filter(t => selectedTagIds.has(t.id)); if (tagsToUpdate.length === 0) return; copyMessage.textContent = `Submitting issue for ${tagsToUpdate.length} tag(s)...`; const title = `[Auto-Submission] Category Update for ${tagsToUpdate.length} Tag(s)`; let body = `**User suggests moving the following tags to the '${newCategory}' category:**\n\n${tagsToUpdate.map(t=>`- \`${t.original}\` (from \`${t.category}\`)`).join('\n')}\n\n---\n*This issue was submitted by the Tag Helper Copilot.*`; try { const response = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/issues`, { method: 'POST', headers: { 'Authorization': `Bearer ${gitHubPat}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' }, body: JSON.stringify({ title, body }) }); if (!response.ok) { const errorData = await response.json(); throw new Error(`GitHub API Error: ${errorData.message}`); } const issueData = await response.json(); copyMessage.textContent = `Success! Issue #${issueData.number} created.`; tagsToUpdate.forEach(tag => { tagCategorizer.updateIndex(tag.original, newCategory); }); const tagIdsToUpdate = new Set(tagsToUpdate.map(t => t.id)); baseTags.forEach(tag => { if (tagIdsToUpdate.has(tag.id)) { tag.category = newCategory; tag.categorySource = 'Primary'; } }); selectedTagIds.clear(); displayTags(); } catch (error) { console.error("Failed to submit GitHub issue:", error); copyMessage.textContent = `Error: ${error.message}`; gitHubPat = null; } finally { setTimeout(() => copyMessage.textContent = '', 5000); } }
+
+    async function loadExternalData() {
+        document.title = 'Danbooru Tag Helper (Loading...)';
+        try {
+            const [tagsResponse, mapResponse] = await Promise.all([
+                fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/tags.json?t=${new Date().getTime()}`),
+                fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/tag_map.json?t=${new Date().getTime()}`)
+            ]);
+            if (!tagsResponse.ok) throw new Error(`Failed to fetch tags.json: ${tagsResponse.statusText}`);
+            if (!mapResponse.ok) throw new Error(`Failed to fetch tag_map.json: ${mapResponse.statusText}`);
+            TAG_DATABASE = await tagsResponse.json();
+            const tagMap = await mapResponse.json();
+            const categoryOrder = ['Quality', 'Composition', 'Characters', 'Subject & Creatures', 'Face', 'Eyes', 'Hair', 'Body Parts', 'Attire', 'Accessories', 'Held Items & Objects', 'Actions & Poses', 'Setting & Environment', 'Style & Meta', 'Other'];
+            tagCategorizer = new TagCategorizer(tagMap, TAG_DATABASE, categoryOrder);
+            document.title = 'Danbooru Tag Helper (Ready)';
+        } catch (error) {
+            console.error("FATAL ERROR:", error);
+            document.title = 'Danbooru Tag Helper (ERROR)';
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'p-4 mb-4 text-sm text-red-200 bg-red-800/50 rounded-lg';
+            errorDiv.innerHTML = `<strong>Error loading data:</strong> ${error.message}. Please check the console (F12) for details.`;
+            document.querySelector('.main-container').prepend(errorDiv);
+        }
+    }
+    
+    // **FIXED LOGIC**: This function now reads the visual order directly from the DOM.
+    function copyTagsToClipboard() {
+        const tagElements = tagOutput.querySelectorAll('.tag-base');
+        const processed = Array.from(tagElements).map(el => {
+            const weightedTag = el.dataset.weightedTag;
+            return underscoreToggle.checked ? weightedTag.replace(/\s/g, '_') : weightedTag.replace(/_/g, ' ');
+        });
+
+        const finalString = [
+            ...triggerInput.value.split(',').map(t => t.trim()).filter(Boolean),
+            ...processed,
+            ...appendInput.value.split(',').map(t => t.trim()).filter(Boolean)
+        ].join(', ');
+        
+        navigator.clipboard.writeText(finalString).then(() => {
+            copyMessage.textContent = 'Tags copied!';
+            updateCopyHistory(finalString);
+            setTimeout(() => copyMessage.textContent = '', 2000);
+        }).catch(err => {
+            copyMessage.textContent = 'Copy failed!';
+            console.error("Clipboard write failed: ", err);
+        });
+    }
+
     window.updateTagWeight = (id, action) => { const tag = baseTags.find(t => t.id === id); if (!tag) return; let current = tag.weighted, original = tag.original; if (action === 'increase') { if (current.startsWith('((')) current = `(((${original})))`; else if (current.startsWith('(')) current = `((${original}))`; else if (current.startsWith('[')) current = original; else current = `(${original})`; } else { if (current.startsWith('[[')) current = `[[[${original}]]]`; else if (current.startsWith('[')) current = `[[${original}]]`; else if (current.startsWith('(')) current = original; else current = `[${original}]`; } tag.weighted = current; displayTags(); };
-    function initSortable() { if (sortableInstances.length) sortableInstances.forEach(s => s.destroy()); sortableInstances = []; tagOutput.querySelectorAll('.tag-group-container').forEach(container => { sortableInstances.push(new Sortable(container, { group: 'shared', animation: 150, ghostClass: 'opacity-50', onEnd: (evt) => { try { const movedTag = baseTags.find(t => t.id === evt.item.dataset.id); const newCategory = evt.to.dataset.groupName; if (movedTag && newCategory) { tagCategorizer.updateIndex(movedTag.original, newCategory); movedTag.category = newCategory; } const allTagElements = Array.from(tagOutput.querySelectorAll('.tag-base')); baseTags = allTagElements.map(el => baseTags.find(t => t.id === el.dataset.id)).filter(Boolean); sortSelect.value = 'manual'; } finally { displayTags(); } }, })); }); }
+    function initSortable() { if (sortableInstances.length) sortableInstances.forEach(s => s.destroy()); sortableInstances = []; tagOutput.querySelectorAll('.tag-group-container').forEach(container => { sortableInstances.push(new Sortable(container, { group: 'shared', animation: 150, ghostClass: 'opacity-50', onEnd: (evt) => { try { const movedTag = baseTags.find(t => t.id === evt.item.dataset.id); const newCategory = evt.to.dataset.groupName; if (movedTag && newCategory) { movedTag.category = newCategory; tagCategorizer.updateIndex(movedTag.original, newCategory); } const allTagElements = Array.from(tagOutput.querySelectorAll('.tag-base')); baseTags = allTagElements.map(el => baseTags.find(t => t.id === el.dataset.id)).filter(Boolean); sortSelect.value = 'manual'; } finally { displayTags(); } }, })); }); }
     function handleAutocomplete(e) { if (!tagCategorizer) return; const text = tagInput.value, cursorPos = tagInput.selectionStart; const lastComma = text.lastIndexOf(',', cursorPos - 1); autocomplete.currentWord = text.substring(lastComma + 1, cursorPos).trim(); const items = autocompleteBox.children; if (autocomplete.active && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === 'Tab')) { e.preventDefault(); if (e.key === 'Enter' || e.key === 'Tab') { if (autocomplete.index > -1 && items[autocomplete.index]) { selectAutocompleteItem(items[autocomplete.index].dataset.tag); } return; } items[autocomplete.index]?.classList.remove('selected'); if (e.key === 'ArrowDown') autocomplete.index = (autocomplete.index + 1) % items.length; if (e.key === 'ArrowUp') autocomplete.index = (autocomplete.index - 1 + items.length) % items.length; items[autocomplete.index]?.classList.add('selected'); return; } if (!autocomplete.currentWord) { hideAutocomplete(); return; } autocomplete.suggestions = TAG_DATABASE.filter(t => t.startsWith(autocomplete.currentWord.replace(/ /g, '_'))).slice(0, 5); if (autocomplete.suggestions.length > 0) { renderAutocomplete(); } else { hideAutocomplete(); } }
     function renderAutocomplete() { autocompleteBox.innerHTML = autocomplete.suggestions.map((s) => `<div class="autocomplete-item p-2 cursor-pointer" data-tag="${s}" onmousedown="selectAutocompleteItem('${s}')">${s.replace(/_/g, ' ')}</div>`).join(''); autocomplete.active = true; autocomplete.index = -1; autocompleteBox.style.display = 'block'; }
     window.selectAutocompleteItem = (tag) => { const text = tagInput.value, cursorPos = tagInput.selectionStart; const lastComma = text.lastIndexOf(',', cursorPos - 1); const before = text.substring(0, lastComma + 1); tagInput.value = `${before} ${tag.replace(/_/g, ' ')}, ${text.substring(cursorPos)}`; hideAutocomplete(); tagInput.focus(); processAll(); };
