@@ -62,14 +62,39 @@
     const ratingSafe = element('rating-safe'), ratingGeneral = element('rating-general'), ratingQuestionable = element('rating-questionable');
 
     class TagCategorizer {
-        constructor(tagMap, allTags, categoryOrder) { this.originalMap = Object.freeze({ ...tagMap }); this.primaryIndex = tagMap; this.displayOrder = categoryOrder; this.allKnownCategories = [...new Set([...Object.values(tagMap), ...categoryOrder])]; this.patternIndex = { ends: {} }; this.keywordIndex = {}; this.buildHeuristicIndexes(allTags); }
-        buildHeuristicIndexes(allTags) { const keywordCategoryCounts={},suffixCategoryCounts={};allTags.forEach(tag=>{const category=this.primaryIndex[tag];if(!category)return;const words=tag.split('_');if(words.length>1){words.forEach(word=>{if(word.length<3)return;if(!keywordCategoryCounts[word])keywordCategoryCounts[word]={};keywordCategoryCounts[word][category]=(keywordCategoryCounts[word][category]||0)+1;});const suffix=words[words.length-1];if(!suffixCategoryCounts[suffix])suffixCategoryCounts[suffix]={};suffixCategoryCounts[suffix][category]=(suffixCategoryCounts[suffix][category]||0)+1;}});for(const keyword in keywordCategoryCounts){const counts=keywordCategoryCounts[keyword];const mostLikelyCategory=Object.keys(counts).reduce((a,b)=>counts[a]>counts[b]?a:b);if(counts[mostLikelyCategory]>1)this.keywordIndex[keyword]=mostLikelyCategory;}for(const suffix in suffixCategoryCounts){const counts=suffixCategoryCounts[suffix];const total=Object.values(counts).reduce((s,c)=>s+c,0);const mostLikelyCategory=Object.keys(counts).reduce((a,b)=>counts[a]>counts[b]?a:b);if(total>5&&(counts[mostLikelyCategory]/total)>0.7)this.patternIndex.ends[`_${suffix}`]=mostLikelyCategory;}console.log(`Built heuristic indexes.`); }
+        constructor(tagMap, allTags, categoryOrder) { this.originalMap = Object.freeze({ ...tagMap }); this.primaryIndex = tagMap; this.displayOrder = categoryOrder; this.allKnownCategories = [...new Set([...Object.values(tagMap), ...categoryOrder])]; this.patternIndex = { ends: {} }; this.keywordIndex = {}; this.buildHeuristicIndexes(); }
+        
+        // **FIXED LOGIC**: This function now learns from the correct data source.
+        buildHeuristicIndexes() {
+            const keywordCategoryCounts = {}, suffixCategoryCounts = {};
+            // Learn from the trusted `tagMap` (this.primaryIndex), not the giant `allTags` list.
+            for (const tag in this.primaryIndex) {
+                const category = this.primaryIndex[tag];
+                const words = tag.split('_');
+                if (words.length > 1) {
+                    words.forEach(word => {
+                        if (word.length < 3) return;
+                        if (!keywordCategoryCounts[word]) keywordCategoryCounts[word] = {};
+                        keywordCategoryCounts[word][category] = (keywordCategoryCounts[word][category] || 0) + 1;
+                    });
+                    const suffix = words[words.length - 1];
+                    if (!suffixCategoryCounts[suffix]) suffixCategoryCounts[suffix] = {};
+                    suffixCategoryCounts[suffix][category] = (suffixCategoryCounts[suffix][category] || 0) + 1;
+                }
+            }
+            for (const keyword in keywordCategoryCounts) { const counts = keywordCategoryCounts[keyword]; const mostLikelyCategory = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b); if (counts[mostLikelyCategory] > 1) this.keywordIndex[keyword] = mostLikelyCategory; }
+            for (const suffix in suffixCategoryCounts) { const counts = suffixCategoryCounts[suffix]; const total = Object.values(counts).reduce((s, c) => s + c, 0); const mostLikelyCategory = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b); if (total > 5 && (counts[mostLikelyCategory] / total) > 0.7) this.patternIndex.ends[`_${suffix}`] = mostLikelyCategory; }
+            console.log(`Built heuristic indexes from ${Object.keys(this.primaryIndex).length} tags.`);
+        }
+        
         updateIndex(tag, newCategory) { this.primaryIndex[tag.toLowerCase().replace(/ /g, '_')] = newCategory; if (!this.allKnownCategories.includes(newCategory)) { this.allKnownCategories.push(newCategory); } if (!this.displayOrder.includes(newCategory)) { const otherIndex = this.displayOrder.indexOf('Other'); this.displayOrder.splice(otherIndex > -1 ? otherIndex : this.displayOrder.length, 0, newCategory); } }
         resetIndexForTag(tag) { const cleanTag = tag.toLowerCase().replace(/ /g, '_'); if (this.originalMap[cleanTag]) { this.primaryIndex[cleanTag] = this.originalMap[cleanTag]; } else { delete this.primaryIndex[cleanTag]; } }
         categorize(tagString) { const tag = tagString.toLowerCase().replace(/ /g, '_'); if (tag.includes('(') && tag.includes(')')) return { category: 'Characters', source: 'Heuristic' }; if (this.primaryIndex[tag]) return { category: this.primaryIndex[tag], source: 'Primary' }; for (const suffix in this.patternIndex.ends) if (tag.endsWith(suffix)) return { category: this.patternIndex.ends[suffix], source: 'Pattern' }; const words = tag.split('_'), categoryScores = {}; words.forEach(word => { if (this.keywordIndex[word]) categoryScores[this.keywordIndex[word]] = (categoryScores[this.keywordIndex[word]] || 0) + 1; }); if (Object.keys(categoryScores).length > 0) return { category: Object.keys(categoryScores).reduce((a, b) => categoryScores[a] > categoryScores[b] ? a : b), source: 'Heuristic' }; return { category: 'Other', source: 'Fallback' }; }
     }
     
-    function getCleanTagsFromInput() {
+    // **FIXED LOGIC**: This function is simpler and correctly handles new tags.
+    function processAll() {
+        if (!tagCategorizer) return;
         const swaps = new Map(swapsInput.value.split(',').map(s => s.split('->').map(p => p.trim())).filter(p => p.length === 2 && p[0]));
         const implications = new Map(implicationsInput.value.split(',').map(s => s.split('=>').map(p => p.trim())).filter(p => p.length === 2 && p[0]));
         const blacklist = new Set(blacklistInput.value.replace(/[\n\s]+/g, ',').split(',').map(w => w.trim().toLowerCase()).filter(Boolean));
@@ -83,80 +108,24 @@
             rawTags = rawTags.filter(tag => { const lower = tag.toLowerCase().replace(/_/g, ' '); if (seen.has(lower)) return false; seen.add(lower); return true; });
         }
         let filteredTags = rawTags.filter(tag => ![...blacklist].some(b => tag.toLowerCase().includes(b)));
-        return filteredTags.slice(0, parseInt(maxTagsInput.value, 10) || 75);
-    }
-    
-    // **FIXED LOGIC** This is the final, correct implementation.
-    function processAll() {
-        if (!tagCategorizer) return;
-        
-        const filteredTags = getCleanTagsFromInput();
+        filteredTags = filteredTags.slice(0, parseInt(maxTagsInput.value, 10) || 75);
+
         const newBaseTags = [];
         const oldTagsMap = new Map(baseTags.map(t => [t.original, t]));
-
         for (const tagString of filteredTags) {
             const { category, source } = tagCategorizer.categorize(tagString);
             const oldTag = oldTagsMap.get(tagString);
-            
-            newBaseTags.push({
-                original: tagString,
-                weighted: oldTag ? oldTag.weighted : tagString,
-                id: oldTag ? oldTag.id : `tag-${tagIdCounter++}`,
-                category,
-                categorySource: source,
-            });
+            newBaseTags.push({ original: tagString, weighted: oldTag ? oldTag.weighted : tagString, id: oldTag ? oldTag.id : `tag-${tagIdCounter++}`, category, categorySource: source });
         }
-        
-        if (!enableWeightingToggle.checked) {
-            newBaseTags.forEach(t => t.weighted = t.original);
-        }
-
+        if (!enableWeightingToggle.checked) newBaseTags.forEach(t => t.weighted = t.original);
         baseTags = newBaseTags;
         displayTags();
     }
 
-    function displayTags() {
-        processedTagsLabel.querySelector('#tagCount').textContent = baseTags.length;
-        processedTagsLabel.querySelector('#maxTagCount').textContent = maxTagsInput.value;
-        tagOutput.innerHTML = '';
-        copyButton.disabled = baseTags.length === 0;
-
-        if (baseTags.length === 0 && sortSelect.value !== 'danbooru') {
-            tagOutput.innerHTML = '<span class="text-gray-500 italic">Start typing or paste tags above...</span>';
-            return;
-        }
-        if (sortSelect.value === 'danbooru') {
-            const groups = baseTags.reduce((acc, tag) => { const c = tag.category || 'Other'; if (!acc[c]) acc[c] = []; acc[c].push(tag); return acc; }, {});
-            tagCategorizer.displayOrder.forEach(categoryName => {
-                const groupDiv = document.createElement('div');
-                groupDiv.className = 'tag-group';
-                groupDiv.innerHTML = `<h3 class="tag-group-title">${categoryName}</h3>`;
-                const container = document.createElement('div');
-                container.className = 'tag-group-container';
-                container.dataset.groupName = categoryName;
-                const tagsForCategory = groups[categoryName];
-                if (tagsForCategory?.length > 0) {
-                    tagsForCategory.forEach(tag => container.appendChild(createTagElement(tag)));
-                }
-                groupDiv.appendChild(container);
-                tagOutput.appendChild(groupDiv);
-            });
-        } else {
-            let tagsToDisplay = [...baseTags];
-            if (sortSelect.value === 'az') tagsToDisplay.sort((a, b) => a.original.localeCompare(b.original));
-            else if (sortSelect.value === 'za') tagsToDisplay.sort((a, b) => b.original.localeCompare(a.original));
-            const container = document.createElement('div');
-            container.className = 'tag-group-container';
-            container.dataset.groupName = 'all';
-            tagsToDisplay.forEach(tag => container.appendChild(createTagElement(tag)));
-            tagOutput.appendChild(container);
-        }
-        initSortable();
-    }
-    
-    function createTagElement(tag) { const el = document.createElement('div'); el.className = 'tag-base processed-tag'; el.dataset.id = tag.id; el.dataset.weightedTag = tag.weighted; if (selectedTagIds.has(tag.id)) el.classList.add('selected'); el.style.borderStyle = tag.categorySource !== 'Primary' ? 'dashed' : 'solid'; el.title = `(${tag.categorySource}) ${tag.original}\nCategory: ${tag.category}\n\nCtrl+Click to multi-select.\nRight-click for options.`; const useUnderscores = underscoreToggle.checked; const displayTag = useUnderscores ? tag.weighted.replace(/\s/g, '_') : tag.weighted.replace(/_/g, ' '); if (enableWeightingToggle.checked) { el.innerHTML = `<button class="tag-weight-btn" onclick="updateTagWeight('${tag.id}','decrease')">-</button><span class="tag-text px-1">${displayTag}</span><button class="tag-weight-btn" onclick="updateTagWeight('${tag.id}','increase')">+</button>`; } else { el.innerHTML = `<span class="tag-text">${displayTag}</span>`; } el.addEventListener('click', (e) => handleTagClick(e, tag.id)); el.addEventListener('contextmenu', (e) => { e.preventDefault(); showCorrectionMenu(e, tag); }); return el; }
-    function handleTagClick(event, tagId) { const tagElement = event.currentTarget; if (event.ctrlKey || event.metaKey) { if (selectedTagIds.has(tagId)) { selectedTagIds.delete(tagId); tagElement.classList.remove('selected'); } else { selectedTagIds.add(tagId); tagElement.classList.add('selected'); } } else { document.querySelectorAll('.tag-base.selected').forEach(el => el.classList.remove('selected')); selectedTagIds.clear(); selectedTagIds.add(tagId); tagElement.classList.add('selected'); } }
-    async function submitCategoryUpdate(event, newCategory) { event.preventDefault(); if (!gitHubPat) { gitHubPat = prompt("Please enter your GitHub Personal Access Token (PAT) with `public_repo` scope.", ""); if (!gitHubPat) { copyMessage.textContent = 'Submission cancelled.'; setTimeout(() => copyMessage.textContent = '', 3000); return; } } const tagsToUpdate = baseTags.filter(t => selectedTagIds.has(t.id)); if (tagsToUpdate.length === 0) return; copyMessage.textContent = `Submitting issue for ${tagsToUpdate.length} tag(s)...`; const title = `[Auto-Submission] Category Update for ${tagsToUpdate.length} Tag(s)`; let body = `**User suggests moving the following tags to the '${newCategory}' category:**\n\n${tagsToUpdate.map(t=>`- \`${t.original}\` (from \`${t.category}\`)`).join('\n')}\n\n---\n*This issue was submitted by the Tag Helper Copilot.*`; try { const response = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/issues`, { method: 'POST', headers: { 'Authorization': `Bearer ${gitHubPat}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' }, body: JSON.stringify({ title, body }) }); if (!response.ok) { const errorData = await response.json(); throw new Error(`GitHub API Error: ${errorData.message}`); } const issueData = await response.json(); copyMessage.textContent = `Success! Issue #${issueData.number} created.`; tagsToUpdate.forEach(tag => tagCategorizer.updateIndex(tag.original, newCategory)); const tagIdsToUpdate = new Set(tagsToUpdate.map(t => t.id)); baseTags.forEach(tag => { if (tagIdsToUpdate.has(tag.id)) { tag.category = newCategory; tag.categorySource = 'Primary'; } }); selectedTagIds.clear(); displayTags(); } catch (error) { console.error("Failed to submit GitHub issue:", error); copyMessage.textContent = `Error: ${error.message}`; gitHubPat = null; } finally { setTimeout(() => copyMessage.textContent = '', 5000); } }
+    function displayTags() { /* No changes */ processedTagsLabel.querySelector('#tagCount').textContent = baseTags.length; processedTagsLabel.querySelector('#maxTagCount').textContent = maxTagsInput.value; tagOutput.innerHTML = ''; copyButton.disabled = baseTags.length === 0; if (baseTags.length === 0 && sortSelect.value !== 'danbooru') { tagOutput.innerHTML = '<span class="text-gray-500 italic">Start typing or paste tags above...</span>'; return; } if (sortSelect.value === 'danbooru') { const groups = baseTags.reduce((acc, tag) => { const c = tag.category || 'Other'; if (!acc[c]) acc[c] = []; acc[c].push(tag); return acc; }, {}); tagCategorizer.displayOrder.forEach(categoryName => { const groupDiv = document.createElement('div'); groupDiv.className = 'tag-group'; groupDiv.innerHTML = `<h3 class="tag-group-title">${categoryName}</h3>`; const container = document.createElement('div'); container.className = 'tag-group-container'; container.dataset.groupName = categoryName; const tagsForCategory = groups[categoryName]; if (tagsForCategory?.length > 0) { tagsForCategory.forEach(tag => container.appendChild(createTagElement(tag))); } groupDiv.appendChild(container); tagOutput.appendChild(groupDiv); }); } else { let tagsToDisplay = [...baseTags]; if (sortSelect.value === 'az') tagsToDisplay.sort((a, b) => a.original.localeCompare(b.original)); else if (sortSelect.value === 'za') tagsToDisplay.sort((a, b) => b.original.localeCompare(a.original)); const container = document.createElement('div'); container.className = 'tag-group-container'; container.dataset.groupName = 'all'; tagsToDisplay.forEach(tag => container.appendChild(createTagElement(tag))); tagOutput.appendChild(container); } initSortable(); }
+    function createTagElement(tag) { /* No changes */ const el = document.createElement('div'); el.className = 'tag-base processed-tag'; el.dataset.id = tag.id; el.dataset.weightedTag = tag.weighted; if (selectedTagIds.has(tag.id)) el.classList.add('selected'); el.style.borderStyle = tag.categorySource !== 'Primary' ? 'dashed' : 'solid'; el.title = `(${tag.categorySource}) ${tag.original}\nCategory: ${tag.category}\n\nCtrl+Click to multi-select.\nRight-click for options.`; const useUnderscores = underscoreToggle.checked; const displayTag = useUnderscores ? tag.weighted.replace(/\s/g, '_') : tag.weighted.replace(/_/g, ' '); if (enableWeightingToggle.checked) { el.innerHTML = `<button class="tag-weight-btn" onclick="updateTagWeight('${tag.id}','decrease')">-</button><span class="tag-text px-1">${displayTag}</span><button class="tag-weight-btn" onclick="updateTagWeight('${tag.id}','increase')">+</button>`; } else { el.innerHTML = `<span class="tag-text">${displayTag}</span>`; } el.addEventListener('click', (e) => handleTagClick(e, tag.id)); el.addEventListener('contextmenu', (e) => { e.preventDefault(); showCorrectionMenu(e, tag); }); return el; }
+    function handleTagClick(event, tagId) { /* No changes */ const tagElement = event.currentTarget; if (event.ctrlKey || event.metaKey) { if (selectedTagIds.has(tagId)) { selectedTagIds.delete(tagId); tagElement.classList.remove('selected'); } else { selectedTagIds.add(tagId); tagElement.classList.add('selected'); } } else { document.querySelectorAll('.tag-base.selected').forEach(el => el.classList.remove('selected')); selectedTagIds.clear(); selectedTagIds.add(tagId); tagElement.classList.add('selected'); } }
+    async function submitCategoryUpdate(event, newCategory) { /* No changes */ event.preventDefault(); if (!gitHubPat) { gitHubPat = prompt("Please enter your GitHub Personal Access Token (PAT) with `public_repo` scope.", ""); if (!gitHubPat) { copyMessage.textContent = 'Submission cancelled.'; setTimeout(() => copyMessage.textContent = '', 3000); return; } } const tagsToUpdate = baseTags.filter(t => selectedTagIds.has(t.id)); if (tagsToUpdate.length === 0) return; copyMessage.textContent = `Submitting issue for ${tagsToUpdate.length} tag(s)...`; const title = `[Auto-Submission] Category Update for ${tagsToUpdate.length} Tag(s)`; let body = `**User suggests moving the following tags to the '${newCategory}' category:**\n\n${tagsToUpdate.map(t=>`- \`${t.original}\` (from \`${t.category}\`)`).join('\n')}\n\n---\n*This issue was submitted by the Tag Helper Copilot.*`; try { const response = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/issues`, { method: 'POST', headers: { 'Authorization': `Bearer ${gitHubPat}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' }, body: JSON.stringify({ title, body }) }); if (!response.ok) { const errorData = await response.json(); throw new Error(`GitHub API Error: ${errorData.message}`); } const issueData = await response.json(); copyMessage.textContent = `Success! Issue #${issueData.number} created.`; tagsToUpdate.forEach(tag => tagCategorizer.updateIndex(tag.original, newCategory)); const tagIdsToUpdate = new Set(tagsToUpdate.map(t => t.id)); baseTags.forEach(tag => { if (tagIdsToUpdate.has(tag.id)) { tag.category = newCategory; tag.categorySource = 'Primary'; } }); selectedTagIds.clear(); displayTags(); } catch (error) { console.error("Failed to submit GitHub issue:", error); copyMessage.textContent = `Error: ${error.message}`; gitHubPat = null; } finally { setTimeout(() => copyMessage.textContent = '', 5000); } }
     
     // --- All other utility functions ---
     function showCorrectionMenu(event, clickedTag) { const menuId = 'correction-menu'; document.getElementById(menuId)?.remove(); if (selectedTagIds.size === 0 || !selectedTagIds.has(clickedTag.id)) { selectedTagIds.clear(); document.querySelectorAll('.tag-base.selected').forEach(el => el.classList.remove('selected')); selectedTagIds.add(clickedTag.id); document.querySelector(`[data-id="${clickedTag.id}"]`)?.classList.add('selected'); } const menu = document.createElement('div'); menu.id = menuId; menu.className = 'absolute z-20 bg-gray-800 border border-gray-600 rounded-md shadow-lg py-1 text-sm'; menu.style.left = `${event.pageX}px`; menu.style.top = `${event.pageY}px`; let title = selectedTagIds.size > 1 ? `Correct ${selectedTagIds.size} Tags` : `Correct '${clickedTag.original}'`; let menuHTML = `<div class="px-3 py-1 text-gray-400 border-b border-gray-700">${title}</div>`; menuHTML += `<a href="#" class="block px-3 py-1 text-amber-400 hover:bg-amber-600/50" onclick="resetTagCategory(event)">Reset to Default Category</a>`; menuHTML += `<div class="border-t border-gray-700 my-1"></div>`; tagCategorizer.allKnownCategories.sort().forEach(cat => { menuHTML += `<a href="#" class="block px-3 py-1 text-gray-200 hover:bg-indigo-600" onclick="submitCategoryUpdate(event,'${cat}')">${cat}</a>`; }); menu.innerHTML = menuHTML; document.body.appendChild(menu); document.addEventListener('click', () => menu.remove(), { once: true }); }
