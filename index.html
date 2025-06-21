@@ -63,11 +63,8 @@
 
     class TagCategorizer {
         constructor(tagMap, allTags, categoryOrder) { this.originalMap = Object.freeze({ ...tagMap }); this.primaryIndex = tagMap; this.displayOrder = categoryOrder; this.allKnownCategories = [...new Set([...Object.values(tagMap), ...categoryOrder])]; this.patternIndex = { ends: {} }; this.keywordIndex = {}; this.buildHeuristicIndexes(); }
-        
-        // **FIXED LOGIC**: This function now learns from the correct data source.
         buildHeuristicIndexes() {
             const keywordCategoryCounts = {}, suffixCategoryCounts = {};
-            // Learn from the trusted `tagMap` (this.primaryIndex), not the giant `allTags` list.
             for (const tag in this.primaryIndex) {
                 const category = this.primaryIndex[tag];
                 const words = tag.split('_');
@@ -86,27 +83,59 @@
             for (const suffix in suffixCategoryCounts) { const counts = suffixCategoryCounts[suffix]; const total = Object.values(counts).reduce((s, c) => s + c, 0); const mostLikelyCategory = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b); if (total > 5 && (counts[mostLikelyCategory] / total) > 0.7) this.patternIndex.ends[`_${suffix}`] = mostLikelyCategory; }
             console.log(`Built heuristic indexes from ${Object.keys(this.primaryIndex).length} tags.`);
         }
-        
         updateIndex(tag, newCategory) { this.primaryIndex[tag.toLowerCase().replace(/ /g, '_')] = newCategory; if (!this.allKnownCategories.includes(newCategory)) { this.allKnownCategories.push(newCategory); } if (!this.displayOrder.includes(newCategory)) { const otherIndex = this.displayOrder.indexOf('Other'); this.displayOrder.splice(otherIndex > -1 ? otherIndex : this.displayOrder.length, 0, newCategory); } }
         resetIndexForTag(tag) { const cleanTag = tag.toLowerCase().replace(/ /g, '_'); if (this.originalMap[cleanTag]) { this.primaryIndex[cleanTag] = this.originalMap[cleanTag]; } else { delete this.primaryIndex[cleanTag]; } }
         categorize(tagString) { const tag = tagString.toLowerCase().replace(/ /g, '_'); if (tag.includes('(') && tag.includes(')')) return { category: 'Characters', source: 'Heuristic' }; if (this.primaryIndex[tag]) return { category: this.primaryIndex[tag], source: 'Primary' }; for (const suffix in this.patternIndex.ends) if (tag.endsWith(suffix)) return { category: this.patternIndex.ends[suffix], source: 'Pattern' }; const words = tag.split('_'), categoryScores = {}; words.forEach(word => { if (this.keywordIndex[word]) categoryScores[this.keywordIndex[word]] = (categoryScores[this.keywordIndex[word]] || 0) + 1; }); if (Object.keys(categoryScores).length > 0) return { category: Object.keys(categoryScores).reduce((a, b) => categoryScores[a] > categoryScores[b] ? a : b), source: 'Heuristic' }; return { category: 'Other', source: 'Fallback' }; }
     }
     
-    // **FIXED LOGIC**: This function is simpler and correctly handles new tags.
+    // =================================================================
+    // FIXED FUNCTION STARTS HERE
+    // This new function removes hidden aliasing and fixes the
+    // deduplication logic to be predictable.
+    // =================================================================
     function processAll() {
         if (!tagCategorizer) return;
+        
+        // Step 1: Parse all user inputs (swaps, implications, blacklist).
         const swaps = new Map(swapsInput.value.split(',').map(s => s.split('->').map(p => p.trim())).filter(p => p.length === 2 && p[0]));
         const implications = new Map(implicationsInput.value.split(',').map(s => s.split('=>').map(p => p.trim())).filter(p => p.length === 2 && p[0]));
-        const blacklist = new Set(blacklistInput.value.replace(/[\n\s]+/g, ',').split(',').map(w => w.trim().toLowerCase()).filter(Boolean));
+        const blacklist = new Set(blacklistInput.value.replace(/[\n\s]+/g, ',').map(w => w.trim().toLowerCase()).filter(Boolean));
+        
+        // Step 2: Get raw tags from input and apply *only* the user-defined swaps.
+        // This is the critical change: no hidden, internal aliases are used.
         let rawTags = tagInput.value.replace(/[\n]+/g, ',').split(',').map(t => t.trim()).filter(Boolean);
-        rawTags = rawTags.map(tag => swaps.get(tag.toLowerCase().replace(/_/g, ' ')) || tag);
+        rawTags = rawTags.map(tag => {
+            const lowerTag = tag.toLowerCase().replace(/_/g, ' ');
+            return swaps.get(lowerTag) || tag;
+        });
+
+        // Step 3: Handle user-defined implications.
         const tagsToAdd = new Set();
-        rawTags.forEach(tag => { const lowerTag = tag.toLowerCase(); if (implications.has(lowerTag)) implications.get(lowerTag).split(',').forEach(imp => tagsToAdd.add(imp.trim())); });
+        rawTags.forEach(tag => {
+            const lowerTag = tag.toLowerCase();
+            if (implications.has(lowerTag)) {
+                implications.get(lowerTag).split(',').forEach(imp => tagsToAdd.add(imp.trim()));
+            }
+        });
         rawTags = [...rawTags, ...tagsToAdd];
+
+        // Step 4: Deduplicate the list if the toggle is checked.
+        // This logic is now safer and more predictable because hidden aliases are gone.
         if (deduplicateToggle.checked) {
             const seen = new Set();
-            rawTags = rawTags.filter(tag => { const lower = tag.toLowerCase().replace(/_/g, ' '); if (seen.has(lower)) return false; seen.add(lower); return true; });
+            // We process the list in reverse to ensure that if a tag and its alias
+            // are both in the list, the one that appears *later* is kept.
+            rawTags = rawTags.reverse().filter(tag => {
+                const lower = tag.toLowerCase().replace(/_/g, ' ');
+                if (seen.has(lower)) {
+                    return false;
+                }
+                seen.add(lower);
+                return true;
+            }).reverse(); // Reverse back to the original intended order.
         }
+        
+        // Step 5: Filter by blacklist, slice to max tags, and prepare for final display.
         let filteredTags = rawTags.filter(tag => ![...blacklist].some(b => tag.toLowerCase().includes(b)));
         filteredTags = filteredTags.slice(0, parseInt(maxTagsInput.value, 10) || 75);
 
@@ -115,12 +144,24 @@
         for (const tagString of filteredTags) {
             const { category, source } = tagCategorizer.categorize(tagString);
             const oldTag = oldTagsMap.get(tagString);
-            newBaseTags.push({ original: tagString, weighted: oldTag ? oldTag.weighted : tagString, id: oldTag ? oldTag.id : `tag-${tagIdCounter++}`, category, categorySource: source });
+            newBaseTags.push({
+                original: tagString,
+                weighted: oldTag ? oldTag.weighted : tagString,
+                id: oldTag ? oldTag.id : `tag-${tagIdCounter++}`,
+                category,
+                categorySource: source
+            });
         }
-        if (!enableWeightingToggle.checked) newBaseTags.forEach(t => t.weighted = t.original);
+        
+        if (!enableWeightingToggle.checked) {
+            newBaseTags.forEach(t => t.weighted = t.original);
+        }
         baseTags = newBaseTags;
         displayTags();
     }
+    // =================================================================
+    // FIXED FUNCTION ENDS HERE
+    // =================================================================
 
     function displayTags() { /* No changes */ processedTagsLabel.querySelector('#tagCount').textContent = baseTags.length; processedTagsLabel.querySelector('#maxTagCount').textContent = maxTagsInput.value; tagOutput.innerHTML = ''; copyButton.disabled = baseTags.length === 0; if (baseTags.length === 0 && sortSelect.value !== 'danbooru') { tagOutput.innerHTML = '<span class="text-gray-500 italic">Start typing or paste tags above...</span>'; return; } if (sortSelect.value === 'danbooru') { const groups = baseTags.reduce((acc, tag) => { const c = tag.category || 'Other'; if (!acc[c]) acc[c] = []; acc[c].push(tag); return acc; }, {}); tagCategorizer.displayOrder.forEach(categoryName => { const groupDiv = document.createElement('div'); groupDiv.className = 'tag-group'; groupDiv.innerHTML = `<h3 class="tag-group-title">${categoryName}</h3>`; const container = document.createElement('div'); container.className = 'tag-group-container'; container.dataset.groupName = categoryName; const tagsForCategory = groups[categoryName]; if (tagsForCategory?.length > 0) { tagsForCategory.forEach(tag => container.appendChild(createTagElement(tag))); } groupDiv.appendChild(container); tagOutput.appendChild(groupDiv); }); } else { let tagsToDisplay = [...baseTags]; if (sortSelect.value === 'az') tagsToDisplay.sort((a, b) => a.original.localeCompare(b.original)); else if (sortSelect.value === 'za') tagsToDisplay.sort((a, b) => b.original.localeCompare(a.original)); const container = document.createElement('div'); container.className = 'tag-group-container'; container.dataset.groupName = 'all'; tagsToDisplay.forEach(tag => container.appendChild(createTagElement(tag))); tagOutput.appendChild(container); } initSortable(); }
     function createTagElement(tag) { /* No changes */ const el = document.createElement('div'); el.className = 'tag-base processed-tag'; el.dataset.id = tag.id; el.dataset.weightedTag = tag.weighted; if (selectedTagIds.has(tag.id)) el.classList.add('selected'); el.style.borderStyle = tag.categorySource !== 'Primary' ? 'dashed' : 'solid'; el.title = `(${tag.categorySource}) ${tag.original}\nCategory: ${tag.category}\n\nCtrl+Click to multi-select.\nRight-click for options.`; const useUnderscores = underscoreToggle.checked; const displayTag = useUnderscores ? tag.weighted.replace(/\s/g, '_') : tag.weighted.replace(/_/g, ' '); if (enableWeightingToggle.checked) { el.innerHTML = `<button class="tag-weight-btn" onclick="updateTagWeight('${tag.id}','decrease')">-</button><span class="tag-text px-1">${displayTag}</span><button class="tag-weight-btn" onclick="updateTagWeight('${tag.id}','increase')">+</button>`; } else { el.innerHTML = `<span class="tag-text">${displayTag}</span>`; } el.addEventListener('click', (e) => handleTagClick(e, tag.id)); el.addEventListener('contextmenu', (e) => { e.preventDefault(); showCorrectionMenu(e, tag); }); return el; }
