@@ -61,15 +61,10 @@
     const suggestBtn = element('suggest-btn'), themeButtons = document.querySelectorAll('.theme-button'), suggestionCountInput = element('suggestionCountInput');
     const ratingSafe = element('rating-safe'), ratingGeneral = element('rating-general'), ratingQuestionable = element('rating-questionable');
 
-    // ===================================================================================
-    // === UPDATED TagCategorizer Class ==================================================
-    // ===================================================================================
-    // This new version includes more robust heuristics for better accuracy.
     class TagCategorizer {
         constructor(tagMap, allTags, categoryOrder) {
             this.primaryIndex = tagMap;
             this.categoryOrder = categoryOrder;
-            // Add a dedicated 'Uncategorized' group for clarity
             this.categories = [...new Set([...Object.values(tagMap), ...categoryOrder, 'Uncategorized'])];
             this.patternIndex = { ends: {}, starts: {} };
             this.keywordIndex = {};
@@ -81,63 +76,42 @@
             const suffixCategoryCounts = {};
             const prefixCategoryCounts = {};
             const COPYRIGHT_KEYWORDS = new Set(['(genshin_impact)', '(azur_lane)', '(touhou)', '(hololive)', '(fate/grand_order)']);
-
             allTags.forEach(tag => {
                 const category = this.primaryIndex[tag];
                 if (!category) return;
-
                 const words = tag.split('_');
                 if (words.length > 1) {
-                    // Analyze keywords
                     words.forEach(word => {
-                        if (word.length < 4 || COPYRIGHT_KEYWORDS.has(word)) return; // Ignore short words and series names
+                        if (word.length < 4 || COPYRIGHT_KEYWORDS.has(word)) return;
                         if (!keywordCategoryCounts[word]) keywordCategoryCounts[word] = {};
                         keywordCategoryCounts[word][category] = (keywordCategoryCounts[word][category] || 0) + 1;
                     });
-                    
-                    // Analyze suffixes
                     const suffix = words[words.length - 1];
                     if (!suffixCategoryCounts[suffix]) suffixCategoryCounts[suffix] = {};
                     suffixCategoryCounts[suffix][category] = (suffixCategoryCounts[suffix][category] || 0) + 1;
-
-                    // Analyze prefixes
                     const prefix = words[0];
                     if (!prefixCategoryCounts[prefix]) prefixCategoryCounts[prefix] = {};
                     prefixCategoryCounts[prefix][category] = (prefixCategoryCounts[prefix][category] || 0) + 1;
                 }
             });
-
-            // Build keyword index from statistics
             for (const keyword in keywordCategoryCounts) {
                 const counts = keywordCategoryCounts[keyword];
                 const total = Object.values(counts).reduce((s, c) => s + c, 0);
                 const [mostLikelyCategory, categoryCount] = Object.entries(counts).reduce((a, b) => a[1] > b[1] ? a : b);
-                // Only add if a keyword is strongly associated with one category
-                if (total > 5 && (categoryCount / total) > 0.8) {
-                    this.keywordIndex[keyword] = mostLikelyCategory;
-                }
+                if (total > 5 && (categoryCount / total) > 0.8) this.keywordIndex[keyword] = mostLikelyCategory;
             }
-            
-            // Build suffix index
             for (const suffix in suffixCategoryCounts) {
                 const counts = suffixCategoryCounts[suffix];
                 const total = Object.values(counts).reduce((s, c) => s + c, 0);
                 const [mostLikelyCategory, categoryCount] = Object.entries(counts).reduce((a, b) => a[1] > b[1] ? a : b);
-                if (total > 10 && (categoryCount / total) > 0.75) {
-                    this.patternIndex.ends[`_${suffix}`] = mostLikelyCategory;
-                }
+                if (total > 10 && (categoryCount / total) > 0.75) this.patternIndex.ends[`_${suffix}`] = mostLikelyCategory;
             }
-
-            // Build prefix index
             for (const prefix in prefixCategoryCounts) {
                 const counts = prefixCategoryCounts[prefix];
                 const total = Object.values(counts).reduce((s, c) => s + c, 0);
                 const [mostLikelyCategory, categoryCount] = Object.entries(counts).reduce((a, b) => a[1] > b[1] ? a : b);
-                 if (total > 10 && (categoryCount / total) > 0.75) {
-                    this.patternIndex.starts[`${prefix}_`] = mostLikelyCategory;
-                }
+                 if (total > 10 && (categoryCount / total) > 0.75) this.patternIndex.starts[`${prefix}_`] = mostLikelyCategory;
             }
-            console.log(`Built enhanced heuristic indexes.`);
         }
 
         updateIndex(tag, newCategory) {
@@ -146,45 +120,17 @@
 
         categorize(tagString) {
             const tag = tagString.toLowerCase().replace(/ /g, '_');
-
-            // 1. Primary Index (Most Accurate)
-            if (this.primaryIndex[tag]) {
-                return { category: this.primaryIndex[tag], source: 'Primary' };
-            }
-            
-            // 2. Character/Copyright Heuristic (Very Reliable Pattern)
+            if (this.primaryIndex[tag]) return { category: this.primaryIndex[tag], source: 'Primary' };
             if (tag.includes('(') && tag.includes(')')) {
-                // Check if the part inside the parenthesis is a known series
                 const seriesMatch = tag.match(/\(([^)]+)\)/);
-                if (seriesMatch && this.primaryIndex[seriesMatch[1]]) {
-                     return { category: 'Characters', source: 'Heuristic (Series)' };
-                }
+                if (seriesMatch && this.primaryIndex[seriesMatch[1]]) return { category: 'Characters', source: 'Heuristic (Series)' };
                 return { category: 'Characters', source: 'Heuristic (Pattern)' };
             }
-
-            // 3. Prefix/Suffix Pattern Matching
-            for (const prefix in this.patternIndex.starts) {
-                if (tag.startsWith(prefix)) return { category: this.patternIndex.starts[prefix], source: 'Pattern (Prefix)' };
-            }
-            for (const suffix in this.patternIndex.ends) {
-                if (tag.endsWith(suffix)) return { category: this.patternIndex.ends[suffix], source: 'Pattern (Suffix)' };
-            }
-
-            // 4. Keyword Scoring
-            const words = tag.split('_');
-            const categoryScores = {};
-            words.forEach(word => {
-                if (this.keywordIndex[word]) {
-                    categoryScores[this.keywordIndex[word]] = (categoryScores[this.keywordIndex[word]] || 0) + 1;
-                }
-            });
-
-            if (Object.keys(categoryScores).length > 0) {
-                const bestCategory = Object.keys(categoryScores).reduce((a, b) => categoryScores[a] > categoryScores[b] ? a : b);
-                return { category: bestCategory, source: 'Heuristic (Keywords)' };
-            }
-
-            // 5. Fallback
+            for (const prefix in this.patternIndex.starts) if (tag.startsWith(prefix)) return { category: this.patternIndex.starts[prefix], source: 'Pattern (Prefix)' };
+            for (const suffix in this.patternIndex.ends) if (tag.endsWith(suffix)) return { category: this.patternIndex.ends[suffix], source: 'Pattern (Suffix)' };
+            const words = tag.split('_'), categoryScores = {};
+            words.forEach(word => { if (this.keywordIndex[word]) categoryScores[this.keywordIndex[word]] = (categoryScores[this.keywordIndex[word]] || 0) + 1; });
+            if (Object.keys(categoryScores).length > 0) return { category: Object.keys(categoryScores).reduce((a, b) => categoryScores[a] > categoryScores[b] ? a : b), source: 'Heuristic (Keywords)' };
             return { category: 'Uncategorized', source: 'Fallback' };
         }
     }
@@ -193,29 +139,18 @@
         if (!tagCategorizer) return;
         const swaps = new Map(swapsInput.value.split(',').map(s => s.split('->').map(p => p.trim())).filter(p => p.length === 2 && p[0]));
         const implications = new Map(implicationsInput.value.split(',').map(s => s.split('=>').map(p => p.trim())).filter(p => p.length === 2 && p[0]));
-        
-        // --- BLACKLIST FIX ---
-        // Normalize blacklist entries to match the format of tags being checked (lowercase, spaces instead of underscores).
         const blacklist = new Set(blacklistInput.value.replace(/[\n,]+/g, ',').split(',').map(w => w.trim().toLowerCase().replace(/_/g, ' ')).filter(Boolean));
-        
         let rawTags = tagInput.value.replace(/[\n]+/g, ',').split(',').map(t => t.trim()).filter(Boolean);
         rawTags = rawTags.map(tag => swaps.get(tag.toLowerCase().replace(/_/g, ' ')) || tag);
-        
         const tagsToAdd = new Set();
         rawTags.forEach(tag => { const lowerTag = tag.toLowerCase(); if (implications.has(lowerTag)) implications.get(lowerTag).split(',').forEach(imp => tagsToAdd.add(imp.trim())); });
         rawTags = [...rawTags, ...tagsToAdd];
-        
         if (deduplicateToggle.checked) {
             const seen = new Set();
             rawTags = rawTags.filter(tag => { const lower = tag.toLowerCase().replace(/_/g, ' '); if (seen.has(lower)) return false; seen.add(lower); return true; });
         }
-        
-        // --- BLACKLIST FIX ---
-        // Filter using an exact match against the normalized blacklist Set.
         let filteredTags = rawTags.filter(tag => !blacklist.has(tag.toLowerCase().replace(/_/g, ' ')));
-
         filteredTags = filteredTags.slice(0, parseInt(maxTagsInput.value, 10) || 75);
-
         const newBaseTags = [];
         const oldTagsMeta = new Map(baseTags.map(t => [t.original, { id: t.id, weighted: t.weighted }]));
         for (const tag of filteredTags) {
@@ -233,27 +168,22 @@
         processedTagsLabel.querySelector('#maxTagCount').textContent = maxTagsInput.value;
         tagOutput.innerHTML = '';
         copyButton.disabled = baseTags.length === 0;
-
         if (baseTags.length === 0 && sortSelect.value !== 'danbooru') {
             tagOutput.innerHTML = '<span class="text-gray-500 italic">Start typing or paste tags above...</span>';
             return;
         }
         if (sortSelect.value === 'danbooru') {
             const groups = baseTags.reduce((acc, tag) => { const c = tag.category || 'Uncategorized'; if (!acc[c]) acc[c] = []; acc[c].push(tag); return acc; }, {});
-            // Ensure Uncategorized is last
             const sortedCategoryOrder = [...tagCategorizer.categoryOrder, 'Uncategorized'].filter(c => c !== 'Other');
-
             sortedCategoryOrder.forEach(categoryName => {
                 const tagsForCategory = groups[categoryName];
-                if (!tagsForCategory || tagsForCategory.length === 0) return; // Don't show empty groups
-
+                if (!tagsForCategory || tagsForCategory.length === 0) return;
                 const groupDiv = document.createElement('div');
                 groupDiv.className = 'tag-group';
                 groupDiv.innerHTML = `<h3 class="tag-group-title">${categoryName}</h3>`;
                 const container = document.createElement('div');
                 container.className = 'tag-group-container';
                 container.dataset.groupName = categoryName;
-                
                 tagsForCategory.forEach(tag => container.appendChild(createTagElement(tag)));
                 groupDiv.appendChild(container);
                 tagOutput.appendChild(groupDiv);
@@ -274,7 +204,102 @@
     function createTagElement(tag) { const el = document.createElement('div'); el.className = 'tag-base processed-tag'; el.dataset.id = tag.id; el.dataset.weightedTag = tag.weighted; if (selectedTagIds.has(tag.id)) el.classList.add('selected'); el.style.borderStyle = tag.categorySource !== 'Primary' ? 'dashed' : 'solid'; el.title = `(${tag.categorySource}) ${tag.original}\nCategory: ${tag.category}\n\nCtrl+Click to multi-select.\nRight-click for options.`; const useUnderscores = underscoreToggle.checked; const displayTag = useUnderscores ? tag.weighted.replace(/\s/g, '_') : tag.weighted.replace(/_/g, ' '); if (enableWeightingToggle.checked) { el.innerHTML = `<button class="tag-weight-btn" onclick="updateTagWeight('${tag.id}','decrease')">-</button><span class="tag-text px-1">${displayTag}</span><button class="tag-weight-btn" onclick="updateTagWeight('${tag.id}','increase')">+</button>`; } else { el.innerHTML = `<span class="tag-text">${displayTag}</span>`; } el.addEventListener('click', (e) => handleTagClick(e, tag.id)); el.addEventListener('contextmenu', (e) => { e.preventDefault(); showCorrectionMenu(e, tag); }); return el; }
     function handleTagClick(event, tagId) { const tagElement = event.currentTarget; if (event.ctrlKey || event.metaKey) { if (selectedTagIds.has(tagId)) { selectedTagIds.delete(tagId); tagElement.classList.remove('selected'); } else { selectedTagIds.add(tagId); tagElement.classList.add('selected'); } } else { document.querySelectorAll('.tag-base.selected').forEach(el => el.classList.remove('selected')); selectedTagIds.clear(); selectedTagIds.add(tagId); tagElement.classList.add('selected'); } }
     function showCorrectionMenu(event, clickedTag) { const menuId = 'correction-menu'; document.getElementById(menuId)?.remove(); if (selectedTagIds.size === 0 || !selectedTagIds.has(clickedTag.id)) { selectedTagIds.clear(); document.querySelectorAll('.tag-base.selected').forEach(el => el.classList.remove('selected')); selectedTagIds.add(clickedTag.id); document.querySelector(`[data-id="${clickedTag.id}"]`)?.classList.add('selected'); } const menu = document.createElement('div'); menu.id = menuId; menu.className = 'absolute z-20 bg-gray-800 border border-gray-600 rounded-md shadow-lg py-1 text-sm'; menu.style.left = `${event.pageX}px`; menu.style.top = `${event.pageY}px`; let title = selectedTagIds.size > 1 ? `Correct ${selectedTagIds.size} Tags` : `Correct '${clickedTag.original}'`; let menuHTML = `<div class="px-3 py-1 text-gray-400 border-b border-gray-700">${title}</div>`; tagCategorizer.categories.forEach(cat => { menuHTML += `<a href="#" class="block px-3 py-1 text-gray-200 hover:bg-indigo-600" onclick="submitCategoryUpdate(event,'${cat}')">${cat}</a>`; }); menu.innerHTML = menuHTML; document.body.appendChild(menu); document.addEventListener('click', () => menu.remove(), { once: true }); }
-    async function submitCategoryUpdate(event, newCategory) { event.preventDefault(); if (!gitHubPat) { gitHubPat = prompt("Please enter your GitHub Personal Access Token (PAT) with `public_repo` scope.", ""); if (!gitHubPat) { copyMessage.textContent = 'Submission cancelled.'; setTimeout(() => copyMessage.textContent = '', 3000); return; } } const tagsToUpdate = baseTags.filter(t => selectedTagIds.has(t.id)); if (tagsToUpdate.length === 0) return; copyMessage.textContent = `Submitting issue for ${tagsToUpdate.length} tag(s)...`; const title = `[Auto-Submission] Category Update for ${tagsToUpdate.length} Tag(s)`; let body = `**User suggests moving the following tags to the '${newCategory}' category:**\n\n${tagsToUpdate.map(t=>`- \`${t.original}\` (from \`${t.category}\`)`).join('\n')}\n\n---\n*This issue was submitted by the Tag Helper Copilot.*`; try { const response = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/issues`, { method: 'POST', headers: { 'Authorization': `Bearer ${gitHubPat}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' }, body: JSON.stringify({ title, body }) }); if (!response.ok) { const errorData = await response.json(); throw new Error(`GitHub API Error: ${errorData.message}`); } const issueData = await response.json(); copyMessage.textContent = `Success! Issue #${issueData.number} created.`; tagsToUpdate.forEach(tag => { tagCategorizer.updateIndex(tag.original, newCategory); }); const tagIdsToUpdate = new Set(tagsToUpdate.map(t => t.id)); baseTags.forEach(tag => { if (tagIdsToUpdate.has(tag.id)) { tag.category = newCategory; tag.categorySource = 'Primary'; } }); selectedTagIds.clear(); displayTags(); } catch (error) { console.error("Failed to submit GitHub issue:", error); copyMessage.textContent = `Error: ${error.message}`; gitHubPat = null; } finally { setTimeout(() => copyMessage.textContent = '', 5000); } }
+    
+    // ===================================================================================
+    // === UPDATED submitCategoryUpdate Function =========================================
+    // ===================================================================================
+    // This function now directly edits the tag_map.json file in your GitHub repo.
+    async function submitCategoryUpdate(event, newCategory) {
+        event.preventDefault();
+        
+        if (!gitHubPat) {
+            gitHubPat = prompt("To save changes directly to GitHub, please enter your Personal Access Token (PAT) with `repo` or `public_repo` scope.", "");
+            if (!gitHubPat) {
+                copyMessage.textContent = 'Update cancelled. No PAT provided.';
+                setTimeout(() => copyMessage.textContent = '', 3000);
+                return;
+            }
+        }
+
+        const tagsToUpdate = baseTags.filter(t => selectedTagIds.has(t.id));
+        if (tagsToUpdate.length === 0) return;
+
+        copyMessage.textContent = `Updating ${tagsToUpdate.length} tag(s) in tag_map.json...`;
+        const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/tag_map.json`;
+        const headers = {
+            'Authorization': `Bearer ${gitHubPat}`,
+            'Accept': 'application/vnd.github+json',
+            'Content-Type': 'application/json'
+        };
+
+        try {
+            // 1. Get the current file content and SHA
+            const getFileResponse = await fetch(apiUrl, { headers });
+            if (!getFileResponse.ok) throw new Error(`Failed to fetch tag_map.json. Status: ${getFileResponse.status}`);
+            const fileData = await getFileResponse.json();
+            const currentContent = atob(fileData.content); // Decode from base64
+            const currentSha = fileData.sha;
+            let currentTagMap = JSON.parse(currentContent);
+
+            // 2. Update the map in memory
+            let changesCount = 0;
+            tagsToUpdate.forEach(tag => {
+                const normalizedTag = tag.original.toLowerCase().replace(/ /g, '_');
+                if (currentTagMap[normalizedTag] !== newCategory) {
+                    currentTagMap[normalizedTag] = newCategory;
+                    changesCount++;
+                }
+            });
+
+            if (changesCount === 0) {
+                copyMessage.textContent = 'No changes needed. Categories are already correct.';
+                setTimeout(() => copyMessage.textContent = '', 3000);
+                return;
+            }
+
+            // 3. Sort and prepare the new content
+            const sortedTagMap = Object.fromEntries(Object.entries(currentTagMap).sort());
+            const newContent = JSON.stringify(sortedTagMap, null, 2);
+            const newContentBase64 = btoa(newContent); // Encode to base64
+
+            // 4. Push the updated file to GitHub
+            const commitMessage = `Update ${changesCount} tag(s) to '${newCategory}' via Tag Helper`;
+            const updateResponse = await fetch(apiUrl, {
+                method: 'PUT',
+                headers,
+                body: JSON.stringify({
+                    message: commitMessage,
+                    content: newContentBase64,
+                    sha: currentSha
+                })
+            });
+
+            if (!updateResponse.ok) {
+                const errorData = await updateResponse.json();
+                throw new Error(`GitHub API Error: ${errorData.message}`);
+            }
+
+            copyMessage.textContent = `Success! Updated ${changesCount} tag(s) in tag_map.json.`;
+
+            // 5. Update the local state to reflect the change immediately
+            tagsToUpdate.forEach(tag => {
+                tagCategorizer.updateIndex(tag.original, newCategory);
+                tag.category = newCategory;
+                tag.categorySource = 'Primary'; // It's now in the primary map
+            });
+            selectedTagIds.clear();
+            displayTags();
+
+        } catch (error) {
+            console.error("Failed to update tag_map.json:", error);
+            copyMessage.textContent = `Error: ${error.message}`;
+            // Don't clear the PAT on auth errors, but maybe on others.
+            if (error.message.includes("401")) gitHubPat = null; 
+        } finally {
+            setTimeout(() => copyMessage.textContent = '', 5000);
+        }
+    }
+
 
     async function loadExternalData() {
         document.title = 'Danbooru Tag Helper (Loading...)';
@@ -306,13 +331,11 @@
             const weightedTag = el.dataset.weightedTag;
             return underscoreToggle.checked ? weightedTag.replace(/\s/g, '_') : weightedTag.replace(/_/g, ' ');
         });
-
         const finalString = [
             ...triggerInput.value.split(',').map(t => t.trim()).filter(Boolean),
             ...processed,
             ...appendInput.value.split(',').map(t => t.trim()).filter(Boolean)
         ].join(', ');
-        
         navigator.clipboard.writeText(finalString).then(() => {
             copyMessage.textContent = 'Tags copied!';
             updateCopyHistory(finalString);
