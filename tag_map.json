@@ -321,6 +321,7 @@
   "extremely_detailed": "Quality",
   "eyebrows": "Face",
   "eyebrows_hidden_by_hair": "Face",
+  "eyebrows_visible_through_hair": "Face",
   "eyelashes": "Eyes",
   "eyes": "Eyes",
   "eyewear": "Accessories",
