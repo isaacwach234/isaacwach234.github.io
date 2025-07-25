@@ -439,6 +439,7 @@
   "dragon_horns": "Body Parts",
   "draph": "Subject & Creatures",
   "drawing": "Style & Meta",
+  "drawstring": "Attire",
   "dreadlocks": "Hair",
   "dress": "Attire",
   "dress_lift": "Actions & Poses",
@@ -1550,5 +1551,7 @@
   "yokozuwari": "Actions & Poses",
   "zero_two_(darling_in_the_franxx)": "Subject & Creatures",
   "zettai_ryouiki": "Attire",
+  "zipper": "Attire",
+  "zipper_pull_tab": "Attire",
   "zootopia": "Subject & Creatures"
 }
