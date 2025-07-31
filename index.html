@@ -878,7 +878,45 @@
 
     window.updateTagWeight = (id, action) => { const tag = baseTags.find(t => t.id === id); if (!tag) return; let current = tag.weighted, original = tag.original; if (action === 'increase') { if (current.startsWith('((')) current = `(((${original})))`; else if (current.startsWith('(')) current = `((${original}))`; else if (current.startsWith('[')) current = original; else current = `(${original})`; } else { if (current.startsWith('[[')) current = `[[[${original}]]]`; else if (current.startsWith('[')) current = `[[${original}]]`; else if (current.startsWith('(')) current = original; else current = `[${original}]`; } tag.weighted = current; displayTags(); };
     function initSortable() { if (sortableInstances.length) sortableInstances.forEach(s => s.destroy()); sortableInstances = []; tagOutput.querySelectorAll('.tag-group-container').forEach(container => { sortableInstances.push(new Sortable(container, { group: 'shared', animation: 150, ghostClass: 'opacity-50', onEnd: (evt) => { try { const movedTag = baseTags.find(t => t.id === evt.item.dataset.id); const newCategory = evt.to.dataset.groupName; if (movedTag && newCategory) { movedTag.category = newCategory; tagCategorizer.updateIndex(movedTag.original, newCategory); } const allTagElements = Array.from(tagOutput.querySelectorAll('.tag-base')); baseTags = allTagElements.map(el => baseTags.find(t => t.id === el.dataset.id)).filter(Boolean); sortSelect.value = 'manual'; } finally { displayTags(); } }, })); }); }
-    function handleAutocomplete(e) { if (!tagCategorizer) return; const text = tagInput.value, cursorPos = tagInput.selectionStart; const lastComma = text.lastIndexOf(',', cursorPos - 1); autocomplete.currentWord = text.substring(lastComma + 1, cursorPos).trim(); const items = autocompleteBox.children; if (autocomplete.active && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === 'Tab')) { e.preventDefault(); if (e.key === 'Enter' || e.key === 'Tab') { if (autocomplete.index > -1 && items[autocomplete.index]) { selectAutocompleteItem(items[autocomplete.index].dataset.tag); } hideAutocomplete(); return; } items[autocomplete.index]?.classList.remove('selected'); if (e.key === 'ArrowDown') autocomplete.index = (autocomplete.index + 1) % items.length; if (e.key === 'ArrowUp') autocomplete.index = (autocomplete.index - 1 + items.length) % items.length; items[autocomplete.index]?.classList.add('selected'); return; } if (!autocomplete.currentWord) { hideAutocomplete(); return; } autocomplete.suggestions = TAG_DATABASE.filter(t => t.startsWith(autocomplete.currentWord.replace(/ /g, '_'))).slice(0, 5); if (autocomplete.suggestions.length > 0) { renderAutocomplete(); } else { hideAutocomplete(); } }
+    function handleAutocomplete(e) {
+    if (!tagCategorizer) return;
+    const text = tagInput.value, cursorPos = tagInput.selectionStart;
+    const lastComma = text.lastIndexOf(',', cursorPos - 1);
+    autocomplete.currentWord = text.substring(lastComma + 1, cursorPos).trim();
+    const items = autocompleteBox.children;
+
+    // 1. Add 'Tab' to the list of keys to watch for when autocomplete is active.
+    if (autocomplete.active && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === 'Tab')) {
+        e.preventDefault(); // This is crucial! It stops the default Tab behavior.
+
+        // 2. Make 'Tab' do the same thing as 'Enter'.
+        if (e.key === 'Enter' || e.key === 'Tab') {
+            if (autocomplete.index > -1 && items[autocomplete.index]) {
+                selectAutocompleteItem(items[autocomplete.index].dataset.tag);
+            }
+            hideAutocomplete(); // Explicitly hide the box on selection
+            return; // Stop further processing
+        }
+        
+        // This part for arrow keys remains the same.
+        items[autocomplete.index]?.classList.remove('selected');
+        if (e.key === 'ArrowDown') autocomplete.index = (autocomplete.index + 1) % items.length;
+        if (e.key === 'ArrowUp') autocomplete.index = (autocomplete.index - 1 + items.length) % items.length;
+        items[autocomplete.index]?.classList.add('selected');
+        return;
+    }
+
+    if (!autocomplete.currentWord) {
+        hideAutocomplete();
+        return;
+    }
+    autocomplete.suggestions = TAG_DATABASE.filter(t => t.startsWith(autocomplete.currentWord.replace(/ /g, '_'))).slice(0, 5);
+    if (autocomplete.suggestions.length > 0) {
+        renderAutocomplete();
+    } else {
+        hideAutocomplete();
+    }
+}
     function renderAutocomplete() { autocompleteBox.innerHTML = autocomplete.suggestions.map((s) => `<div class="autocomplete-item p-2 cursor-pointer" data-tag="${s}" onmousedown="selectAutocompleteItem('${s}')">${s.replace(/_/g, ' ')}</div>`).join(''); autocomplete.active = true; autocomplete.index = -1; autocompleteBox.style.display = 'block'; }
     window.selectAutocompleteItem = (tag) => { const text = tagInput.value, cursorPos = tagInput.selectionStart; const lastComma = text.lastIndexOf(',', cursorPos - 1); const before = text.substring(0, lastComma + 1); tagInput.value = `${before} ${tag.replace(/_/g, ' ')}, ${text.substring(cursorPos)}`; hideAutocomplete(); tagInput.focus(); processAll(); };
     function hideAutocomplete() { autocomplete.active = false; autocompleteBox.style.display = 'none'; }
