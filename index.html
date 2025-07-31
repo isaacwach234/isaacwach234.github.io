@@ -14,6 +14,80 @@
     const suggestBtn = element('suggest-btn'), themeButtons = document.querySelectorAll('.theme-button'), suggestionCountInput = element('suggestionCountInput');
     const ratingSafe = element('rating-safe'), ratingGeneral = element('rating-general'), ratingQuestionable = element('rating-questionable');
 
+        class TagCategorizer {
+    constructor(tagMap, allTags, categoryOrder) {
+        this.primaryIndex = tagMap;
+        this.categoryOrder = categoryOrder;
+        this.categories = [...new Set([...Object.values(tagMap), ...categoryOrder, 'Uncategorized'])];
+        this.patternIndex = { ends: {}, starts: {} };
+        this.keywordIndex = {};
+        this.buildHeuristicIndexes(allTags);
+    }
+
+    buildHeuristicIndexes(allTags) {
+        const keywordCategoryCounts = {};
+        const suffixCategoryCounts = {};
+        const prefixCategoryCounts = {};
+        const COPYRIGHT_KEYWORDS = new Set(['(genshin_impact)', '(azur_lane)', '(touhou)', '(hololive)', '(fate/grand_order)']);
+        allTags.forEach(tag => {
+            const category = this.primaryIndex[tag];
+            if (!category) return;
+            const words = tag.split('_');
+            if (words.length > 1) {
+                words.forEach(word => {
+                    if (word.length < 4 || COPYRIGHT_KEYWORDS.has(word)) return;
+                    if (!keywordCategoryCounts[word]) keywordCategoryCounts[word] = {};
+                    keywordCategoryCounts[word][category] = (keywordCategoryCounts[word][category] || 0) + 1;
+                });
+                const suffix = words[words.length - 1];
+                if (!suffixCategoryCounts[suffix]) suffixCategoryCounts[suffix] = {};
+                suffixCategoryCounts[suffix][category] = (suffixCategoryCounts[suffix][category] || 0) + 1;
+                const prefix = words[0];
+                if (!prefixCategoryCounts[prefix]) prefixCategoryCounts[prefix] = {};
+                prefixCategoryCounts[prefix][category] = (prefixCategoryCounts[prefix][category] || 0) + 1;
+            }
+        });
+        for (const keyword in keywordCategoryCounts) {
+            const counts = keywordCategoryCounts[keyword];
+            const total = Object.values(counts).reduce((s, c) => s + c, 0);
+            const [mostLikelyCategory, categoryCount] = Object.entries(counts).reduce((a, b) => a[1] > b[1] ? a : b);
+            if (total > 5 && (categoryCount / total) > 0.8) this.keywordIndex[keyword] = mostLikelyCategory;
+        }
+        for (const suffix in suffixCategoryCounts) {
+            const counts = suffixCategoryCounts[suffix];
+            const total = Object.values(counts).reduce((s, c) => s + c, 0);
+            const [mostLikelyCategory, categoryCount] = Object.entries(counts).reduce((a, b) => a[1] > b[1] ? a : b);
+            if (total > 10 && (categoryCount / total) > 0.75) this.patternIndex.ends[`_${suffix}`] = mostLikelyCategory;
+        }
+        for (const prefix in prefixCategoryCounts) {
+            const counts = prefixCategoryCounts[prefix];
+            const total = Object.values(counts).reduce((s, c) => s + c, 0);
+            const [mostLikelyCategory, categoryCount] = Object.entries(counts).reduce((a, b) => a[1] > b[1] ? a : b);
+             if (total > 10 && (categoryCount / total) > 0.75) this.patternIndex.starts[`${prefix}_`] = mostLikelyCategory;
+        }
+    }
+
+    updateIndex(tag, newCategory) {
+        this.primaryIndex[tag.toLowerCase().replace(/ /g, '_')] = newCategory;
+    }
+
+    categorize(tagString) {
+        const tag = tagString.toLowerCase().replace(/ /g, '_');
+        if (this.primaryIndex[tag]) return { category: this.primaryIndex[tag], source: 'Primary' };
+        if (tag.includes('(') && tag.includes(')')) {
+            const seriesMatch = tag.match(/\(([^)]+)\)/);
+            if (seriesMatch && this.primaryIndex[seriesMatch[1]]) return { category: 'Characters', source: 'Heuristic (Series)' };
+            return { category: 'Characters', source: 'Heuristic (Pattern)' };
+        }
+        for (const prefix in this.patternIndex.starts) if (tag.startsWith(prefix)) return { category: this.patternIndex.starts[prefix], source: 'Pattern (Prefix)' };
+        for (const suffix in this.patternIndex.ends) if (tag.endsWith(suffix)) return { category: this.patternIndex.ends[suffix], source: 'Pattern (Suffix)' };
+        const words = tag.split('_'), categoryScores = {};
+        words.forEach(word => { if (this.keywordIndex[word]) categoryScores[this.keywordIndex[word]] = (categoryScores[this.keywordIndex[word]] || 0) + 1; });
+        if (Object.keys(categoryScores).length > 0) return { category: Object.keys(categoryScores).reduce((a, b) => categoryScores[a] > categoryScores[b] ? a : b), source: 'Heuristic (Keywords)' };
+        return { category: 'Uncategorized', source: 'Fallback' };
+    }
+}
+
     // Enhanced tag categorization with better heuristics
     class EnhancedTagCategorizer {
         constructor(tagMap, allTags, categoryOrder) {
