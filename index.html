@@ -1,810 +1,548 @@
     <script>
-    const GITHUB_USER = 'isaacwach234';
-    const GITHUB_REPO = 'isaacwach234.github.io';
-    
-    let TAG_DATABASE = [], gitHubPat = null, tagCategorizer, tagIdCounter = 0;
-    let baseTags = [], copyHistory = [], selectedTagIds = new Set(), sortableInstances = [];
-    let autocomplete = { active: false, index: -1, currentWord: '', suggestions: [] };
-    
-    const element = (id) => document.getElementById(id);
-    const body = document.body, tagInput = element('tagInput'), swapsInput = element('swapsInput'), implicationsInput = element('implicationsInput'), blacklistInput = element('blacklistInput'), triggerInput = element('triggerInput'), appendInput = element('appendInput');
-    const deduplicateToggle = element('deduplicateToggle'), underscoreToggle = element('underscoreToggle'), enableWeightingToggle = element('enableWeightingToggle');
-    const sortSelect = element('sortSelect'), maxTagsInput = element('maxTagsInput'), tagOutput = element('tagOutput'), processedTagsLabel = element('processedTagsLabel');
-    const copyButton = element('copyButton'), copyMessage = element('copyMessage'), historyContainer = element('history-container'), autocompleteBox = element('autocomplete-box');
-    const suggestBtn = element('suggest-btn'), themeButtons = document.querySelectorAll('.theme-button'), suggestionCountInput = element('suggestionCountInput');
-    const ratingSafe = element('rating-safe'), ratingGeneral = element('rating-general'), ratingQuestionable = element('rating-questionable');
+    // --- Start of Corrected Script ---
+const GITHUB_USER = 'isaacwach234';
+const GITHUB_REPO = 'isaacwach234.github.io';
+let TAG_DATABASE = [], gitHubPat = null, tagCategorizer, tagIdCounter = 0;
+let baseTags = [], copyHistory = [], selectedTagIds = new Set(), sortableInstances = [];
+let autocomplete = { active: false, index: -1, currentWord: '', suggestions: [] };
 
-    // Enhanced tag categorization with better heuristics
-    class EnhancedTagCategorizer {
-        constructor(tagMap, allTags, categoryOrder) {
-            this.primaryIndex = tagMap;
-            this.categoryOrder = categoryOrder;
-            this.categories = [...new Set([...Object.values(tagMap), ...categoryOrder, 'Uncategorized'])];
-            this.patternIndex = { ends: {}, starts: {} };
-            this.keywordIndex = {};
-            this.buildHeuristicIndexes(allTags);
-            this.buildEnhancedHeuristics();
-        }
+// Helper to get elements
+const element = (id) => document.getElementById(id);
 
-        buildHeuristicIndexes(allTags) {
-            const keywordCategoryCounts = {};
-            const suffixCategoryCounts = {};
-            const prefixCategoryCounts = {};
-            const COPYRIGHT_KEYWORDS = new Set(['(genshin_impact)', '(azur_lane)', '(touhou)', '(hololive)', '(fate/grand_order)']);
-            allTags.forEach(tag => {
-                const category = this.primaryIndex[tag];
-                if (!category) return;
-                const words = tag.split('_');
-                if (words.length > 1) {
-                    words.forEach(word => {
-                        if (word.length < 4 || COPYRIGHT_KEYWORDS.has(word)) return;
-                        if (!keywordCategoryCounts[word]) keywordCategoryCounts[word] = {};
-                        keywordCategoryCounts[word][category] = (keywordCategoryCounts[word][category] || 0) + 1;
-                    });
-                    const suffix = words[words.length - 1];
-                    if (!suffixCategoryCounts[suffix]) suffixCategoryCounts[suffix] = {};
-                    suffixCategoryCounts[suffix][category] = (suffixCategoryCounts[suffix][category] || 0) + 1;
-                    const prefix = words[0];
-                    if (!prefixCategoryCounts[prefix]) prefixCategoryCounts[prefix] = {};
-                    prefixCategoryCounts[prefix][category] = (prefixCategoryCounts[prefix][category] || 0) + 1;
-                }
-            });
-            for (const keyword in keywordCategoryCounts) {
-                const counts = keywordCategoryCounts[keyword];
-                const total = Object.values(counts).reduce((s, c) => s + c, 0);
-                const [mostLikelyCategory, categoryCount] = Object.entries(counts).reduce((a, b) => a[1] > b[1] ? a : b);
-                if (total > 5 && (categoryCount / total) > 0.8) this.keywordIndex[keyword] = mostLikelyCategory;
-            }
-            for (const suffix in suffixCategoryCounts) {
-                const counts = suffixCategoryCounts[suffix];
-                const total = Object.values(counts).reduce((s, c) => s + c, 0);
-                const [mostLikelyCategory, categoryCount] = Object.entries(counts).reduce((a, b) => a[1] > b[1] ? a : b);
-                if (total > 10 && (categoryCount / total) > 0.75) this.patternIndex.ends[`_${suffix}`] = mostLikelyCategory;
-            }
-            for (const prefix in prefixCategoryCounts) {
-                const counts = prefixCategoryCounts[prefix];
-                const total = Object.values(counts).reduce((s, c) => s + c, 0);
-                const [mostLikelyCategory, categoryCount] = Object.entries(counts).reduce((a, b) => a[1] > b[1] ? a : b);
-                 if (total > 10 && (categoryCount / total) > 0.75) this.patternIndex.starts[`${prefix}_`] = mostLikelyCategory;
-            }
-        }
+// Element references
+const body = document.body, tagInput = element('tagInput'), swapsInput = element('swapsInput'), implicationsInput = element('implicationsInput'), blacklistInput = element('blacklistInput'), triggerInput = element('triggerInput'), appendInput = element('appendInput');
+const deduplicateToggle = element('deduplicateToggle'), underscoreToggle = element('underscoreToggle'), enableWeightingToggle = element('enableWeightingToggle');
+const sortSelect = element('sortSelect'), maxTagsInput = element('maxTagsInput'), tagOutput = element('tagOutput'), processedTagsLabel = element('processedTagsLabel');
+const copyButton = element('copyButton'), copyMessage = element('copyMessage'), historyContainer = element('history-container'), autocompleteBox = element('autocomplete-box');
+const suggestBtn = element('suggest-btn'), themeButtons = document.querySelectorAll('.theme-button'), suggestionCountInput = element('suggestionCountInput');
+const ratingSafe = element('rating-safe'), ratingGeneral = element('rating-general'), ratingQuestionable = element('rating-questionable');
 
-        buildEnhancedHeuristics() {
-            // Character-specific patterns
-            this.characterPatterns = [
-                /\([^)]+\)$/, // Series tags like (genshin_impact)
-                /_\([^)]+\)$/, // Character tags like yae_miko_(genshin_impact)
-                /^[a-z]+_[a-z]+_\([^)]+\)$/, // Full character names
-            ];
+// --- Corrected and Final Class Definitions ---
 
-            // Quality indicators
-            this.qualityKeywords = new Set([
-                'quality', 'masterpiece', 'best', 'high', 'ultra', 'super', 'extremely',
-                'detailed', 'resolution', 'res', '4k', '8k', 'hd', 'uhd', 'absurdres'
-            ]);
-
-            // Composition keywords
-            this.compositionKeywords = new Set([
-                'shot', 'view', 'angle', 'perspective', 'focus', 'body', 'portrait',
-                'landscape', 'close-up', 'wide', 'cowboy', 'full', 'upper', 'lower'
-            ]);
-
-            // Body part keywords
-            this.bodyPartKeywords = new Set([
-                'breasts', 'ass', 'butt', 'thighs', 'legs', 'arms', 'hands', 'feet',
-                'face', 'eyes', 'hair', 'skin', 'body', 'torso', 'chest', 'belly',
-                'navel', 'shoulders', 'back', 'neck', 'head', 'nose', 'lips', 'mouth'
-            ]);
-
-            // Clothing keywords
-            this.clothingKeywords = new Set([
-                'dress', 'shirt', 'pants', 'skirt', 'shorts', 'jacket', 'coat',
-                'bikini', 'swimsuit', 'underwear', 'bra', 'panties', 'socks',
-                'stockings', 'thighhighs', 'pantyhose', 'boots', 'shoes', 'gloves'
-            ]);
-
-            // Action keywords
-            this.actionKeywords = new Set([
-                'sitting', 'standing', 'lying', 'walking', 'running', 'jumping',
-                'dancing', 'singing', 'eating', 'drinking', 'sleeping', 'smiling',
-                'looking', 'holding', 'grabbing', 'touching', 'reaching'
-            ]);
-
-            // Setting keywords
-            this.settingKeywords = new Set([
-                'background', 'outdoor', 'indoor', 'room', 'bedroom', 'bathroom',
-                'kitchen', 'school', 'office', 'beach', 'forest', 'city', 'sky',
-                'night', 'day', 'sunset', 'sunrise', 'moon', 'star', 'cloud'
-            ]);
-        }
-
-        updateIndex(tag, newCategory) {
-            this.primaryIndex[tag.toLowerCase().replace(/ /g, '_')] = newCategory;
-        }
-
-        categorizeEnhanced(tagString) {
-            const tag = tagString.toLowerCase().replace(/ /g, '_');
-            
-            // First check primary index
-            if (this.primaryIndex[tag]) {
-                return { category: this.primaryIndex[tag], source: 'Primary', confidence: 1.0 };
-            }
-
-            // Character detection with high confidence
-            for (const pattern of this.characterPatterns) {
-                if (pattern.test(tag)) {
-                    return { category: 'Characters', source: 'Smart (Character)', confidence: 0.95 };
-                }
-            }
-
-            // Keyword-based categorization with confidence scoring
+class TagCategorizer {
+    constructor(tagMap, allTags, categoryOrder) {
+        this.primaryIndex = tagMap;
+        this.categoryOrder = categoryOrder;
+        this.categories = [...new Set([...Object.values(tagMap), ...categoryOrder, 'Uncategorized'])];
+        this.patternIndex = { ends: {}, starts: {} };
+        this.keywordIndex = {};
+        this.buildHeuristicIndexes(allTags);
+    }
+    buildHeuristicIndexes(allTags) {
+        const keywordCategoryCounts = {}, suffixCategoryCounts = {}, prefixCategoryCounts = {};
+        const COPYRIGHT_KEYWORDS = new Set(['(genshin_impact)', '(azur_lane)', '(touhou)', '(hololive)', '(fate/grand_order)']);
+        allTags.forEach(tag => {
+            const category = this.primaryIndex[tag];
+            if (!category) return;
             const words = tag.split('_');
-            const scores = {};
-
-            // Check each word against keyword sets
-            words.forEach(word => {
-                if (this.qualityKeywords.has(word)) {
-                    scores['Quality'] = (scores['Quality'] || 0) + 0.8;
-                }
-                if (this.compositionKeywords.has(word)) {
-                    scores['Composition'] = (scores['Composition'] || 0) + 0.7;
-                }
-                if (this.bodyPartKeywords.has(word)) {
-                    scores['Body Parts'] = (scores['Body Parts'] || 0) + 0.9;
-                }
-                if (this.clothingKeywords.has(word)) {
-                    scores['Attire'] = (scores['Attire'] || 0) + 0.8;
-                }
-                if (this.actionKeywords.has(word)) {
-                    scores['Actions & Poses'] = (scores['Actions & Poses'] || 0) + 0.7;
-                }
-                if (this.settingKeywords.has(word)) {
-                    scores['Setting & Environment'] = (scores['Setting & Environment'] || 0) + 0.8;
-                }
-            });
-
-            // Color detection
-            const colorWords = ['red', 'blue', 'green', 'yellow', 'purple', 'pink', 'orange', 'black', 'white', 'grey', 'gray', 'brown'];
-            if (words.some(word => colorWords.includes(word))) {
-                if (words.some(word => ['hair', 'eyes'].includes(word))) {
-                    scores['Hair'] = (scores['Hair'] || 0) + 0.6;
-                    scores['Eyes'] = (scores['Eyes'] || 0) + 0.6;
-                } else if (words.some(word => this.clothingKeywords.has(word))) {
-                    scores['Attire'] = (scores['Attire'] || 0) + 0.5;
-                }
+            if (words.length > 1) {
+                words.forEach(word => { if (word.length < 4 || COPYRIGHT_KEYWORDS.has(word)) return; if (!keywordCategoryCounts[word]) keywordCategoryCounts[word] = {}; keywordCategoryCounts[word][category] = (keywordCategoryCounts[word][category] || 0) + 1; });
+                const suffix = words[words.length - 1]; if (!suffixCategoryCounts[suffix]) suffixCategoryCounts[suffix] = {}; suffixCategoryCounts[suffix][category] = (suffixCategoryCounts[suffix][category] || 0) + 1;
+                const prefix = words[0]; if (!prefixCategoryCounts[prefix]) prefixCategoryCounts[prefix] = {}; prefixCategoryCounts[prefix][category] = (prefixCategoryCounts[prefix][category] || 0) + 1;
             }
-
-            // Find best match
-            if (Object.keys(scores).length > 0) {
-                const bestCategory = Object.entries(scores).reduce((a, b) => a[1] > b[1] ? a : b);
-                return { 
-                    category: bestCategory[0], 
-                    source: 'Smart Heuristic', 
-                    confidence: Math.min(bestCategory[1], 0.9) 
-                };
-            }
-
-            // Fallback to original heuristics
-            return this.categorizeOriginal(tagString);
-        }
-
-        categorizeOriginal(tagString) {
-            const tag = tagString.toLowerCase().replace(/ /g, '_');
-            if (this.primaryIndex[tag]) return { category: this.primaryIndex[tag], source: 'Primary' };
-            if (tag.includes('(') && tag.includes(')')) {
-                const seriesMatch = tag.match(/\(([^)]+)\)/);
-                if (seriesMatch && this.primaryIndex[seriesMatch[1]]) return { category: 'Characters', source: 'Heuristic (Series)' };
-                return { category: 'Characters', source: 'Heuristic (Pattern)' };
-            }
-            for (const prefix in this.patternIndex.starts) if (tag.startsWith(prefix)) return { category: this.patternIndex.starts[prefix], source: 'Pattern (Prefix)' };
-            for (const suffix in this.patternIndex.ends) if (tag.endsWith(suffix)) return { category: this.patternIndex.ends[suffix], source: 'Pattern (Suffix)' };
-            const words = tag.split('_'), categoryScores = {};
-            words.forEach(word => { if (this.keywordIndex[word]) categoryScores[this.keywordIndex[word]] = (categoryScores[this.keywordIndex[word]] || 0) + 1; });
-            if (Object.keys(categoryScores).length > 0) return { category: Object.keys(categoryScores).reduce((a, b) => categoryScores[a] > categoryScores[b] ? a : b), source: 'Heuristic (Keywords)' };
-            return { category: 'Uncategorized', source: 'Fallback' };
-        }
-
-        categorize(tagString) {
-            return this.categorizeOriginal(tagString);
-        }
-
-        categorizeSmart(tagString) {
-            return this.categorizeEnhanced(tagString);
-        }
+        });
+        for (const keyword in keywordCategoryCounts) { const counts = keywordCategoryCounts[keyword]; const total = Object.values(counts).reduce((s, c) => s + c, 0); if (total > 5) { const [mostLikelyCategory, categoryCount] = Object.entries(counts).reduce((a, b) => a[1] > b[1] ? a : b); if ((categoryCount / total) > 0.8) this.keywordIndex[keyword] = mostLikelyCategory; } }
+        for (const suffix in suffixCategoryCounts) { const counts = suffixCategoryCounts[suffix]; const total = Object.values(counts).reduce((s, c) => s + c, 0); if (total > 10) { const [mostLikelyCategory, categoryCount] = Object.entries(counts).reduce((a, b) => a[1] > b[1] ? a : b); if ((categoryCount / total) > 0.75) this.patternIndex.ends[`_${suffix}`] = mostLikelyCategory; } }
+        for (const prefix in prefixCategoryCounts) { const counts = prefixCategoryCounts[prefix]; const total = Object.values(counts).reduce((s, c) => s + c, 0); if (total > 10) { const [mostLikelyCategory, categoryCount] = Object.entries(counts).reduce((a, b) => a[1] > b[1] ? a : b); if ((categoryCount / total) > 0.75) this.patternIndex.starts[`${prefix}_`] = mostLikelyCategory; } }
     }
-    
-    function processAll() {
-        if (!tagCategorizer) return;
-        const swaps = new Map(swapsInput.value.split(',').map(s => s.split('->').map(p => p.trim())).filter(p => p.length === 2 && p[0]));
-        const implications = new Map(implicationsInput.value.split(',').map(s => s.split('=>').map(p => p.trim())).filter(p => p.length === 2 && p[0]));
-        const blacklist = new Set(blacklistInput.value.replace(/[\n,]+/g, ',').split(',').map(w => w.trim().toLowerCase().replace(/_/g, ' ')).filter(Boolean));
-        let rawTags = tagInput.value.replace(/[\n]+/g, ',').split(',').map(t => t.trim()).filter(Boolean);
-        rawTags = rawTags.map(tag => swaps.get(tag.toLowerCase().replace(/_/g, ' ')) || tag);
-        const tagsToAdd = new Set();
-        rawTags.forEach(tag => { const lowerTag = tag.toLowerCase(); if (implications.has(lowerTag)) implications.get(lowerTag).split(',').forEach(imp => tagsToAdd.add(imp.trim())); });
-        rawTags = [...rawTags, ...tagsToAdd];
-        if (deduplicateToggle.checked) {
-            const seen = new Set();
-            rawTags = rawTags.filter(tag => { const lower = tag.toLowerCase().replace(/_/g, ' '); if (seen.has(lower)) return false; seen.add(lower); return true; });
-        }
-        let filteredTags = rawTags.filter(tag => !blacklist.has(tag.toLowerCase().replace(/_/g, ' ')));
-        filteredTags = filteredTags.slice(0, parseInt(maxTagsInput.value, 10) || 75);
-        const newBaseTags = [];
-        const oldTagsMeta = new Map(baseTags.map(t => [t.original, { id: t.id, weighted: t.weighted }]));
-        for (const tag of filteredTags) {
-            const isSmartSort = sortSelect.value === 'smart';
-            const { category, source } = isSmartSort ? tagCategorizer.categorizeSmart(tag) : tagCategorizer.categorize(tag);
-            const oldMeta = oldTagsMeta.get(tag);
-            newBaseTags.push({ original: tag, weighted: oldMeta ? oldMeta.weighted : tag, id: oldMeta ? oldMeta.id : `tag-${tagIdCounter++}`, category, categorySource: source });
-        }
-        if (!enableWeightingToggle.checked) newBaseTags.forEach(t => t.weighted = t.original);
-        baseTags = newBaseTags;
-        displayTags();
-        updateStats();
+    updateIndex(tag, newCategory) { this.primaryIndex[tag.toLowerCase().replace(/ /g, '_')] = newCategory; }
+    categorize(tagString) {
+        const tag = tagString.toLowerCase().replace(/ /g, '_');
+        if (this.primaryIndex[tag]) return { category: this.primaryIndex[tag], source: 'Primary' };
+        if (tag.includes('(') && tag.includes(')')) { const seriesMatch = tag.match(/\(([^)]+)\)/); return seriesMatch && this.primaryIndex[seriesMatch[1]] ? { category: 'Characters', source: 'Heuristic (Series)' } : { category: 'Characters', source: 'Heuristic (Pattern)' }; }
+        for (const prefix in this.patternIndex.starts) if (tag.startsWith(prefix)) return { category: this.patternIndex.starts[prefix], source: 'Pattern (Prefix)' };
+        for (const suffix in this.patternIndex.ends) if (tag.endsWith(suffix)) return { category: this.patternIndex.ends[suffix], source: 'Pattern (Suffix)' };
+        const words = tag.split('_'), categoryScores = {};
+        words.forEach(word => { if (this.keywordIndex[word]) categoryScores[this.keywordIndex[word]] = (categoryScores[this.keywordIndex[word]] || 0) + 1; });
+        return Object.keys(categoryScores).length > 0 ? { category: Object.keys(categoryScores).reduce((a, b) => categoryScores[a] > categoryScores[b] ? a : b), source: 'Heuristic (Keywords)' } : { category: 'Uncategorized', source: 'Fallback' };
     }
-
-    function displayTags() {
-        tagOutput.innerHTML = '';
-        copyButton.disabled = baseTags.length === 0;
-        if (baseTags.length === 0) {
-    tagOutput.innerHTML = '<div class="text-gray-500 italic text-center py-12">Start typing or paste tags above to begin...</div>';
-    updateStats(); // <-- ADD THIS LINE
-    return;
 }
-        if (sortSelect.value === 'danbooru' || sortSelect.value === 'smart') {
-            const groups = baseTags.reduce((acc, tag) => { const c = tag.category || 'Uncategorized'; if (!acc[c]) acc[c] = []; acc[c].push(tag); return acc; }, {});
-            const sortedCategoryOrder = [...tagCategorizer.categoryOrder, 'Uncategorized'].filter(c => c !== 'Other');
-            sortedCategoryOrder.forEach(categoryName => {
-                const tagsForCategory = groups[categoryName];
-                if (!tagsForCategory || tagsForCategory.length === 0) return;
-                const groupDiv = document.createElement('div');
-                groupDiv.className = 'tag-group fade-in-up';
-                groupDiv.innerHTML = `<h3 class="tag-group-title">${categoryName}</h3>`;
-                const container = document.createElement('div');
-                container.className = 'tag-group-container';
-                container.dataset.groupName = categoryName;
-                tagsForCategory.forEach(tag => container.appendChild(createTagElement(tag)));
-                groupDiv.appendChild(container);
-                tagOutput.appendChild(groupDiv);
-            });
-        } else {
-            let tagsToDisplay = [...baseTags];
-            if (sortSelect.value === 'az') tagsToDisplay.sort((a, b) => a.original.localeCompare(b.original));
-            else if (sortSelect.value === 'za') tagsToDisplay.sort((a, b) => b.original.localeCompare(a.original));
-            const container = document.createElement('div');
-            container.className = 'tag-group-container';
-            container.dataset.groupName = 'all';
-            tagsToDisplay.forEach(tag => container.appendChild(createTagElement(tag)));
-            tagOutput.appendChild(container);
-        }
-        initSortable();
+
+class EnhancedTagCategorizer extends TagCategorizer {
+    constructor(tagMap, allTags, categoryOrder) {
+        super(tagMap, allTags, categoryOrder);
+        this.buildEnhancedHeuristics();
     }
-    
-    function createTagElement(tag) { const el = document.createElement('div'); el.className = 'tag-base processed-tag'; el.dataset.id = tag.id; el.dataset.weightedTag = tag.weighted; if (selectedTagIds.has(tag.id)) el.classList.add('selected'); el.style.borderStyle = tag.categorySource !== 'Primary' ? 'dashed' : 'solid'; el.title = `(${tag.categorySource}) ${tag.original}\nCategory: ${tag.category}\n\nCtrl+Click to multi-select.\nRight-click for options.`; const useUnderscores = underscoreToggle.checked; const displayTag = useUnderscores ? tag.weighted.replace(/\s/g, '_') : tag.weighted.replace(/_/g, ' '); if (enableWeightingToggle.checked) { el.innerHTML = `<button class="tag-weight-btn" onclick="updateTagWeight('${tag.id}','decrease')">-</button><span class="tag-text px-1">${displayTag}</span><button class="tag-weight-btn" onclick="updateTagWeight('${tag.id}','increase')">+</button>`; } else { el.innerHTML = `<span class="tag-text">${displayTag}</span>`; } el.addEventListener('click', (e) => handleTagClick(e, tag.id)); el.addEventListener('contextmenu', (e) => { e.preventDefault(); showCorrectionMenu(e, tag); }); return el; }
-    function handleTagClick(event, tagId) { const tagElement = event.currentTarget; if (event.ctrlKey || event.metaKey) { if (selectedTagIds.has(tagId)) { selectedTagIds.delete(tagId); tagElement.classList.remove('selected'); } else { selectedTagIds.add(tagId); tagElement.classList.add('selected'); } } else { document.querySelectorAll('.tag-base.selected').forEach(el => el.classList.remove('selected')); selectedTagIds.clear(); selectedTagIds.add(tagId); tagElement.classList.add('selected'); } }
-    function showCorrectionMenu(event, clickedTag) { const menuId = 'correction-menu'; document.getElementById(menuId)?.remove(); if (selectedTagIds.size === 0 || !selectedTagIds.has(clickedTag.id)) { selectedTagIds.clear(); document.querySelectorAll('.tag-base.selected').forEach(el => el.classList.remove('selected')); selectedTagIds.add(clickedTag.id); document.querySelector(`[data-id="${clickedTag.id}"]`)?.classList.add('selected'); } const menu = document.createElement('div'); menu.id = menuId; menu.className = 'absolute z-20 bg-gray-800 border border-gray-600 rounded-md shadow-lg py-1 text-sm'; menu.style.left = `${event.pageX}px`; menu.style.top = `${event.pageY}px`; let title = selectedTagIds.size > 1 ? `Correct ${selectedTagIds.size} Tags` : `Correct '${clickedTag.original}'`; let menuHTML = `<div class="px-3 py-1 text-gray-400 border-b border-gray-700">${title}</div>`; tagCategorizer.categories.forEach(cat => { menuHTML += `<a href="#" class="block px-3 py-1 text-gray-200 hover:bg-indigo-600" onclick="submitCategoryUpdate(event,'${cat}')">${cat}</a>`; }); menu.innerHTML = menuHTML; document.body.appendChild(menu); document.addEventListener('click', () => menu.remove(), { once: true }); }
-    
-    // Keep your existing submitCategoryUpdate function
-    async function submitCategoryUpdate(event, newCategory) {
-        event.preventDefault();
-        
-        if (!gitHubPat) {
-            gitHubPat = prompt("To save changes directly to GitHub, please enter your Personal Access Token (PAT) with `repo` or `public_repo` scope.", "");
-            if (!gitHubPat) {
-                copyMessage.textContent = 'Update cancelled. No PAT provided.';
-                setTimeout(() => copyMessage.textContent = '', 3000);
-                return;
-            }
-        }
-
-        const tagsToUpdate = baseTags.filter(t => selectedTagIds.has(t.id));
-        if (tagsToUpdate.length === 0) return;
-
-        copyMessage.textContent = `Updating ${tagsToUpdate.length} tag(s) in tag_map.json...`;
-        const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/tag_map.json`;
-        const headers = {
-            'Authorization': `Bearer ${gitHubPat}`,
-            'Accept': 'application/vnd.github+json',
-            'Content-Type': 'application/json'
-        };
-
-        try {
-            const getFileResponse = await fetch(apiUrl, { headers });
-            if (!getFileResponse.ok) throw new Error(`Failed to fetch tag_map.json. Status: ${getFileResponse.status}`);
-            const fileData = await getFileResponse.json();
-            const currentContent = atob(fileData.content);
-            const currentSha = fileData.sha;
-            let currentTagMap = JSON.parse(currentContent);
-
-            let changesCount = 0;
-            tagsToUpdate.forEach(tag => {
-                const normalizedTag = tag.original.toLowerCase().replace(/ /g, '_');
-                if (currentTagMap[normalizedTag] !== newCategory) {
-                    currentTagMap[normalizedTag] = newCategory;
-                    changesCount++;
-                }
-            });
-
-            if (changesCount === 0) {
-                copyMessage.textContent = 'No changes needed. Categories are already correct.';
-                setTimeout(() => copyMessage.textContent = '', 3000);
-                return;
-            }
-
-            const sortedTagMap = Object.fromEntries(Object.entries(currentTagMap).sort());
-            const newContent = JSON.stringify(sortedTagMap, null, 2);
-            const newContentBase64 = btoa(newContent);
-
-            const commitMessage = `Update ${changesCount} tag(s) to '${newCategory}' via Tag Helper`;
-            const updateResponse = await fetch(apiUrl, {
-                method: 'PUT',
-                headers,
-                body: JSON.stringify({
-                    message: commitMessage,
-                    content: newContentBase64,
-                    sha: currentSha
-                })
-            });
-
-            if (!updateResponse.ok) {
-                const errorData = await updateResponse.json();
-                throw new Error(`GitHub API Error: ${errorData.message}`);
-            }
-
-            copyMessage.textContent = `Success! Updated ${changesCount} tag(s) in tag_map.json.`;
-
-            tagsToUpdate.forEach(tag => {
-                tagCategorizer.updateIndex(tag.original, newCategory);
-                tag.category = newCategory;
-                tag.categorySource = 'Primary';
-            });
-            selectedTagIds.clear();
-            displayTags();
-
-        } catch (error) {
-            console.error("Failed to update tag_map.json:", error);
-            copyMessage.textContent = `Error: ${error.message}`;
-            if (error.message.includes("401")) gitHubPat = null; 
-        } finally {
-            setTimeout(() => copyMessage.textContent = '', 5000);
-        }
+    buildEnhancedHeuristics() {
+        this.characterPatterns = [/\([^)]+\)$/, /_\([^)]+\)$/, /^[a-z]+_[a-z]+_\([^)]+\)$/];
+        this.qualityKeywords = new Set(['quality', 'masterpiece', 'best', 'high', 'ultra', 'detailed', 'resolution', '4k', '8k', 'hd', 'absurdres']);
+        this.compositionKeywords = new Set(['shot', 'view', 'angle', 'perspective', 'focus', 'portrait', 'landscape', 'close-up', 'wide', 'full', 'upper', 'lower']);
+        this.bodyPartKeywords = new Set(['breasts', 'ass', 'thighs', 'legs', 'arms', 'hands', 'feet', 'face', 'eyes', 'hair', 'skin', 'torso', 'belly', 'navel', 'shoulders', 'back', 'neck', 'head']);
+        this.clothingKeywords = new Set(['dress', 'shirt', 'pants', 'skirt', 'jacket', 'coat', 'bikini', 'swimsuit', 'underwear', 'bra', 'panties', 'socks', 'stockings', 'thighhighs', 'pantyhose', 'boots', 'shoes', 'gloves']);
+        this.actionKeywords = new Set(['sitting', 'standing', 'lying', 'walking', 'running', 'jumping', 'smiling', 'looking', 'holding']);
+        this.settingKeywords = new Set(['background', 'outdoor', 'indoor', 'room', 'bedroom', 'beach', 'forest', 'city', 'sky', 'night', 'day', 'sunset']);
     }
-
-    async function loadExternalData() {
-        document.title = 'Danbooru Tag Helper (Loading...)';
-        try {
-            const [tagsResponse, mapResponse] = await Promise.all([
-                fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/tags.json?t=${new Date().getTime()}`),
-                fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/tag_map.json?t=${new Date().getTime()}`)
-            ]);
-            if (!tagsResponse.ok) throw new Error(`Failed to fetch tags.json: ${tagsResponse.statusText}`);
-            if (!mapResponse.ok) throw new Error(`Failed to fetch tag_map.json: ${mapResponse.statusText}`);
-            TAG_DATABASE = await tagsResponse.json();
-            const tagMap = await mapResponse.json();
-            const categoryOrder = ['Quality', 'Composition', 'Characters', 'Subject & Creatures', 'Face', 'Eyes', 'Hair', 'Body Parts', 'Attire', 'Accessories', 'Held Items & Objects', 'Actions & Poses', 'Setting & Environment', 'Style & Meta'];
-            tagCategorizer = new EnhancedTagCategorizer(tagMap, TAG_DATABASE, categoryOrder);
-            document.title = 'Danbooru Tag Helper (Ready)';
-        } catch (error) {
-            console.error("FATAL ERROR:", error);
-            document.title = 'Danbooru Tag Helper (ERROR)';
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'p-4 mb-4 text-sm text-red-200 bg-red-800/50 rounded-lg';
-            errorDiv.innerHTML = `<strong>Error loading data:</strong> ${error.message}. Please check the console (F12) for details.`;
-            document.querySelector('.glass-panel').prepend(errorDiv);
-        }
-    }
-    
-    function copyTagsToClipboard() {
-        const tagElements = tagOutput.querySelectorAll('.tag-base');
-        const processed = Array.from(tagElements).map(el => {
-            const weightedTag = el.dataset.weightedTag;
-            return underscoreToggle.checked ? weightedTag.replace(/\s/g, '_') : weightedTag.replace(/_/g, ' ');
+    categorizeSmart(tagString) {
+        const tag = tagString.toLowerCase().replace(/ /g, '_');
+        if (this.primaryIndex[tag]) return { category: this.primaryIndex[tag], source: 'Primary' };
+        for (const pattern of this.characterPatterns) if (pattern.test(tag)) return { category: 'Characters', source: 'Smart (Character)' };
+        const scores = {};
+        const words = tag.split('_');
+        const check = (word, set, cat, score) => { if (set.has(word)) scores[cat] = (scores[cat] || 0) + score; };
+        words.forEach(word => {
+            check(word, this.qualityKeywords, 'Quality', 0.8);
+            check(word, this.compositionKeywords, 'Composition', 0.7);
+            check(word, this.bodyPartKeywords, 'Body Parts', 0.9);
+            check(word, this.clothingKeywords, 'Attire', 0.8);
+            check(word, this.actionKeywords, 'Actions & Poses', 0.7);
+            check(word, this.settingKeywords, 'Setting & Environment', 0.8);
         });
-        const finalString = [
-            ...triggerInput.value.split(',').map(t => t.trim()).filter(Boolean),
-            ...processed,
-            ...appendInput.value.split(',').map(t => t.trim()).filter(Boolean)
-        ].join(', ');
-        navigator.clipboard.writeText(finalString).then(() => {
-            copyMessage.textContent = 'Tags copied!';
-            updateCopyHistory(finalString);
-            setTimeout(() => copyMessage.textContent = '', 2000);
-        }).catch(err => {
-            copyMessage.textContent = 'Copy failed!';
-            console.error("Clipboard write failed: ", err);
-        });
+        if (Object.keys(scores).length > 0) {
+            const bestCategory = Object.entries(scores).reduce((a, b) => a[1] > b[1] ? a : b);
+            return { category: bestCategory[0], source: 'Smart Heuristic' };
+        }
+        return super.categorize(tagString);
     }
+}
 
-    window.updateTagWeight = (id, action) => { const tag = baseTags.find(t => t.id === id); if (!tag) return; let current = tag.weighted, original = tag.original; if (action === 'increase') { if (current.startsWith('((')) current = `(((${original})))`; else if (current.startsWith('(')) current = `((${original}))`; else if (current.startsWith('[')) current = original; else current = `(${original})`; } else { if (current.startsWith('[[')) current = `[[[${original}]]]`; else if (current.startsWith('[')) current = `[[${original}]]`; else if (current.startsWith('(')) current = original; else current = `[${original}]`; } tag.weighted = current; displayTags(); };
-    function initSortable() { if (sortableInstances.length) sortableInstances.forEach(s => s.destroy()); sortableInstances = []; tagOutput.querySelectorAll('.tag-group-container').forEach(container => { sortableInstances.push(new Sortable(container, { group: 'shared', animation: 150, ghostClass: 'opacity-50', onEnd: (evt) => { try { const movedTag = baseTags.find(t => t.id === evt.item.dataset.id); const newCategory = evt.to.dataset.groupName; if (movedTag && newCategory) { movedTag.category = newCategory; tagCategorizer.updateIndex(movedTag.original, newCategory); } const allTagElements = Array.from(tagOutput.querySelectorAll('.tag-base')); baseTags = allTagElements.map(el => baseTags.find(t => t.id === el.dataset.id)).filter(Boolean); sortSelect.value = 'manual'; } finally { displayTags(); } }, })); }); }
-    function handleAutocomplete(e) { if (!tagCategorizer) return; const text = tagInput.value, cursorPos = tagInput.selectionStart; const lastComma = text.lastIndexOf(',', cursorPos - 1); autocomplete.currentWord = text.substring(lastComma + 1, cursorPos).trim(); const items = autocompleteBox.children; if (autocomplete.active && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === 'Tab')) { e.preventDefault(); if (e.key === 'Enter' || e.key === 'Tab') { if (autocomplete.index > -1 && items[autocomplete.index]) { selectAutocompleteItem(items[autocomplete.index].dataset.tag); } return; } items[autocomplete.index]?.classList.remove('selected'); if (e.key === 'ArrowDown') autocomplete.index = (autocomplete.index + 1) % items.length; if (e.key === 'ArrowUp') autocomplete.index = (autocomplete.index - 1 + items.length) % items.length; items[autocomplete.index]?.classList.add('selected'); return; } if (!autocomplete.currentWord) { hideAutocomplete(); return; } autocomplete.suggestions = TAG_DATABASE.filter(t => t.startsWith(autocomplete.currentWord.replace(/ /g, '_'))).slice(0, 5); if (autocomplete.suggestions.length > 0) { renderAutocomplete(); } else { hideAutocomplete(); } }
-    function renderAutocomplete() { autocompleteBox.innerHTML = autocomplete.suggestions.map((s) => `<div class="autocomplete-item p-2 cursor-pointer" data-tag="${s}" onmousedown="selectAutocompleteItem('${s}')">${s.replace(/_/g, ' ')}</div>`).join(''); autocomplete.active = true; autocomplete.index = -1; autocompleteBox.style.display = 'block'; }
-    window.selectAutocompleteItem = (tag) => { const text = tagInput.value, cursorPos = tagInput.selectionStart; const lastComma = text.lastIndexOf(',', cursorPos - 1); const before = text.substring(0, lastComma + 1); tagInput.value = `${before} ${tag.replace(/_/g, ' ')}, ${text.substring(cursorPos)}`; hideAutocomplete(); tagInput.focus(); processAll(); };
-    function hideAutocomplete() { autocomplete.active = false; autocompleteBox.style.display = 'none'; }
-    function updateCopyHistory(text) { if(text){ copyHistory.unshift(text); if (copyHistory.length > 10) copyHistory.pop(); localStorage.setItem('danbooru-tag-history', JSON.stringify(copyHistory)); } historyContainer.innerHTML = ''; if (copyHistory.length === 0) {
-    historyContainer.innerHTML = `<p class="text-sm text-gray-500 italic">No history yet.</p>`;
-    updateStats(); // <-- ADD THIS LINE
-    return;
-} copyHistory.forEach(item => { const el = document.createElement('div'); el.className = 'history-item p-2 rounded-md flex items-center justify-between gap-2'; el.innerHTML = `<span class="history-item-text text-gray-400 text-xs flex-grow overflow-hidden whitespace-nowrap text-ellipsis">${item}</span><button class="copy-btn-sm p-1 rounded" onclick="navigator.clipboard.writeText(\`${item.replace(/`/g, '\\`')}\`)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-300"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>`; historyContainer.appendChild(el); }); }
-    function suggestCoherentTags() { if (!tagCategorizer) return; const QUESTIONABLE_KEYWORDS = ['bikini', 'swimsuit', 'cleavage', 'breasts', 'ass', 'thighs', 'pantyhose', 'leotard', 'garter_belt', 'panty_shot', 'sideboob', 'topless', 'bra', 'panties', 'lingerie', 'seductive', 'bondage', 'shibari', 'partially_nude', 'armpits', 'bottomless']; const EXPLICIT_KEYWORDS = ['pussy', 'penis', 'sex', 'oral', 'ahegao', 'nude', 'naked', 'cum', 'masturbation', 'fellatio', 'cunnilingus', 'prolapse']; const numToSuggest = parseInt(suggestionCountInput.value, 10); const existingTags = new Set(baseTags.map(t => t.original.toLowerCase().replace(/ /g, '_'))); const isAllowed = (tag) => { if (EXPLICIT_KEYWORDS.some(kw => tag.includes(kw))) return false; if (!ratingQuestionable.checked && QUESTIONABLE_KEYWORDS.some(kw => tag.includes(kw))) return false; if (!ratingGeneral.checked && !ratingSafe.checked && !ratingQuestionable.checked) return false; return true; }; const suggestions = new Set(), categoryPools = {}; TAG_DATABASE.forEach(tag => { const { category } = tagCategorizer.categorize(tag); if (!categoryPools[category]) categoryPools[category] = []; if (!existingTags.has(tag) && isAllowed(tag)) categoryPools[category].push(tag); }); const plan = (existingTags.size === 0) ? [ { name: 'Quality', count: 1 }, { name: 'Composition', count: 2 }, { name: 'Characters', count: 1 }, { name: 'Face', count: 2 }, { name: 'Eyes', count: 1 }, { name: 'Hair', count: 2 } ] : Object.entries(baseTags.reduce((acc, tag) => { acc[tag.category] = (acc[tag.category] || 0) + 1; return acc; }, {})).map(([name, count]) => ({name, count})); let suggestionsNeeded = numToSuggest; while(suggestionsNeeded > 0) { let madeSuggestion = false; for(const p of plan) { if(suggestionsNeeded <= 0) break; const pool = categoryPools[p.name] || []; for(let i=0; i < p.count; ++i) { if(pool.length > 0) { const [suggestion] = pool.splice(Math.floor(Math.random() * pool.length), 1); if(suggestion && !suggestions.has(suggestion)) { suggestions.add(suggestion); suggestionsNeeded--; madeSuggestion = true; } } } } if(!madeSuggestion) break; } const suggestionsToAdd = [...suggestions]; if (suggestionsToAdd.length > 0) { const separator = tagInput.value.trim().length > 0 && !tagInput.value.trim().endsWith(',') ? ', ' : ''; tagInput.value += separator + suggestionsToAdd.join(', ').replace(/_/g, ' '); processAll(); } }
+// --- Core App Functions ---
 
-    // Enhanced token management
-    function showTokenSettings() {
-        const panel = document.getElementById('tokenPanel');
-        const input = document.getElementById('githubTokenInput');
-        const checkbox = document.getElementById('rememberToken');
-        
-        // Load saved token if exists
-        const savedToken = localStorage.getItem('github-pat');
-        if (savedToken) {
-            input.value = savedToken;
-            checkbox.checked = true;
-            gitHubPat = savedToken;
-        }
-        
-        updateTokenStatus();
-        panel.classList.remove('hidden');
+function processAll() {
+    if (!tagCategorizer) return;
+    const swaps = new Map(swapsInput.value.split(',').map(s => s.split('->').map(p => p.trim())).filter(p => p.length === 2 && p[0]));
+    const implications = new Map(implicationsInput.value.split(',').map(s => s.split('=>').map(p => p.trim())).filter(p => p.length === 2 && p[0]));
+    const blacklist = new Set(blacklistInput.value.replace(/[\n,]+/g, ',').split(',').map(w => w.trim().toLowerCase().replace(/_/g, ' ')).filter(Boolean));
+    let rawTags = tagInput.value.replace(/\n+/g, ',').split(',').map(t => t.trim()).filter(Boolean);
+    rawTags = rawTags.map(tag => swaps.get(tag.toLowerCase().replace(/_/g, ' ')) || tag);
+    const tagsToAdd = new Set();
+    rawTags.forEach(tag => { const lowerTag = tag.toLowerCase(); if (implications.has(lowerTag)) implications.get(lowerTag).split(',').forEach(imp => tagsToAdd.add(imp.trim())); });
+    rawTags = [...rawTags, ...tagsToAdd];
+    if (deduplicateToggle.checked) {
+        const seen = new Set();
+        rawTags = rawTags.filter(tag => { const lower = tag.toLowerCase().replace(/_/g, ' '); if (seen.has(lower)) return false; seen.add(lower); return true; });
     }
-    
-    function hideTokenSettings() {
-        document.getElementById('tokenPanel').classList.add('hidden');
+    let filteredTags = rawTags.filter(tag => !blacklist.has(tag.toLowerCase().replace(/_/g, ' ')));
+    filteredTags = filteredTags.slice(0, parseInt(maxTagsInput.value, 10) || 75);
+    const newBaseTags = [];
+    const oldTagsMeta = new Map(baseTags.map(t => [t.original, { id: t.id, weighted: t.weighted }]));
+    for (const tag of filteredTags) {
+        const { category, source } = sortSelect.value === 'smart' ? tagCategorizer.categorizeSmart(tag) : tagCategorizer.categorize(tag);
+        const oldMeta = oldTagsMeta.get(tag);
+        newBaseTags.push({ original: tag, weighted: oldMeta ? oldMeta.weighted : tag, id: oldMeta ? oldMeta.id : `tag-${tagIdCounter++}`, category, categorySource: source });
     }
-    
-    function saveToken() {
-        const token = document.getElementById('githubTokenInput').value.trim();
-        const remember = document.getElementById('rememberToken').checked;
-        
-        if (!token) {
-            alert('Please enter a valid GitHub token');
-            return;
-        }
-        
-        gitHubPat = token;
-        
-        if (remember) {
-            localStorage.setItem('github-pat', token);
-        } else {
-            localStorage.removeItem('github-pat');
-        }
-        
-        updateTokenStatus();
-        document.getElementById('copyMessage').textContent = 'Token saved successfully!';
-        setTimeout(() => document.getElementById('copyMessage').textContent = '', 3000);
-    }
-    
-    function testToken() {
-        const token = document.getElementById('githubTokenInput').value.trim();
-        if (!token) {
-            alert('Please enter a token first');
-            return;
-        }
-        
-        // Test the token by making a simple API call
-        fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}`, {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Accept': 'application/vnd.github+json'
-            }
-        })
-        .then(response => {
-            const statusEl = document.getElementById('tokenStatus');
-            if (response.ok) {
-                statusEl.innerHTML = '<span class="text-green-400">✓ Token is valid and has access</span>';
-            } else if (response.status === 401) {
-                statusEl.innerHTML = '<span class="text-red-400">✗ Invalid token</span>';
-            } else if (response.status === 403) {
-                statusEl.innerHTML = '<span class="text-yellow-400">⚠ Token valid but insufficient permissions</span>';
-            } else {
-                statusEl.innerHTML = '<span class="text-red-400">✗ Connection failed</span>';
-            }
-        })
-        .catch(error => {
-            document.getElementById('tokenStatus').innerHTML = '<span class="text-red-400">✗ Connection error</span>';
-        });
-    }
-    
-    function updateTokenStatus() {
-        const statusEl = document.getElementById('tokenStatus');
-        if (gitHubPat || localStorage.getItem('github-pat')) {
-            statusEl.innerHTML = '<span class="text-green-400">✓ Token configured</span>';
-        } else {
-            statusEl.innerHTML = '<span class="text-gray-400">No token configured</span>';
-        }
-    }
+    if (!enableWeightingToggle.checked) newBaseTags.forEach(t => t.weighted = t.original);
+    baseTags = newBaseTags;
+    displayTags();
+}
 
-    // Auto-load token on startup
-    function initializeToken() {
-        const savedToken = localStorage.getItem('github-pat');
-        if (savedToken) {
-            gitHubPat = savedToken;
-            console.log('GitHub token loaded from storage');
-        }
+function displayTags() {
+    tagOutput.innerHTML = '';
+    copyButton.disabled = baseTags.length === 0;
+    if (baseTags.length === 0) {
+        tagOutput.innerHTML = '<div class="text-gray-500 italic text-center py-12">Start typing or paste tags above to begin...</div>';
+        updateStats(); // Update stats even when empty
+        return;
     }
-    
-    function toggleSettingsPanel() {
-        const panel = document.getElementById('settingsPanel');
-        panel.classList.toggle('hidden');
-    }
-    
-    function clearAll() {
-        if (confirm('Clear all tags and settings?')) {
-            document.getElementById('tagInput').value = '';
-            document.getElementById('triggerInput').value = '';
-            document.getElementById('appendInput').value = '';
-            document.getElementById('swapsInput').value = '';
-            document.getElementById('implicationsInput').value = '';
-            document.getElementById('blacklistInput').value = '';
-            processAll();
-        }
-    }
-    
-    function randomizeTags() {
-        if (baseTags.length === 0) return;
-        for (let i = baseTags.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [baseTags[i], baseTags[j]] = [baseTags[j], baseTags[i]];
-        }
-        displayTags();
-    }
-    
-    function optimizeOrder() {
-        // Sort tags within categories by importance/frequency
-        const categoryPriority = {
-            'Quality': 1, 'Composition': 2, 'Characters': 3, 'Subject & Creatures': 4,
-            'Face': 5, 'Eyes': 6, 'Hair': 7, 'Body Parts': 8, 'Attire': 9,
-            'Accessories': 10, 'Held Items & Objects': 11, 'Actions & Poses': 12,
-            'Setting & Environment': 13, 'Style & Meta': 14
-        };
-        
-        baseTags.sort((a, b) => {
-            const aPriority = categoryPriority[a.category] || 99;
-            const bPriority = categoryPriority[b.category] || 99;
-            if (aPriority !== bPriority) return aPriority - bPriority;
-            return a.original.localeCompare(b.original);
+    if (sortSelect.value === 'danbooru' || sortSelect.value === 'smart') {
+        const groups = baseTags.reduce((acc, tag) => { const c = tag.category || 'Uncategorized'; if (!acc[c]) acc[c] = []; acc[c].push(tag); return acc; }, {});
+        [...tagCategorizer.categoryOrder, 'Uncategorized'].filter(c => c !== 'Other').forEach(categoryName => {
+            const tagsForCategory = groups[categoryName];
+            if (!tagsForCategory || tagsForCategory.length === 0) return;
+            const groupDiv = document.createElement('div'); groupDiv.className = 'tag-group'; groupDiv.innerHTML = `<h3 class="tag-group-title">${categoryName}</h3>`;
+            const container = document.createElement('div'); container.className = 'tag-group-container'; container.dataset.groupName = categoryName;
+            tagsForCategory.forEach(tag => container.appendChild(createTagElement(tag)));
+            groupDiv.appendChild(container); tagOutput.appendChild(groupDiv);
         });
-        
-        displayTags();
-        copyMessage.textContent = 'Tags optimized!';
-        setTimeout(() => copyMessage.textContent = '', 2000);
+    } else {
+        let tagsToDisplay = [...baseTags];
+        if (sortSelect.value === 'az') tagsToDisplay.sort((a, b) => a.original.localeCompare(b.original));
+        else if (sortSelect.value === 'za') tagsToDisplay.sort((a, b) => b.original.localeCompare(a.original));
+        const container = document.createElement('div'); container.className = 'tag-group-container'; container.dataset.groupName = 'all';
+        tagsToDisplay.forEach(tag => container.appendChild(createTagElement(tag)));
+        tagOutput.appendChild(container);
     }
-    
-    function exportTags() {
-        const tagElements = document.querySelectorAll('#tagOutput .tag-base');
-        const tags = Array.from(tagElements).map(el => el.dataset.weightedTag || el.textContent.trim());
-        const data = {
-            tags: tags,
-            settings: {
-                prepend: document.getElementById('triggerInput').value,
-                append: document.getElementById('appendInput').value,
-                maxTags: document.getElementById('maxTagsInput').value,
-                sorting: document.getElementById('sortSelect').value
-            },
-            timestamp: new Date().toISOString()
-        };
-        
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `danbooru-tags-${new Date().toISOString().split('T')[0]}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
+    initSortable();
+    updateStats();
+}
+
+function createTagElement(tag) {
+    const el = document.createElement('div');
+    el.className = 'tag-base processed-tag';
+    el.dataset.id = tag.id;
+    el.dataset.weightedTag = tag.weighted;
+    if (selectedTagIds.has(tag.id)) el.classList.add('selected');
+    el.style.borderStyle = tag.categorySource !== 'Primary' ? 'dashed' : 'solid';
+    el.title = `(${tag.categorySource}) ${tag.original}\nCategory: ${tag.category}`;
+    const useUnderscores = underscoreToggle.checked;
+    const displayTag = useUnderscores ? tag.weighted.replace(/\s/g, '_') : tag.weighted.replace(/_/g, ' ');
+    if (enableWeightingToggle.checked) {
+        el.innerHTML = `<button class="tag-weight-btn" onclick="updateTagWeight('${tag.id}','decrease')">-</button><span class="tag-text px-1">${displayTag}</span><button class="tag-weight-btn" onclick="updateTagWeight('${tag.id}','increase')">+</button>`;
+    } else {
+        el.innerHTML = `<span class="tag-text">${displayTag}</span>`;
     }
+    el.addEventListener('click', (e) => handleTagClick(e, tag.id));
+    el.addEventListener('contextmenu', (e) => { e.preventDefault(); showCorrectionMenu(e, tag); });
+    return el;
+}
+
+function updateStats() {
+    const tagCount = baseTags.length;
+    const maxTags = parseInt(maxTagsInput.value) || 75;
+    const categoryCount = new Set(baseTags.map(t => t.category)).size;
+    const historyCount = copyHistory.length;
     
-    function importTags() {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = '.json,.txt';
-        input.onchange = (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            
-            const reader = new FileReader();
-            reader.onload = (e) => {
+    // Update the new stats panel
+    if (element('activeTagCount')) element('activeTagCount').textContent = tagCount;
+    if (element('maxTagCountDisplay')) element('maxTagCountDisplay').textContent = maxTags;
+    if (element('categoryCount')) element('categoryCount').textContent = categoryCount;
+    if (element('historyCount')) element('historyCount').textContent = historyCount;
+    
+    // Update the original processed tags label
+    if (processedTagsLabel) {
+        processedTagsLabel.querySelector('#tagCount').textContent = tagCount;
+        processedTagsLabel.querySelector('#maxTagCount').textContent = maxTags;
+    }
+}
+
+// --- Event Handlers & UI Functions ---
+
+function handleTagClick(event, tagId) {
+    const tagElement = event.currentTarget;
+    if (event.ctrlKey || event.metaKey) {
+        if (selectedTagIds.has(tagId)) { selectedTagIds.delete(tagId); tagElement.classList.remove('selected'); }
+        else { selectedTagIds.add(tagId); tagElement.classList.add('selected'); }
+    } else {
+        document.querySelectorAll('.tag-base.selected').forEach(el => el.classList.remove('selected'));
+        selectedTagIds.clear();
+        selectedTagIds.add(tagId);
+        tagElement.classList.add('selected');
+    }
+}
+
+function showCorrectionMenu(event, clickedTag) {
+    const menuId = 'correction-menu';
+    document.getElementById(menuId)?.remove();
+    if (selectedTagIds.size === 0 || !selectedTagIds.has(clickedTag.id)) {
+        selectedTagIds.clear();
+        document.querySelectorAll('.tag-base.selected').forEach(el => el.classList.remove('selected'));
+        selectedTagIds.add(clickedTag.id);
+        document.querySelector(`[data-id="${clickedTag.id}"]`)?.classList.add('selected');
+    }
+    const menu = document.createElement('div');
+    menu.id = menuId;
+    menu.className = 'absolute z-50 bg-gray-800 border border-gray-600 rounded-md shadow-lg py-1 text-sm';
+    menu.style.left = `${event.pageX}px`;
+    menu.style.top = `${event.pageY}px`;
+    let title = selectedTagIds.size > 1 ? `Correct ${selectedTagIds.size} Tags` : `Correct '${clickedTag.original}'`;
+    let menuHTML = `<div class="px-3 py-1 text-gray-400 border-b border-gray-700">${title}</div>`;
+    tagCategorizer.categories.forEach(cat => { menuHTML += `<a href="#" class="block px-3 py-1 text-gray-200 hover:bg-indigo-600" onclick="submitCategoryUpdate(event,'${cat}')">${cat}</a>`; });
+    menu.innerHTML = menuHTML;
+    document.body.appendChild(menu);
+    document.addEventListener('click', () => menu.remove(), { once: true });
+}
+
+function initSortable() {
+    if (sortableInstances.length) sortableInstances.forEach(s => s.destroy());
+    sortableInstances = [];
+    tagOutput.querySelectorAll('.tag-group-container').forEach(container => {
+        sortableInstances.push(new Sortable(container, {
+            group: 'shared', animation: 150, ghostClass: 'opacity-50',
+            onEnd: (evt) => {
                 try {
-                    const content = e.target.result;
-                    if (file.name.endsWith('.json')) {
-                        const data = JSON.parse(content);
-                        if (data.tags) {
-                            document.getElementById('tagInput').value = data.tags.join(', ');
-                        }
-                        if (data.settings) {
-                            if (data.settings.prepend) document.getElementById('triggerInput').value = data.settings.prepend;
-                            if (data.settings.append) document.getElementById('appendInput').value = data.settings.append;
-                            if (data.settings.maxTags) document.getElementById('maxTagsInput').value = data.settings.maxTags;
-                            if (data.settings.sorting) document.getElementById('sortSelect').value = data.settings.sorting;
-                        }
-                    } else {
-                        document.getElementById('tagInput').value = content.trim();
+                    const movedTag = baseTags.find(t => t.id === evt.item.dataset.id);
+                    const newCategory = evt.to.dataset.groupName;
+                    if (movedTag && newCategory && movedTag.category !== newCategory) {
+                        movedTag.category = newCategory;
+                        tagCategorizer.updateIndex(movedTag.original, newCategory);
                     }
-                    processAll();
-                } catch (error) {
-                    alert('Error importing file: ' + error.message);
-                }
-            };
-            reader.readAsText(file);
-        };
-        input.click();
-    }
-    
-    function exportSettings() {
-        const settings = {
-            theme: document.body.className.match(/theme-\w+/)?.[0] || 'theme-indigo',
-            prepend: document.getElementById('triggerInput').value,
-            append: document.getElementById('appendInput').value,
-            swaps: document.getElementById('swapsInput').value,
-            implications: document.getElementById('implicationsInput').value,
-            blacklist: document.getElementById('blacklistInput').value,
-            maxTags: document.getElementById('maxTagsInput').value,
-            sorting: document.getElementById('sortSelect').value,
-            deduplicate: document.getElementById('deduplicateToggle').checked,
-            underscores: document.getElementById('underscoreToggle').checked,
-            weighting: document.getElementById('enableWeightingToggle').checked,
-            ratings: {
-                safe: document.getElementById('rating-safe').checked,
-                general: document.getElementById('rating-general').checked,
-                questionable: document.getElementById('rating-questionable').checked
+                    const allTagElements = Array.from(tagOutput.querySelectorAll('.tag-base'));
+                    baseTags = allTagElements.map(el => baseTags.find(t => t.id === el.dataset.id)).filter(Boolean);
+                    sortSelect.value = 'manual';
+                } finally { displayTags(); }
             }
-        };
-        
-        const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `danbooru-helper-settings-${new Date().toISOString().split('T')[0]}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
+        }));
+    });
+}
+
+function handleAutocomplete(e) {
+    if (!tagCategorizer) return;
+    const text = tagInput.value, cursorPos = tagInput.selectionStart;
+    const lastComma = text.lastIndexOf(',', cursorPos - 1);
+    autocomplete.currentWord = text.substring(lastComma + 1, cursorPos).trim();
+    const items = autocompleteBox.children;
+    if (autocomplete.active && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === 'Tab')) {
+        e.preventDefault();
+        if (e.key === 'Enter' || e.key === 'Tab') { if (autocomplete.index > -1 && items[autocomplete.index]) { selectAutocompleteItem(items[autocomplete.index].dataset.tag); } return; }
+        items[autocomplete.index]?.classList.remove('selected');
+        if (e.key === 'ArrowDown') autocomplete.index = (autocomplete.index + 1) % items.length;
+        else if (e.key === 'ArrowUp') autocomplete.index = (autocomplete.index - 1 + items.length) % items.length;
+        items[autocomplete.index]?.classList.add('selected');
+    } else {
+        if (!autocomplete.currentWord) return hideAutocomplete();
+        autocomplete.suggestions = TAG_DATABASE.filter(t => t.startsWith(autocomplete.currentWord.replace(/ /g, '_'))).slice(0, 5);
+        if (autocomplete.suggestions.length > 0) renderAutocomplete(); else hideAutocomplete();
     }
-    
-    function importSettings(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                const settings = JSON.parse(e.target.result);
-                
-                if (settings.theme) applyTheme(settings.theme);
-                if (settings.prepend !== undefined) document.getElementById('triggerInput').value = settings.prepend;
-                if (settings.append !== undefined) document.getElementById('appendInput').value = settings.append;
-                if (settings.swaps !== undefined) document.getElementById('swapsInput').value = settings.swaps;
-                if (settings.implications !== undefined) document.getElementById('implicationsInput').value = settings.implications;
-                if (settings.blacklist !== undefined) document.getElementById('blacklistInput').value = settings.blacklist;
-                if (settings.maxTags !== undefined) document.getElementById('maxTagsInput').value = settings.maxTags;
-                if (settings.sorting !== undefined) document.getElementById('sortSelect').value = settings.sorting;
-                if (settings.deduplicate !== undefined) document.getElementById('deduplicateToggle').checked = settings.deduplicate;
-                if (settings.underscores !== undefined) document.getElementById('underscoreToggle').checked = settings.underscores;
-                if (settings.weighting !== undefined) document.getElementById('enableWeightingToggle').checked = settings.weighting;
-                if (settings.ratings) {
-                    if (settings.ratings.safe !== undefined) document.getElementById('rating-safe').checked = settings.ratings.safe;
-                    if (settings.ratings.general !== undefined) document.getElementById('rating-general').checked = settings.ratings.general;
-                    if (settings.ratings.questionable !== undefined) document.getElementById('rating-questionable').checked = settings.ratings.questionable;
-                }
-                
-                toggleSettingsPanel();
-                processAll();
-                
-                document.getElementById('copyMessage').textContent = 'Settings imported successfully!';
-                setTimeout(() => document.getElementById('copyMessage').textContent = '', 3000);
-            } catch (error) {
-                alert('Error importing settings: ' + error.message);
-            }
-        };
-        reader.readAsText(file);
+}
+
+function renderAutocomplete() {
+    autocompleteBox.innerHTML = autocomplete.suggestions.map((s) => `<div class="autocomplete-item p-2 cursor-pointer" data-tag="${s}" onmousedown="selectAutocompleteItem('${s}')">${s.replace(/_/g, ' ')}</div>`).join('');
+    autocomplete.active = true;
+    autocompleteBox.classList.remove('hidden');
+}
+
+window.selectAutocompleteItem = (tag) => {
+    const text = tagInput.value, cursorPos = tagInput.selectionStart;
+    const lastComma = text.lastIndexOf(',', cursorPos - 1);
+    const before = text.substring(0, lastComma + 1);
+    tagInput.value = `${before} ${tag.replace(/_/g, ' ')}, ${text.substring(cursorPos)}`;
+    hideAutocomplete();
+    tagInput.focus();
+    processAll();
+};
+
+function hideAutocomplete() { autocomplete.active = false; autocompleteBox.classList.add('hidden'); }
+
+// --- Utility & Helper Functions ---
+
+function copyTagsToClipboard() {
+    const tagElements = tagOutput.querySelectorAll('.tag-base');
+    const processed = Array.from(tagElements).map(el => { const weightedTag = el.dataset.weightedTag; return underscoreToggle.checked ? weightedTag.replace(/\s/g, '_') : weightedTag.replace(/_/g, ' '); });
+    const finalString = [...triggerInput.value.split(',').map(t => t.trim()).filter(Boolean), ...processed, ...appendInput.value.split(',').map(t => t.trim()).filter(Boolean)].join(', ');
+    navigator.clipboard.writeText(finalString).then(() => { copyMessage.textContent = 'Tags copied!'; updateCopyHistory(finalString); setTimeout(() => copyMessage.textContent = '', 2000); }).catch(err => { copyMessage.textContent = 'Copy failed!'; console.error("Clipboard write failed: ", err); });
+}
+
+window.updateTagWeight = (id, action) => {
+    const tag = baseTags.find(t => t.id === id); if (!tag) return;
+    let current = tag.weighted, original = tag.original; let cleaned = original;
+    const weightChars = { '(': ')', '[': ']' }; const openBrackets = Object.keys(weightChars); const closeBrackets = Object.values(weightChars);
+    while (openBrackets.includes(cleaned.charAt(0)) && closeBrackets.includes(cleaned.charAt(cleaned.length - 1))) { cleaned = cleaned.substring(1, cleaned.length - 1); }
+    if (action === 'increase') { if (current.startsWith('((')) current = `(((${cleaned})))`; else if (current.startsWith('(')) current = `((${cleaned}))`; else if (current.startsWith('[')) current = cleaned; else current = `(${cleaned})`; }
+    else { if (current.startsWith('(((')) current = `((${cleaned}))`; else if (current.startsWith('((')) current = `(${cleaned})`; else if (current.startsWith('(')) current = cleaned; else if (current.startsWith('[[')) current = `[[[${cleaned}]]]`; else if (current.startsWith('[')) current = `[[${cleaned}]]`; else current = `[${cleaned}]`; }
+    tag.weighted = current; displayTags();
+};
+
+function updateCopyHistory(text) {
+    if (text) { copyHistory.unshift(text); if (copyHistory.length > 10) copyHistory.pop(); localStorage.setItem('danbooru-tag-history', JSON.stringify(copyHistory)); }
+    historyContainer.innerHTML = '';
+    if (copyHistory.length === 0) {
+        historyContainer.innerHTML = `<p class="text-sm text-gray-500 italic">No history yet.</p>`;
+        updateStats(); // Update stats when history is cleared
+        return;
     }
-    
-    function resetToDefaults() {
-        if (confirm('Reset all settings to defaults?')) {
-            document.getElementById('tagInput').value = '';
-            document.getElementById('triggerInput').value = '';
-            document.getElementById('appendInput').value = '';
-            document.getElementById('swapsInput').value = '';
-            document.getElementById('implicationsInput').value = '';
-            document.getElementById('blacklistInput').value = '';
-            document.getElementById('maxTagsInput').value = '75';
-            document.getElementById('sortSelect').value = 'danbooru';
-            document.getElementById('suggestionCountInput').value = '15';
-            document.getElementById('deduplicateToggle').checked = true;
-            document.getElementById('underscoreToggle').checked = true;
-            document.getElementById('enableWeightingToggle').checked = false;
-            document.getElementById('rating-safe').checked = true;
-            document.getElementById('rating-general').checked = true;
-            document.getElementById('rating-questionable').checked = false;
-            
-            applyTheme('theme-indigo');
+    copyHistory.forEach(item => {
+        const el = document.createElement('div'); el.className = 'history-item p-2 rounded-md flex items-center justify-between gap-2 bg-gray-800/50';
+        el.innerHTML = `<span class="history-item-text text-gray-400 text-xs flex-grow overflow-hidden whitespace-nowrap text-ellipsis">${item}</span><button class="copy-btn-sm p-1 rounded hover:bg-[var(--accent-color)]" onclick="navigator.clipboard.writeText(\`${item.replace(/`/g, '\\`')}\`)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-300"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>`;
+        historyContainer.appendChild(el);
+    });
+    updateStats();
+}
+
+function applyTheme(theme) { document.body.className = `p-4 md:p-6 lg:p-8 ${theme}`; themeButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.theme === theme)); localStorage.setItem('danbooru-tag-helper-theme', theme); }
+
+function suggestCoherentTags() {
+    if (!tagCategorizer) return;
+    const QUESTIONABLE_KEYWORDS = ['bikini', 'swimsuit', 'cleavage', 'breasts', 'ass', 'thighs', 'pantyhose', 'leotard', 'garter_belt', 'panty_shot', 'sideboob', 'topless', 'bra', 'panties', 'lingerie', 'seductive', 'bondage', 'shibari', 'partially_nude', 'armpits', 'bottomless'];
+    const EXPLICIT_KEYWORDS = ['pussy', 'penis', 'sex', 'oral', 'ahegao', 'nude', 'naked', 'cum', 'masturbation', 'fellatio', 'cunnilingus', 'prolapse'];
+    const numToSuggest = parseInt(suggestionCountInput.value, 10);
+    const existingTags = new Set(baseTags.map(t => t.original.toLowerCase().replace(/ /g, '_')));
+    const isAllowed = (tag) => { if (EXPLICIT_KEYWORDS.some(kw => tag.includes(kw))) return false; if (!ratingQuestionable.checked && QUESTIONABLE_KEYWORDS.some(kw => tag.includes(kw))) return false; return !(!ratingGeneral.checked && !ratingSafe.checked && !ratingQuestionable.checked); };
+    const suggestions = new Set(), categoryPools = {};
+    TAG_DATABASE.forEach(tag => { const { category } = tagCategorizer.categorize(tag); if (!categoryPools[category]) categoryPools[category] = []; if (!existingTags.has(tag) && isAllowed(tag)) categoryPools[category].push(tag); });
+    const plan = existingTags.size === 0 ? [{ name: 'Quality', count: 1 }, { name: 'Composition', count: 2 }, { name: 'Characters', count: 1 }, { name: 'Face', count: 2 }, { name: 'Eyes', count: 1 }, { name: 'Hair', count: 2 }] : Object.entries(baseTags.reduce((acc, tag) => { acc[tag.category] = (acc[tag.category] || 0) + 1; return acc; }, {})).map(([name, count]) => ({ name, count }));
+    let suggestionsNeeded = numToSuggest;
+    while (suggestionsNeeded > 0) {
+        let madeSuggestion = false;
+        for (const p of plan) {
+            if (suggestionsNeeded <= 0) break;
+            const pool = categoryPools[p.name] || [];
+            for (let i = 0; i < p.count; ++i) { if (pool.length > 0) { const [suggestion] = pool.splice(Math.floor(Math.random() * pool.length), 1); if (suggestion && !suggestions.has(suggestion)) { suggestions.add(suggestion); suggestionsNeeded--; madeSuggestion = true; } } }
+        }
+        if (!madeSuggestion) break;
+    }
+    const suggestionsToAdd = [...suggestions];
+    if (suggestionsToAdd.length > 0) { const separator = tagInput.value.trim().length > 0 && !tagInput.value.trim().endsWith(',') ? ', ' : ''; tagInput.value += separator + suggestionsToAdd.join(', ').replace(/_/g, ' '); processAll(); }
+}
+
+function toggleSettingsPanel() { element('settingsPanel').classList.toggle('hidden'); }
+function showTokenSettings() { element('tokenPanel').classList.remove('hidden'); }
+function hideTokenSettings() { element('tokenPanel').classList.add('hidden'); }
+function clearAll() { if (confirm("Clear all input fields?")) { ['tagInput', 'triggerInput', 'appendInput', 'swapsInput', 'implicationsInput', 'blacklistInput'].forEach(id => element(id).value = ''); processAll(); } }
+
+// --- Initialization ---
+
+document.addEventListener('DOMContentLoaded', async () => {
+    initializeToken();
+    await loadExternalData();
+    const inputsForProcessing = [tagInput, swapsInput, implicationsInput, blacklistInput, triggerInput, appendInput, maxTagsInput];
+    inputsForProcessing.forEach(input => input.addEventListener('input', processAll));
+    const inputsForDisplay = [deduplicateToggle, underscoreToggle, enableWeightingToggle, sortSelect];
+    inputsForDisplay.forEach(input => input.addEventListener('change', () => { sortSelect.value !== 'manual' ? processAll() : displayTags(); }));
+    tagInput.addEventListener('keyup', handleAutocomplete);
+    tagInput.addEventListener('keydown', handleAutocomplete);
+    tagInput.addEventListener('blur', () => setTimeout(hideAutocomplete, 150));
+    copyButton.addEventListener('click', copyTagsToClipboard);
+    suggestBtn.addEventListener('click', suggestCoherentTags);
+    themeButtons.forEach(btn => btn.addEventListener('click', () => applyTheme(btn.dataset.theme)));
+    const savedTheme = localStorage.getItem('danbooru-tag-helper-theme') || 'theme-indigo';
+    const savedHistory = localStorage.getItem('danbooru-tag-history');
+    if (savedHistory) copyHistory = JSON.parse(savedHistory);
+    applyTheme(savedTheme);
+    processAll();
+    updateCopyHistory(null);
+});
+
+// --- GitHub & Settings Functions ---
+
+async function loadExternalData() {
+    document.title = 'Danbooru Tag Helper (Loading...)';
+    try {
+        const cacheBuster = `?t=${new Date().getTime()}`;
+        const [tagsResponse, mapResponse] = await Promise.all([
+            fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/tags.json${cacheBuster}`),
+            fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/tag_map.json${cacheBuster}`)
+        ]);
+        if (!tagsResponse.ok) throw new Error(`Failed to fetch tags.json: ${tagsResponse.statusText}`);
+        if (!mapResponse.ok) throw new Error(`Failed to fetch tag_map.json: ${mapResponse.statusText}`);
+        TAG_DATABASE = await tagsResponse.json();
+        const tagMap = await mapResponse.json();
+        const categoryOrder = ['Quality', 'Composition', 'Characters', 'Subject & Creatures', 'Face', 'Eyes', 'Hair', 'Body Parts', 'Attire', 'Accessories', 'Held Items & Objects', 'Actions & Poses', 'Setting & Environment', 'Style & Meta'];
+        tagCategorizer = new EnhancedTagCategorizer(tagMap, TAG_DATABASE, categoryOrder);
+        document.title = 'Danbooru Tag Helper (Ready)';
+    } catch (error) {
+        console.error("FATAL ERROR:", error);
+        document.title = 'Danbooru Tag Helper (ERROR)';
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'p-4 mb-4 text-sm text-red-200 bg-red-800/50 rounded-lg';
+        errorDiv.innerHTML = `<strong>Error loading data:</strong> ${error.message}. See console (F12).`;
+        document.querySelector('.glass-panel').prepend(errorDiv);
+    }
+}
+
+async function submitCategoryUpdate(event, newCategory) {
+    event.preventDefault();
+    if (!gitHubPat) return showTokenSettings(), void alert("Please enter your GitHub PAT to save changes.");
+    const tagsToUpdate = baseTags.filter(t => selectedTagIds.has(t.id));
+    if (tagsToUpdate.length === 0) return;
+    copyMessage.textContent = `Updating ${tagsToUpdate.length} tag(s)...`;
+    const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/tag_map.json`;
+    const headers = { 'Authorization': `Bearer ${gitHubPat}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' };
+    try {
+        const getFileResponse = await fetch(apiUrl, { headers });
+        if (!getFileResponse.ok) throw new Error(`Failed to fetch tag_map.json. Status: ${getFileResponse.status}`);
+        const fileData = await getFileResponse.json();
+        const currentContent = atob(fileData.content);
+        const currentSha = fileData.sha;
+        let currentTagMap = JSON.parse(currentContent);
+        let changesCount = 0;
+        tagsToUpdate.forEach(tag => { const normalizedTag = tag.original.toLowerCase().replace(/ /g, '_'); if (currentTagMap[normalizedTag] !== newCategory) { currentTagMap[normalizedTag] = newCategory; changesCount++; } });
+        if (changesCount === 0) return copyMessage.textContent = 'No changes needed.', void setTimeout(() => copyMessage.textContent = '', 3000);
+        const sortedTagMap = Object.fromEntries(Object.entries(currentTagMap).sort());
+        const newContent = JSON.stringify(sortedTagMap, null, 2);
+        const newContentBase64 = btoa(unescape(encodeURIComponent(newContent)));
+        const commitMessage = `Update ${changesCount} tag(s) to '${newCategory}' via Tag Helper`;
+        const updateResponse = await fetch(apiUrl, { method: 'PUT', headers, body: JSON.stringify({ message: commitMessage, content: newContentBase64, sha: currentSha }) });
+        if (!updateResponse.ok) throw new Error(`GitHub API Error: ${(await updateResponse.json()).message}`);
+        copyMessage.textContent = `Success! Updated ${changesCount} tag(s).`;
+        tagsToUpdate.forEach(tag => { tagCategorizer.updateIndex(tag.original, newCategory); tag.category = newCategory; tag.categorySource = 'Primary'; });
+        selectedTagIds.clear();
+        displayTags();
+    } catch (error) {
+        console.error("Failed to update tag_map.json:", error);
+        copyMessage.textContent = `Error: ${error.message}`;
+        if (error.message.includes("401")) gitHubPat = null;
+    } finally {
+        setTimeout(() => copyMessage.textContent = '', 5000);
+    }
+}
+
+function saveToken() {
+    const token = element('githubTokenInput').value.trim();
+    const remember = element('rememberToken').checked;
+    if (!token) return alert("Please enter a token");
+    gitHubPat = token;
+    if (remember) localStorage.setItem('github-pat', token);
+    else localStorage.removeItem('github-pat');
+    updateTokenStatus();
+    copyMessage.textContent = 'Token saved!';
+    setTimeout(() => copyMessage.textContent = '', 3000);
+    hideTokenSettings();
+}
+
+function testToken() {
+    const token = element('githubTokenInput').value.trim();
+    if (!token) return alert("Please enter a token");
+    const statusEl = element('tokenStatus');
+    statusEl.innerHTML = '<span class="text-amber-400">Testing...</span>';
+    fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}`, { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' } })
+        .then(response => {
+            if (response.ok) statusEl.innerHTML = '<span class="text-green-400">✓ Token valid</span>';
+            else if (response.status === 401) statusEl.innerHTML = '<span class="text-red-400">✗ Invalid token</span>';
+            else if (response.status === 403) statusEl.innerHTML = '<span class="text-yellow-400">⚠ Insufficient permissions</span>';
+            else statusEl.innerHTML = `<span class="text-red-400">✗ Connection failed (${response.status})</span>`;
+        }).catch(error => { statusEl.innerHTML = '<span class="text-red-400">✗ Connection error</span>'; });
+}
+
+function updateTokenStatus() {
+    const statusEl = element('tokenStatus');
+    gitHubPat ? statusEl.innerHTML = '<span class="text-green-400">✓ Token configured</span>' : statusEl.innerHTML = '<span class="text-gray-400">No token configured</span>';
+}
+
+function initializeToken() {
+    const savedToken = localStorage.getItem('github-pat');
+    if (savedToken) {
+        gitHubPat = savedToken;
+        element('githubTokenInput').value = savedToken;
+        element('rememberToken').checked = true;
+    }
+    updateTokenStatus();
+}
+
+function exportSettings() {
+    const settings = {
+        theme: document.body.className.match(/theme-\w+/)?.[0] || 'theme-indigo',
+        prepend: element('triggerInput').value, append: element('appendInput').value,
+        swaps: element('swapsInput').value, implications: element('implicationsInput').value,
+        blacklist: element('blacklistInput').value, maxTags: element('maxTagsInput').value,
+        sorting: element('sortSelect').value, deduplicate: element('deduplicateToggle').checked,
+        underscores: element('underscoreToggle').checked, weighting: element('enableWeightingToggle').checked,
+        ratings: { safe: element('rating-safe').checked, general: element('rating-general').checked, questionable: element('rating-questionable').checked }
+    };
+    const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `danbooru-helper-settings-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function importSettings(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const settings = JSON.parse(e.target.result);
+            if (settings.theme) applyTheme(settings.theme);
+            ['prepend', 'append', 'swaps', 'implications', 'blacklist', 'maxTags', 'sorting'].forEach(key => { if (settings[key] !== undefined) element(key.replace('prepend', 'triggerInput').replace('sorting', 'sortSelect')).value = settings[key]; });
+            ['deduplicate', 'underscores', 'weighting'].forEach(key => { if (settings[key] !== undefined) element(key + 'Toggle').checked = settings[key]; });
+            if (settings.ratings) { ['safe', 'general', 'questionable'].forEach(key => { if (settings.ratings[key] !== undefined) element('rating-' + key).checked = settings.ratings[key]; }); }
             toggleSettingsPanel();
             processAll();
-        }
-    }
+            copyMessage.textContent = 'Settings imported!';
+            setTimeout(() => copyMessage.textContent = '', 3000);
+        } catch (error) { alert('Error importing settings: ' + error.message); }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+}
 
-    // Enhanced theme application with smooth transitions
-    function applyTheme(theme) {
-        document.documentElement.className = 'dark';
-        document.body.className = `p-4 md:p-6 lg:p-8 ${theme}`;
-        
-        document.querySelectorAll('.theme-button').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.theme === theme);
-        });
-        
-        localStorage.setItem('danbooru-tag-helper-theme', theme);
-        
-        // Smooth color transition
-        document.documentElement.style.setProperty('--transition', 'all 0.3s ease-in-out');
-        setTimeout(() => {
-            document.documentElement.style.removeProperty('--transition');
-        }, 300);
-    }
-
-    // Enhanced statistics updates
-    function updateStats() {
-        const tagCount = baseTags.length;
-        const maxTags = parseInt(document.getElementById('maxTagsInput').value) || 75;
-        const categoryCount = new Set(baseTags.map(t => t.category)).size;
-        const historyCount = copyHistory.length;
-        
-        document.getElementById('tagCount').textContent = tagCount;
-        document.getElementById('maxTagCount').textContent = maxTags;
-        document.getElementById('categoryCount').textContent = categoryCount;
-        document.getElementById('historyCount').textContent = historyCount;
-        
-        // Update processed tag count
-        document.getElementById('processedTagCount').textContent = tagCount;
-        document.getElementById('processedMaxTagCount').textContent = maxTags;
-        
-        // Add warning colors if approaching limits
-        const tagCountEl = document.getElementById('tagCount');
-        const percentage = (tagCount / maxTags) * 100;
-        if (percentage > 90) {
-            tagCountEl.style.color = '#ef4444'; // red
-        } else if (percentage > 75) {
-            tagCountEl.style.color = '#f59e0b'; // amber
-        } else {
-            tagCountEl.style.color = 'var(--accent-color)';
-        }
-    }
-
-    // Initialize when DOM is loaded
-    document.addEventListener('DOMContentLoaded', async () => {
-        // Initialize token management
-        initializeToken();
-        
-        // Load external data first
-        await loadExternalData();
-        
-        // Apply saved theme
-        const savedTheme = localStorage.getItem('danbooru-tag-helper-theme') || 'theme-indigo';
-        applyTheme(savedTheme);
-        
-        // Load saved history
-        const savedHistory = localStorage.getItem('danbooru-tag-history');
-        if (savedHistory) {
-            copyHistory = JSON.parse(savedHistory);
-        }
-        
-        // Setup theme buttons
-        document.querySelectorAll('.theme-button').forEach(btn => {
-            btn.addEventListener('click', () => applyTheme(btn.dataset.theme));
-        });
-        
-        // Setup all event listeners
-        const inputsForProcessing = [tagInput, swapsInput, implicationsInput, blacklistInput, triggerInput, appendInput, maxTagsInput];
-        inputsForProcessing.forEach(input => input.addEventListener('input', processAll));
-        const inputsForDisplay = [deduplicateToggle, underscoreToggle, enableWeightingToggle, sortSelect];
-        inputsForDisplay.forEach(input => input.addEventListener('change', displayTags));
-        tagInput.addEventListener('keyup', handleAutocomplete);
-        tagInput.addEventListener('keydown', handleAutocomplete);
-        tagInput.addEventListener('blur', () => setTimeout(hideAutocomplete, 150));
-        copyButton.addEventListener('click', copyTagsToClipboard);
-        suggestBtn.addEventListener('click', suggestCoherentTags);
-        
-        // Initialize
+function resetToDefaults() {
+    if (confirm("Reset all settings to defaults?")) {
+        applyTheme('theme-indigo');
+        element('triggerInput').value = ''; element('appendInput').value = '';
+        element('swapsInput').value = ''; element('implicationsInput').value = '';
+        element('blacklistInput').value = ''; element('maxTagsInput').value = '75';
+        element('sortSelect').value = 'danbooru'; element('suggestionCountInput').value = '15';
+        element('deduplicateToggle').checked = true; element('underscoreToggle').checked = true;
+        element('enableWeightingToggle').checked = false; element('rating-safe').checked = true;
+        element('rating-general').checked = true; element('rating-questionable').checked = false;
+        toggleSettingsPanel();
         processAll();
-        updateCopyHistory(null);
-        updateStats();
-        updateTokenStatus();
-    });
-    </script>
+    }
+}
+// --- End of Script ---
+</script>
 </body>
 </html><!DOCTYPE html>
 <html lang="en" class="dark">
