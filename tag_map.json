@@ -1587,6 +1587,7 @@
   "on_bench": "Actions & Poses",
   "on_chair": "Setting & Environment",
   "on_couch": "Actions & Poses",
+  "on_desk": "Actions & Poses",
   "on_floor": "Actions & Poses",
   "on_ground": "Actions & Poses",
   "on_side": "Actions & Poses",
