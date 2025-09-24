@@ -1,3 +1,4 @@
+ (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
 diff --git a/index.html b/index.html
 index 6483cd981c75308485c819c99db97c6a0b0bb644..e43a4904a1d8d365ebf87dae29ccb53bcad4eb3b 100644
 --- a/index.html
@@ -617,694 +618,1208 @@ index 6483cd981c75308485c819c99db97c6a0b0bb644..e43a4904a1d8d365ebf87dae29ccb53b
 -        justify-content: space-between;
 -        gap: 0.75rem;
 -      }
--      #history-dralative;
-        overflow: hidden;
-      }
-      .theme-button:hover {
-        transform: scale(1.05);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-      }
-      .theme-button.active { 
-        border-color: white;
-        box-shadow: 0 0 0 2px rgba(255,255,255,0.5), 0 8px 25px rgba(0,0,0,0.4);
-        transform: scale(1.1);
-      }
-      
-      .floating-panel {
-        position: fixed;
-        top: 2rem;
-        right: 2rem;
-        z-index: 40;
-        display: flex;
-        gap: 0.75rem;
-        align-items: center;
-        padding: 1rem;
-        background: var(--glass-bg);
-        backdrop-filter: blur(12px);
-        border: 1px solid var(--glass-border);
-        border-radius: 1rem;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-      }
-      
-      .quick-action-btn {
-        padding: 0.5rem;
-        background: rgba(55, 65, 81, 0.6);
-        border: 1px solid rgba(75, 85, 99, 0.5);
-        border-radius: 0.5rem;
-        color: #e2e8f0;
-        cursor: pointer;
-        transition: all 0.2s ease-in-out;
-      }
-      .quick-action-btn:hover {
-        background: var(--accent-color);
-        color: white;
-        transform: translateY(-1px);
-      }
-      
-      .stats-panel {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-        gap: 1rem;
-        margin-bottom: 2rem;
-      }
-      .stat-item {
-        text-align: center;
-        padding: 1rem;
-        background: rgba(0,0,0,0.3);
-        border-radius: 1rem;
-        border: 1px solid rgba(var(--accent-color), 0.3);
-      }
-      .stat-value {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: var(--accent-color);
-      }
-      .stat-label {
-        font-size: 0.75rem;
-        color: #94a3b8;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-      }
-      
-      .advanced-controls {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
-        margin-bottom: 2rem;
-      }
-      
-      .control-group {
-        background: rgba(15, 23, 42, 0.35);
-        border-radius: 1rem;
-        border: 1px solid rgba(var(--accent-color), 0.18);
-        transition: border-color 0.3s ease, box-shadow 0.3s ease;
-        overflow: hidden;
-      }
-      
-      .control-group[open] {
-        border-color: rgba(var(--accent-color), 0.4);
-        box-shadow: 0 20px 45px -15px rgba(15, 23, 42, 0.6);
-      }
-
-      .control-label {
-        font-size: 0.8rem;
-        font-weight: 600;
-        color: #cbd5e1;
-        margin-bottom: 0.5rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-      }
-
-      .collapsible summary {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.75rem;
-        list-style: none;
-        cursor: pointer;
-        padding: 1rem 1.25rem;
-      }
-      .collapsible summary::-webkit-details-marker {
-        display: none;
-      }
-      .collapsible summary:focus-visible {
-        outline: 2px solid var(--accent-color);
-        outline-offset: 4px;
-        border-radius: 0.75rem;
-      }
-      .summary-title {
-        display: block;
-        font-size: 0.95rem;
-        font-weight: 600;
-        color: #e2e8f0;
-      }
-      .summary-subtitle {
-        display: block;
-        font-size: 0.75rem;
-        color: #94a3b8;
-        margin-top: 0.25rem;
-      }
-      .collapsible-icon {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 1.75rem;
-        height: 1.75rem;
-        border-radius: 999px;
-        background: rgba(148, 163, 184, 0.18);
-        color: #e2e8f0;
-        transition: transform 0.3s ease, background 0.3s;
-      }
-      .collapsible-icon::before {
-        content: '⌄';
-        font-size: 0.9rem;
-        line-height: 1;
-        transform: translateY(-1px);
-      }
-      .control-group[open] .collapsible-icon {
-        transform: rotate(180deg);
-        background: rgba(148, 163, 184, 0.25);
-      }
-      .collapsible-content {
-        padding: 0 1.25rem 1.25rem;
-        margin-top: -0.5rem;
-      }
-      .collapsible-content > *:last-child {
-        margin-bottom: 0;
-      }
-
-      .quick-action-btn:focus-visible {
-        outline: 2px solid var(--accent-color);
-        outline-offset: 2px;
-      }
-
-      #dataStatusBanner .app-alert,
-      #pipeline-alerts .pipeline-alert {
-        border-radius: 0.85rem;
-        background: rgba(15, 23, 42, 0.6);
-        border: 1px solid rgba(var(--accent-color), 0.25);
-        padding: 0.75rem 1rem;
-        font-size: 0.85rem;
-        display: flex;
-        align-items: flex-start;
-        gap: 0.75rem;
-      }
-      .app-alert strong,
-      .pipeline-alert strong {
-        color: var(--processed-tag-text);
-      }
-      .app-alert .icon,
-      .pipeline-alert .icon {
-        font-size: 1.25rem;
-        line-height: 1;
-      }
-
-      .category-chart {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-      }
-      .category-bar {
-        display: grid;
-        grid-template-columns: minmax(110px, 0.6fr) 1fr minmax(2.5rem, 0.2fr);
-        align-items: center;
-        gap: 0.75rem;
-        font-size: 0.75rem;
-      }
-      .category-bar-label {
-        color: #e2e8f0;
-        font-weight: 500;
-      }
-      .category-bar-track {
-        position: relative;
-        height: 0.6rem;
-        border-radius: 999px;
-        background: rgba(148, 163, 184, 0.2);
-        overflow: hidden;
-      }
-      .category-bar-fill {
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        background: linear-gradient(90deg, var(--accent-color) 0%, var(--accent-color-hover) 100%);
-      }
-      .category-bar-value {
-        text-align: right;
-        color: #94a3b8;
-      }
-
-      .history-list {
-        max-height: 520px;
-        overflow-y: auto;
-        padding-right: 0.25rem;
-      }
-      .history-item {
-        background: rgba(15, 23, 42, 0.55);
-        border: 1px solid rgba(148, 163, 184, 0.25);
-        border-radius: 0.9rem;
-        padding: 0.85rem;
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-        transition: border-color 0.2s ease, transform 0.2s ease;
-      }
-      .history-item:hover {
-        border-color: rgba(var(--accent-color), 0.45);
-        transform: translateY(-1px);
-      }
-      .history-item.pinned {
-        border-color: rgba(var(--accent-color), 0.6);
-        box-shadow: 0 0 0 1px rgba(var(--accent-color), 0.35);
-      }
-      .history-item-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.5rem;
-      }
-      .history-item-title {
-        font-size: 0.9rem;
-        font-weight: 600;
-        color: #e2e8f0;
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-      }
-      .preset-badge {
-        font-size: 0.65rem;
-        padding: 0.15rem 0.45rem;
-        border-radius: 999px;
-        background: rgba(var(--accent-color), 0.2);
-        color: var(--processed-tag-text);
-        letter-spacing: 0.02em;
-      }
-      .history-item-meta {
-        font-size: 0.7rem;
-        color: #94a3b8;
-      }
-      .history-item-tags {
-        font-size: 0.75rem;
-        color: #cbd5e1;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-      }
-      .history-item-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-      }
-      .history-item-action {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-        padding: 0.35rem 0.75rem;
-        font-size: 0.7rem;
-        border-radius: 999px;
-        background: rgba(148, 163, 184, 0.12);
-        border: 1px solid transparent;
-        color: #cbd5e1;
-        cursor: pointer;
-        transition: all 0.2s ease-in-out;
-      }
-      .history-item-action:hover {
-        background: rgba(var(--accent-color), 0.2);
-        color: white;
-        border-color: rgba(var(--accent-color), 0.35);
-      }
-      .history-item-action:focus-visible {
-        outline: 2px solid var(--accent-color);
-        outline-offset: 2px;
-      }
-
-      .history-drawer {
-        position: fixed;
-        inset: 0;
-        z-index: 50;
-      }
-      .history-drawer-backdrop {
-        position: absolute;
-        inset: 0;
-        background: rgba(8, 15, 30, 0.7);
-        backdrop-filter: blur(8px);
-      }
-      .history-drawer-panel {
-        position: absolute;
-        left: 50%;
-        bottom: 0;
-        transform: translateX(-50%);
-        width: min(480px, calc(100% - 2rem));
-        background: var(--glass-bg);
-        border: 1px solid var(--glass-border);
-        border-radius: 1.25rem 1.25rem 0 0;
-        box-shadow: 0 -18px 40px rgba(0, 0, 0, 0.55);
-        padding: 1rem 1.25rem 1.5rem;
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-        max-height: 75vh;
-      }
-      .history-drawer-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.75rem;
-      }
-      #history-drawer-list {
-        overflow-y: auto;
-        padding-right: 0.25rem;
-      }
-
-      /* Improved animations */
-      @keyframes fadeInUp {
-        from {
-          opacity: 0;
-          transform: translateY(20px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      .fade-in-up {
-        animation: fadeInUp 0.5s ease-out;
-      }
-
-      /* Custom scrollbar */
-      ::-webkit-scrollbar {
-        width: 8px;
-      }
-      ::-webkit-scrollbar-track {
-        background: rgba(0,0,0,0.2);
-        border-radius: 4px;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: var(--accent-color);
-        border-radius: 4px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: var(--accent-color-hover);
-      }
-
-      /* Responsive improvements */
-      @media (max-width: 1023px) {
-        .history-sidebar {
-          display: none;
-        }
-        .stats-panel {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-      }
-      @media (max-width: 768px) {
-        .floating-panel {
-          position: static;
-          margin-bottom: 2rem;
-          justify-content: center;
-        }
-        .advanced-controls {
-          grid-template-columns: 1fr;
-        }
-      }
-      @media (max-width: 640px) {
-        .stats-panel {
-          grid-template-columns: 1fr;
-        }
-        .category-bar {
-          grid-template-columns: 1fr;
-          gap: 0.4rem;
-        }
-        .category-bar-value {
-          text-align: left;
-        }
-      }
-    </style>
-</head>
-<body class="p-4 md:p-6 lg:p-8">
-    <!-- Floating theme panel -->
-    <div class="floating-panel">
-        <span class="text-sm font-medium text-gray-300">Theme:</span>
-        <button class="theme-button" style="background: linear-gradient(135deg, #4f46e5, #6366f1);" data-theme="theme-indigo" title="Indigo"></button>
-        <button class="theme-button" style="background: linear-gradient(135deg, #2563eb, #3b82f6);" data-theme="theme-blue" title="Blue"></button>
-        <button class="theme-button" style="background: linear-gradient(135deg, #0d9488, #14b8a6);" data-theme="theme-teal" title="Teal"></button>
-        <button class="theme-button" style="background: linear-gradient(135deg, #dc2626, #ef4444);" data-theme="theme-crimson" title="Crimson"></button>
-        <button class="theme-button" style="background: linear-gradient(135deg, #10b981, #34d399);" data-theme="theme-emerald" title="Emerald"></button>
-        <button class="theme-button" style="background: linear-gradient(135deg, #8b5cf6, #a78bfa);" data-theme="theme-purple" title="Purple"></button>
-        <button class="theme-button" style="background: linear-gradient(135deg, #f59e0b, #fbbf24);" data-theme="theme-amber" title="Amber"></button>
-        <button class="theme-button" style="background: linear-gradient(135deg, #f43f5e, #fb7185);" data-theme="theme-rose" title="Rose"></button>
-        <button class="theme-button" style="background: linear-gradient(135deg, #06b6d4, #22d3ee);" data-theme="theme-cyan" title="Cyan"></button>
-        
-        <div class="w-px h-6 bg-gray-600 mx-2"></div>
-        
-        <button class="quick-action-btn" title="GitHub Token Settings" onclick="showTokenSettings()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                <path d="M9 12l2 2 4-4"></path>
-            </svg>
-        </button>
-        
-        <button class="quick-action-btn" title="Import/Export Settings" onclick="toggleSettingsPanel()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 15l0 6"></path>
-                <path d="M8 21l8 0"></path>
-                <path d="M8.56 17.198l0 0c-.345 -.865 -.819 -1.698 -1.319 -2.48c-.5 -.782 -1.028 -1.517 -1.56 -2.198c-.532 -.681 -1.068 -1.316 -1.56 -1.895"></path>
-                <path d="M15.44 17.198l0 0c.345 -.865 .819 -1.698 1.319 -2.48c.5 -.782 1.028 -1.517 1.56 -2.198c.532 -.681 1.068 -1.316 1.56 -1.895"></path>
-                <circle cx="12" cy="6" r="3"></circle>
-            </svg>
-        </button>
-        
-        <button class="quick-action-btn" title="Clear All" onclick="clearAll()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M18 6l-12 12"></path>
-                <path d="M6 6l12 12"></path>
-            </svg>
-        </button>
-    </div>
-
-    <div class="glass-panel max-w-7xl mx-auto p-6 md:p-8 fade-in-up">
-        <div class="text-center mb-8">
-            <h1 class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent mb-4">
-                Danbooru Tag Helper
-            </h1>
-            <p class="text-gray-400 text-lg">Advanced AI Art Prompt Management</p>
-        </div>
-
-        <!-- Stats Panel -->
-        <div class="stats-panel">
-            <div class="stat-item">
-                <div class="stat-value" id="tagCount">0</div>
-                <div class="stat-label">Active Tags</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value" id="maxTagCount">75</div>
-                <div class="stat-label">Max Tags</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value" id="categoryCount">0</div>
-                <div class="stat-label">Categories</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value" id="historyCount">0</div>
-                <div class="stat-label">History</div>
-            </div>
-        </div>
-
-        <!-- Advanced Controls -->
-        <div class="advanced-controls">
-            <div class="control-group">
-                <div class="control-label">AI Suggestions</div>
-                <div class="flex items-center gap-2 mb-3">
-                    <input type="number" id="suggestionCountInput" value="15" min="5" max="50" 
-                           class="input-base text-sm flex-1" placeholder="Count">
-                    <button id="suggest-btn" class="btn-primary">Generate</button>
-                </div>
-                <div class="flex flex-wrap gap-2 text-sm">
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" id="rating-safe" class="rounded" checked>
-                        <span>Safe</span>
-                    </label>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" id="rating-general" class="rounded" checked>
-                        <span>General</span>
-                    </label>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" id="rating-questionable" class="rounded">
-                        <span>Questionable</span>
-                    </label>
-                </div>
-            </div>
-
-            <div class="control-group">
-                <div class="control-label">Processing Options</div>
-                <div class="space-y-3">
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input id="deduplicateToggle" type="checkbox" class="rounded" checked>
-                        <span class="text-sm">Deduplicate Tags</span>
-                    </label>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input id="underscoreToggle" type="checkbox" class="rounded" checked>
-                        <span class="text-sm">Use Underscores</span>
-                    </label>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input id="enableWeightingToggle" type="checkbox" class="rounded">
-                        <span class="text-sm">Enable Weighting</span>
-                    </label>
-                </div>
-            </div>
-
-            <div class="control-group">
-                <div class="control-label">Sorting & Limits</div>
-                <div class="space-y-3">
-                    <select id="sortSelect" class="input-base text-sm w-full">
-                        <option value="danbooru" selected>Sort: Danbooru</option>
-                        <option value="smart">Sort: Smart</option>
-                        <option value="manual">Sort: Manual</option>
-                        <option value="none">Sort: None</option>
-                        <option value="az">Sort: A-Z</option>
-                        <option value="za">Sort: Z-A</option>
-                    </select>
-                    <input type="number" id="maxTagsInput" value="75" min="1" max="500" 
-                           class="input-base text-sm w-full" placeholder="Max Tags">
-                </div>
-            </div>
-
-            <div class="control-group">
-                <div class="control-label">Quick Actions</div>
-                <div class="grid grid-cols-2 gap-2">
-                    <button onclick="randomizeTags()" class="quick-action-btn text-center py-2">
-                        <div class="text-xs">Randomize</div>
-                    </button>
-                    <button onclick="optimizeOrder()" class="quick-action-btn text-center py-2">
-                        <div class="text-xs">Optimize</div>
-                    </button>
-                    <button onclick="exportTags()" class="quick-action-btn text-center py-2">
-                        <div class="text-xs">Export</div>
-                    </button>
-                    <button onclick="importTags()" class="quick-action-btn text-center py-2">
-                        <div class="text-xs">Import</div>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <!-- Input Section -->
-            <div class="lg:col-span-4 space-y-6">
-                <div>
-                    <label for="tagInput" class="control-label mb-3 block">Main Tags</label>
-                    <div class="relative">
-                        <textarea id="tagInput" rows="6" class="input-base w-full resize-none" 
-                                  placeholder="1girl, solo, masterpiece, black background..."></textarea>
-                        <div id="autocomplete-box" class="w-full hidden"></div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="control-label mb-2 block">Prepend</label>
-                        <input type="text" id="triggerInput" class="input-base w-full" 
-                               placeholder="best quality...">
-                    </div>
-                    <div>
-                        <label class="control-label mb-2 block">Append</label>
-                        <input type="text" id="appendInput" class="input-base w-full" 
-                               placeholder="style_name...">
-                    </div>
-                </div>
-
-                <div>
-                    <label for="swapsInput" class="control-label mb-2 block">Aliases / Swaps</label>
-                    <textarea id="swapsInput" rows="3" class="input-base w-full" 
-                              placeholder="girl -> 1girl, boobs -> large_breasts"></textarea>
-                </div>
-
-                <div>
-                    <label for="implicationsInput" class="control-label mb-2 block">Implications</label>
-                    <textarea id="implicationsInput" rows="3" class="input-base w-full" 
-                              placeholder="1girl => backlighting"></textarea>
-                </div>
-
-                <div>
-                    <label for="blacklistInput" class="control-label mb-2 block">Blacklist</label>
-                    <textarea id="blacklistInput" rows="2" class="input-base w-full" 
-                              placeholder="bad_anatomy, blurry, text"></textarea>
-                </div>
-            </div>
-
-            <!-- Main Output Section -->
-            <div class="lg:col-span-5">
-                <div class="mb-6">
-                    <h2 class="text-xl font-semibold text-gray-200 mb-4 flex items-center gap-3">
-                        Processed Tags
-                        <span class="text-sm font-normal px-3 py-1 rounded-full" 
-                              style="background: var(--processed-tag-bg); color: var(--processed-tag-text);">
-                            <span id="processedTagCount">0</span>/<span id="processedMaxTagCount">75</span>
-                        </span>
-                    </h2>
-                </div>
-
-                <div id="tagOutput" class="glass-panel p-6 min-h-[500px] space-y-6 mb-6">
-                    <div class="text-gray-500 italic text-center py-12">
-                        Start typing or paste tags above to begin...
-                    </div>
-                </div>
-
-                <button id="copyButton" class="btn-primary w-full py-4 text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
-                    Copy All Tags
-                </button>
-                <p id="copyMessage" class="text-sm text-green-400 mt-3 h-5 text-center"></p>
-            </div>
-
-            <!-- History Section -->
-            <div class="lg:col-span-3">
-                <h3 class="text-lg font-semibold text-gray-200 mb-4">History</h3>
-                <div id="history-container" class="space-y-3">
-                    <p class="text-sm text-gray-500 italic">No history yet.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Token Settings Panel -->
-    <div id="tokenPanel" class="fixed inset-0 z-50 hidden">
-        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="hideTokenSettings()"></div>
-        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 glass-panel p-6 w-full max-w-lg">
-            <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                </svg>
-                GitHub Token Settings
-            </h3>
-            <div class="space-y-4">
-                <div>
-                    <label class="control-label mb-2 block">Personal Access Token</label>
-                    <input type="password" id="githubTokenInput" class="input-base w-full" 
-                           placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
-                    <p class="text-xs text-gray-400 mt-1">
-                        Token needs 'repo' or 'public_repo' scope for tag corrections
-                    </p>
-                </div>
-                <div class="flex items-center gap-2">
-                    <input type="checkbox" id="rememberToken" class="rounded">
-                    <label for="rememberToken" class="text-sm text-gray-300">Remember token (stored locally)</label>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <button onclick="saveToken()" class="btn-primary">Save Token</button>
-                    <button onclick="testToken()" class="quick-action-btn py-2">Test Connection</button>
-                </div>
-                <div class="border-t border-gray-600 pt-4">
-                    <h4 class="font-medium mb-2">Token Status</h4>
-                    <div id="tokenStatus" class="text-sm text-gray-400">
-                        No token configured
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Settings Panel (hidden by default) -->
-    <div id="settingsPanel" class="fixed inset-0 z-50 hidden">
-        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="toggleSettingsPanel()"></div>
-        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 glass-panel p-6 w-full max-w-md">
-            <h3 class="text-lg font-semibold mb-4">Import/Export Settings</h3>
-            <div class="space-y-4">
-                <button onclick="exportSettings()" class="btn-primary w-full">Export Settings</button>
-                <input type="file" id="importFile" accept=".json" class="hidden" onchange="importSettings(event)">
-                <button onclick="document.getElementById('importFile').click()" class="btn-primary w-full">Import Settings</button>
-                <button onclick="resetToDefaults()" class="quick-action-btn w-full py-2">Reset to Defaults</button>
-            </div>
-        </div>
-    </div>
-
-<script>
-    const GITHUB_USER = 'isaacwach234';
-    const GITHUB_REPO = 'isaacwach234.github.io';
-    
-    let TAG_DATABASE = [], gitHubPat = null, tagCategorizer, tagIdCounter = 0;
-    let baseTags = [], copyHistory = [], selectedTagIds = new Set(), sortableInstances = [];
-    let autocomplete = { active: false, index: -1, currentWord: '', suggestions: [] };
-    
-    const element = (id) => document.getElementById(id);
-    const body = document.body, tagInput = element('tagInput'), swapsInput = element('swapsInput'), implicationsInput = element('implicationsInput'), blacklistInput = element('blacklistInput'), t[...]
+-      #history-drawer-list {
+-        overflow-y: auto;
+-        padding-right: 0.25rem;
+-      }
+-
+-      /* Improved animations */
+-      @keyframes fadeInUp {
+-        from {
+-          opacity: 0;
+-          transform: translateY(20px);
+-        }
+-        to {
+-          opacity: 1;
+-          transform: translateY(0);
+-        }
+-      }
+-
+-      .fade-in-up {
+-        animation: fadeInUp 0.5s ease-out;
+-      }
+-
+-      /* Custom scrollbar */
+-      ::-webkit-scrollbar {
+-        width: 8px;
+-      }
+-      ::-webkit-scrollbar-track {
+-        background: rgba(0,0,0,0.2);
+-        border-radius: 4px;
+-      }
+-      ::-webkit-scrollbar-thumb {
+-        background: var(--accent-color);
+-        border-radius: 4px;
+-      }
+-      ::-webkit-scrollbar-thumb:hover {
+-        background: var(--accent-color-hover);
+-      }
+-
+-      /* Responsive improvements */
+-      @media (max-width: 1023px) {
+-        .history-sidebar {
+-          display: none;
+-        }
+-        .stats-panel {
+-          grid-template-columns: repeat(2, minmax(0, 1fr));
+-        }
+-      }
+-      @media (max-width: 768px) {
+-        .floating-panel {
+-          position: static;
+-          margin-bottom: 2rem;
+-          justify-content: center;
+-        }
+-        .advanced-controls {
+-          grid-template-columns: 1fr;
+-        }
+-      }
+-      @media (max-width: 640px) {
+-        .stats-panel {
+-          grid-template-columns: 1fr;
+-        }
+-        .category-bar {
+-          grid-template-columns: 1fr;
+-          gap: 0.4rem;
+-        }
+-        .category-bar-value {
+-          text-align: left;
+-        }
+-      }
+-    </style>
++  <meta charset="UTF-8" />
++  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
++  <title>Danbooru Tag Helper</title>
++  <script src="https://cdn.tailwindcss.com"></script>
++  <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js" integrity="sha512-A9xv2XyVOH47AcdpShUMpOWcZH/5LiCFYI8aAkaI0s5momkMumZ5qX6Ch12yvDqOiiMHDL/95B2S/bjdKfh0ug==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
++  <link rel="preconnect" href="https://fonts.googleapis.com" />
++  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
++  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
++  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:wght@500" rel="stylesheet" />
++  <style>
++    :root {
++      --accent-color: #6366f1;
++      --accent-color-hover: #4338ca;
++      --chip-bg: rgba(99, 102, 241, 0.2);
++      --chip-border: rgba(129, 140, 248, 0.6);
++      --glass-bg: rgba(15, 23, 42, 0.75);
++      --glass-border: rgba(148, 163, 184, 0.25);
++      --page-bg: linear-gradient(140deg, #0f172a 0%, #111827 55%, #312e81 100%);
++    }
++
++    .theme-indigo {
++      --accent-color: #6366f1;
++      --accent-color-hover: #4338ca;
++      --chip-bg: rgba(99, 102, 241, 0.22);
++      --chip-border: rgba(129, 140, 248, 0.6);
++      --page-bg: linear-gradient(140deg, #0f172a 0%, #111827 55%, #312e81 100%);
++    }
++
++    .theme-emerald {
++      --accent-color: #10b981;
++      --accent-color-hover: #059669;
++      --chip-bg: rgba(16, 185, 129, 0.22);
++      --chip-border: rgba(110, 231, 183, 0.6);
++      --page-bg: linear-gradient(140deg, #022c22 0%, #064e3b 50%, #0f766e 100%);
++    }
++
++    .theme-rose {
++      --accent-color: #f43f5e;
++      --accent-color-hover: #be123c;
++      --chip-bg: rgba(244, 63, 94, 0.22);
++      --chip-border: rgba(251, 113, 133, 0.6);
++      --page-bg: linear-gradient(140deg, #200111 0%, #9d174d 50%, #be123c 100%);
++    }
++
++    body {
++      font-family: "Inter", sans-serif;
++      background: var(--page-bg);
++      background-attachment: fixed;
++      color: #e2e8f0;
++      min-height: 100vh;
++      transition: background 0.4s ease-in-out;
++    }
++
++    .glass-panel {
++      background: var(--glass-bg);
++      border: 1px solid var(--glass-border);
++      border-radius: 1rem;
++      box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.65);
++      backdrop-filter: blur(16px);
++    }
++
++    .input-base {
++      border: 1px solid rgba(148, 163, 184, 0.25);
++      background: rgba(15, 23, 42, 0.7);
++      border-radius: 0.85rem;
++      padding: 0.8rem 1rem;
++      transition: border-color 0.2s ease, box-shadow 0.2s ease;
++    }
++
++    .input-base:focus {
++      outline: none;
++      border-color: var(--accent-color);
++      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
++      background: rgba(15, 23, 42, 0.85);
++    }
++
++    .btn-primary {
++      background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-color-hover) 100%);
++      color: white;
++      padding: 0.8rem 1.4rem;
++      border-radius: 0.85rem;
++      font-weight: 600;
++      transition: transform 0.2s ease, box-shadow 0.2s ease;
++      box-shadow: 0 15px 30px -10px rgba(79, 70, 229, 0.6);
++    }
++
++    .btn-primary:hover {
++      transform: translateY(-1px);
++      box-shadow: 0 18px 35px -12px rgba(79, 70, 229, 0.65);
++    }
++
++    .chip {
++      display: inline-flex;
++      align-items: center;
++      gap: 0.55rem;
++      background: var(--chip-bg);
++      border: 1px solid var(--chip-border);
++      border-radius: 9999px;
++      padding: 0.45rem 0.9rem;
++      font-size: 0.9rem;
++      font-weight: 500;
++      color: #e2e8f0;
++      cursor: grab;
++      transition: transform 0.2s ease, box-shadow 0.2s ease;
++    }
++
++    .chip:hover {
++      transform: translateY(-2px);
++      box-shadow: 0 12px 25px rgba(30, 64, 175, 0.35);
++    }
++
++    .chip button {
++      appearance: none;
++      border: none;
++      background: rgba(15, 23, 42, 0.35);
++      color: #f8fafc;
++      border-radius: 9999px;
++      width: 1.5rem;
++      height: 1.5rem;
++      display: grid;
++      place-items: center;
++      cursor: pointer;
++      transition: background 0.2s ease;
++    }
++
++    .chip button:hover {
++      background: rgba(248, 113, 113, 0.85);
++    }
++
++    .theme-button {
++      width: 1.9rem;
++      height: 1.9rem;
++      border-radius: 9999px;
++      border: 2px solid transparent;
++      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
++    }
++
++    .theme-button:hover {
++      transform: translateY(-1px);
++      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.35);
++    }
++
++    .theme-button.active {
++      border-color: white;
++      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
++    }
++
++    .material-symbols-rounded {
++      font-variation-settings:
++        'FILL' 0,
++        'wght' 500,
++        'GRAD' 0,
++        'opsz' 24;
++    }
++
++    .quick-btn {
++      border: 1px solid rgba(148, 163, 184, 0.35);
++      background: rgba(15, 23, 42, 0.55);
++      color: #cbd5f5;
++      border-radius: 0.75rem;
++      padding: 0.55rem 0.9rem;
++      transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
++    }
++
++    .quick-btn:hover {
++      background: var(--accent-color);
++      border-color: transparent;
++      transform: translateY(-1px);
++      color: white;
++    }
++
++    #suggestion-box {
++      position: absolute;
++      top: 100%;
++      left: 0;
++      right: 0;
++      margin-top: 0.4rem;
++      z-index: 40;
++      background: rgba(15, 23, 42, 0.95);
++      border-radius: 0.9rem;
++      border: 1px solid rgba(148, 163, 184, 0.25);
++      box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.7);
++      overflow: hidden;
++    }
++
++    .suggestion-item {
++      padding: 0.7rem 1rem;
++      cursor: pointer;
++      display: flex;
++      justify-content: space-between;
++      align-items: center;
++      font-size: 0.9rem;
++      transition: background 0.15s ease;
++    }
++
++    .suggestion-item.active,
++    .suggestion-item:hover {
++      background: var(--accent-color);
++      color: white;
++    }
++
++    .stat-card {
++      padding: 1rem 1.25rem;
++      border-radius: 0.9rem;
++      background: rgba(15, 23, 42, 0.6);
++      border: 1px solid rgba(148, 163, 184, 0.25);
++    }
++
++    ::-webkit-scrollbar {
++      width: 8px;
++    }
++
++    ::-webkit-scrollbar-thumb {
++      background: var(--accent-color);
++      border-radius: 9999px;
++    }
++
++    @media (max-width: 1024px) {
++      .layout {
++        grid-template-columns: 1fr;
++      }
++    }
++  </style>
+ </head>
+-<body class="p-4 md:p-6 lg:p-8">
+-    <!-- Floating theme panel -->
+-    <div class="floating-panel">
+-        <span class="text-sm font-medium text-gray-300">Theme:</span>
+-        <button class="theme-button" style="background: linear-gradient(135deg, #4f46e5, #6366f1);" data-theme="theme-indigo" title="Indigo"></button>
+-        <button class="theme-button" style="background: linear-gradient(135deg, #2563eb, #3b82f6);" data-theme="theme-blue" title="Blue"></button>
+-        <button class="theme-button" style="background: linear-gradient(135deg, #0d9488, #14b8a6);" data-theme="theme-teal" title="Teal"></button>
+-        <button class="theme-button" style="background: linear-gradient(135deg, #dc2626, #ef4444);" data-theme="theme-crimson" title="Crimson"></button>
+-        <button class="theme-button" style="background: linear-gradient(135deg, #10b981, #34d399);" data-theme="theme-emerald" title="Emerald"></button>
+-        <button class="theme-button" style="background: linear-gradient(135deg, #8b5cf6, #a78bfa);" data-theme="theme-purple" title="Purple"></button>
+-        <button class="theme-button" style="background: linear-gradient(135deg, #f59e0b, #fbbf24);" data-theme="theme-amber" title="Amber"></button>
+-        <button class="theme-button" style="background: linear-gradient(135deg, #f43f5e, #fb7185);" data-theme="theme-rose" title="Rose"></button>
+-        <button class="theme-button" style="background: linear-gradient(135deg, #06b6d4, #22d3ee);" data-theme="theme-cyan" title="Cyan"></button>
+-        
+-        <div class="w-px h-6 bg-gray-600 mx-2"></div>
+-        
+-        <button class="quick-action-btn" title="GitHub Token Settings" onclick="showTokenSettings()">
+-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+-                <path d="M9 12l2 2 4-4"></path>
+-            </svg>
++<body class="min-h-screen px-4 py-8 md:px-8">
++  <div class="max-w-7xl mx-auto space-y-8">
++    <header class="flex flex-col gap-6">
++      <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
++        <div>
++          <h1 class="text-4xl font-bold text-slate-100">Danbooru Tag Helper</h1>
++          <p class="text-slate-400 max-w-2xl">Curate clean AI art prompts with live tag processing, keyboard-friendly suggestions, and smart history tools.</p>
++        </div>
++        <div class="flex items-center gap-4">
++          <span class="text-sm font-semibold uppercase tracking-wider text-slate-400">Theme</span>
++          <button class="theme-button" data-theme="theme-indigo" title="Midnight Indigo" style="background: linear-gradient(135deg,#4338ca,#6366f1);"></button>
++          <button class="theme-button" data-theme="theme-emerald" title="Emerald Coast" style="background: linear-gradient(135deg,#047857,#10b981);"></button>
++          <button class="theme-button" data-theme="theme-rose" title="Crimson Night" style="background: linear-gradient(135deg,#be123c,#f43f5e);"></button>
++        </div>
++      </div>
++
++      <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
++        <button id="clearAll" class="quick-btn flex items-center justify-center gap-2">
++          <span class="material-symbols-rounded">backspace</span>
++          <span>Clear everything</span>
+         </button>
+-        
+-        <button class="quick-action-btn" title="Import/Export Settings" onclick="toggleSettingsPanel()">
+-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+-                <path d="M12 15l0 6"></path>
+-                <path d="M8 21l8 0"></path>
+-                <path d="M8.56 17.198l0 0c-.345 -.865 -.819 -1.698 -1.319 -2.48c-.5 -.782 -1.028 -1.517 -1.56 -2.198c-.532 -.681 -1.068 -1.316 -1.56 -1.895"></path>
+-                <path d="M15.44 17.198l0 0c.345 -.865 .819 -1.698 1.319 -2.48c.5 -.782 1.028 -1.517 1.56 -2.198c.532 -.681 1.068 -1.316 1.56 -1.895"></path>
+-                <circle cx="12" cy="6" r="3"></circle>
+-            </svg>
++        <button id="exportTags" class="quick-btn flex items-center justify-center gap-2">
++          <span class="material-symbols-rounded">ios_share</span>
++          <span>Copy processed tags</span>
+         </button>
+-        
+-        <button class="quick-action-btn" title="Clear All" onclick="clearAll()">
+-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+-                <path d="M18 6l-12 12"></path>
+-                <path d="M6 6l12 12"></path>
+-            </svg>
++        <button id="importPreset" class="quick-btn flex items-center justify-center gap-2">
++          <span class="material-symbols-rounded">upload_file</span>
++          <span>Load preset</span>
++          <input id="presetFile" type="file" accept=".json" class="hidden" />
+         </button>
+-    </div>
+-
+-    <div class="glass-panel max-w-7xl mx-auto p-6 md:p-8 fade-in-up">
+-        <div class="text-center mb-8">
+-            <h1 class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent mb-4">
+-                Danbooru Tag Helper
+-            </h1>
+-            <p class="text-gray-400 text-lg">Advanced AI Art Prompt Management</p>
++      </div>
++    </header>
++
++    <main class="layout grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.8fr)] gap-6">
++      <section class="glass-panel p-6 space-y-6">
++        <div class="space-y-2">
++          <div class="flex items-center justify-between gap-4">
++            <label for="tagInput" class="font-semibold tracking-wide uppercase text-sm text-slate-300">Tag input</label>
++            <span id="duplicateCount" class="text-xs text-slate-400"></span>
++          </div>
++          <div class="relative">
++            <textarea id="tagInput" rows="8" placeholder="masterpiece, 1girl, solo, long hair, looking at viewer" class="input-base w-full resize-y"></textarea>
++            <div id="suggestion-box" class="hidden"></div>
++          </div>
++          <p class="text-xs text-slate-500">Use commas or new lines. Navigate suggestions with ↑ ↓, press Tab or Enter to accept.</p>
+         </div>
+ 
+-        <!-- Stats Panel -->
+-        <div class="stats-panel">
+-            <div class="stat-item">
+-                <div class="stat-value" id="tagCount">0</div>
+-                <div class="stat-label">Active Tags</div>
+-            </div>
+-            <div class="stat-item">
+-                <div class="stat-value" id="maxTagCount">75</div>
+-                <div class="stat-label">Max Tags</div>
+-            </div>
+-            <div class="stat-item">
+-                <div class="stat-value" id="categoryCount">0</div>
+-                <div class="stat-label">Categories</div>
+-            </div>
+-            <div class="stat-item">
+-                <div class="stat-value" id="historyCount">0</div>
+-                <div class="stat-label">History</div>
+-            </div>
++        <div class="grid gap-4 md:grid-cols-2">
++          <div>
++            <label class="block text-xs uppercase tracking-wide text-slate-400 mb-2" for="prependInput">Prepend</label>
++            <input id="prependInput" type="text" placeholder="best quality, absurdres" class="input-base w-full" />
++          </div>
++          <div>
++            <label class="block text-xs uppercase tracking-wide text-slate-400 mb-2" for="appendInput">Append</label>
++            <input id="appendInput" type="text" placeholder="artist name, signature" class="input-base w-full" />
++          </div>
+         </div>
+ 
+-        <!-- Advanced Controls -->
+-        <div class="advanced-controls">
+-            <div class="control-group">
+-                <div class="control-label">AI Suggestions</div>
+-                <div class="flex items-center gap-2 mb-3">
+-                    <input type="number" id="suggestionCountInput" value="15" min="5" max="50" 
+-                           class="input-base text-sm flex-1" placeholder="Count">
+-                    <button id="suggest-btn" class="btn-primary">Generate</button>
+-                </div>
+-                <div class="flex flex-wrap gap-2 text-sm">
+-                    <label class="flex items-center gap-2 cursor-pointer">
+-                        <input type="checkbox" id="rating-safe" class="rounded" checked>
+-                        <span>Safe</span>
+-                    </label>
+-                    <label class="flex items-center gap-2 cursor-pointer">
+-                        <input type="checkbox" id="rating-general" class="rounded" checked>
+-                        <span>General</span>
+-                    </label>
+-                    <label class="flex items-center gap-2 cursor-pointer">
+-                        <input type="checkbox" id="rating-questionable" class="rounded">
+-                        <span>Questionable</span>
+-                    </label>
+-                </div>
+-            </div>
+-
+-            <div class="control-group">
+-                <div class="control-label">Processing Options</div>
+-                <div class="space-y-3">
+-                    <label class="flex items-center gap-2 cursor-pointer">
+-                        <input id="deduplicateToggle" type="checkbox" class="rounded" checked>
+-                        <span class="text-sm">Deduplicate Tags</span>
+-                    </label>
+-                    <label class="flex items-center gap-2 cursor-pointer">
+-                        <input id="underscoreToggle" type="checkbox" class="rounded" checked>
+-                        <span class="text-sm">Use Underscores</span>
+-                    </label>
+-                    <label class="flex items-center gap-2 cursor-pointer">
+-                        <input id="enableWeightingToggle" type="checkbox" class="rounded">
+-                        <span class="text-sm">Enable Weighting</span>
+-                    </label>
+-                </div>
+-            </div>
+-
+-            <div class="control-group">
+-                <div class="control-label">Sorting & Limits</div>
+-                <div class="space-y-3">
+-                    <select id="sortSelect" class="input-base text-sm w-full">
+-                        <option value="danbooru" selected>Sort: Danbooru</option>
+-                        <option value="smart">Sort: Smart</option>
+-                        <option value="manual">Sort: Manual</option>
+-                        <option value="none">Sort: None</option>
+-                        <option value="az">Sort: A-Z</option>
+-                        <option value="za">Sort: Z-A</option>
+-                    </select>
+-                    <input type="number" id="maxTagsInput" value="75" min="1" max="500" 
+-                           class="input-base text-sm w-full" placeholder="Max Tags">
+-                </div>
+-            </div>
+-
+-            <div class="control-group">
+-                <div class="control-label">Quick Actions</div>
+-                <div class="grid grid-cols-2 gap-2">
+-                    <button onclick="randomizeTags()" class="quick-action-btn text-center py-2">
+-                        <div class="text-xs">Randomize</div>
+-                    </button>
+-                    <button onclick="optimizeOrder()" class="quick-action-btn text-center py-2">
+-                        <div class="text-xs">Optimize</div>
+-                    </button>
+-                    <button onclick="exportTags()" class="quick-action-btn text-center py-2">
+-                        <div class="text-xs">Export</div>
+-                    </button>
+-                    <button onclick="importTags()" class="quick-action-btn text-center py-2">
+-                        <div class="text-xs">Import</div>
+-                    </button>
+-                </div>
+-            </div>
++        <div class="grid gap-4 md:grid-cols-2">
++          <label class="flex items-center gap-3">
++            <input id="dedupeToggle" type="checkbox" class="h-4 w-4 rounded border-slate-600 bg-slate-800" checked />
++            <span class="text-sm text-slate-200">Automatically remove duplicates</span>
++          </label>
++          <label class="flex items-center gap-3">
++            <input id="underscoreToggle" type="checkbox" class="h-4 w-4 rounded border-slate-600 bg-slate-800" checked />
++            <span class="text-sm text-slate-200">Replace spaces with underscores</span>
++          </label>
+         </div>
+ 
+-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+-            <!-- Input Section -->
+-            <div class="lg:col-span-4 space-y-6">
+-                <div>
+-                    <label for="tagInput" class="control-label mb-3 block">Main Tags</label>
+-                    <div class="relative">
+-                        <textarea id="tagInput" rows="6" class="input-base w-full resize-none" 
+-                                  placeholder="1girl, solo, masterpiece, black background..."></textarea>
+-                        <div id="autocomplete-box" class="w-full hidden"></div>
+-                    </div>
+-                </div>
+-
+-                <div class="grid grid-cols-2 gap-4">
+-                    <div>
+-                        <label class="control-label mb-2 block">Prepend</label>
+-                        <input type="text" id="triggerInput" class="input-base w-full" 
+-                               placeholder="best quality...">
+-                    </div>
+-                    <div>
+-                        <label class="control-label mb-2 block">Append</label>
+-                        <input type="text" id="appendInput" class="input-base w-full" 
+-                               placeholder="style_name...">
+-                    </div>
+-                </div>
+-
+-                <div>
+-                    <label for="swapsInput" class="control-label mb-2 block">Aliases / Swaps</label>
+-                    <textarea id="swapsInput" rows="3" class="input-base w-full" 
+-                              placeholder="girl -> 1girl, boobs -> large_breasts"></textarea>
+-                </div>
+-
+-                <div>
+-                    <label for="implicationsInput" class="control-label mb-2 block">Implications</label>
+-                    <textarea id="implicationsInput" rows="3" class="input-base w-full" 
+-                              placeholder="1girl => backlighting"></textarea>
+-                </div>
+-
+-                <div>
+-                    <label for="blacklistInput" class="control-label mb-2 block">Blacklist</label>
+-                    <textarea id="blacklistInput" rows="2" class="input-base w-full" 
+-                              placeholder="bad_anatomy, blurry, text"></textarea>
+-                </div>
+-            </div>
+-
+-            <!-- Main Output Section -->
+-            <div class="lg:col-span-5">
+-                <div class="mb-6">
+-                    <h2 class="text-xl font-semibold text-gray-200 mb-4 flex items-center gap-3">
+-                        Processed Tags
+-                        <span class="text-sm font-normal px-3 py-1 rounded-full" 
+-                              style="background: var(--processed-tag-bg); color: var(--processed-tag-text);">
+-                            <span id="processedTagCount">0</span>/<span id="processedMaxTagCount">75</span>
+-                        </span>
+-                    </h2>
+-                </div>
+-
+-                <div id="tagOutput" class="glass-panel p-6 min-h-[500px] space-y-6 mb-6">
+-                    <div class="text-gray-500 italic text-center py-12">
+-                        Start typing or paste tags above to begin...
+-                    </div>
+-                </div>
+-
+-                <button id="copyButton" class="btn-primary w-full py-4 text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
+-                    Copy All Tags
+-                </button>
+-                <p id="copyMessage" class="text-sm text-green-400 mt-3 h-5 text-center"></p>
+-            </div>
+-
+-            <!-- History Section -->
+-            <div class="lg:col-span-3">
+-                <h3 class="text-lg font-semibold text-gray-200 mb-4">History</h3>
+-                <div id="history-container" class="space-y-3">
+-                    <p class="text-sm text-gray-500 italic">No history yet.</p>
+-                </div>
+-            </div>
++        <div class="grid gap-4 md:grid-cols-2">
++          <div>
++            <label class="block text-xs uppercase tracking-wide text-slate-400 mb-2" for="sortSelect">Sort order</label>
++            <select id="sortSelect" class="input-base w-full text-sm">
++              <option value="none">Keep original order</option>
++              <option value="alpha">Alphabetical (A→Z)</option>
++              <option value="reverse-alpha">Alphabetical (Z→A)</option>
++              <option value="category">Group by category</option>
++              <option value="length">Shortest first</option>
++            </select>
++          </div>
++          <div>
++            <label class="block text-xs uppercase tracking-wide text-slate-400 mb-2" for="maxTagsInput">Tag limit</label>
++            <input id="maxTagsInput" type="number" min="1" max="500" value="75" class="input-base w-full" />
++          </div>
+         </div>
+-    </div>
+-
+-    <!-- Token Settings Panel -->
+-    <div id="tokenPanel" class="fixed inset-0 z-50 hidden">
+-        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="hideTokenSettings()"></div>
+-        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 glass-panel p-6 w-full max-w-lg">
+-            <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+-                </svg>
+-                GitHub Token Settings
+-            </h3>
+-            <div class="space-y-4">
+-                <div>
+-                    <label class="control-label mb-2 block">Personal Access Token</label>
+-                    <input type="password" id="githubTokenInput" class="input-base w-full" 
+-                           placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+-                    <p class="text-xs text-gray-400 mt-1">
+-                        Token needs 'repo' or 'public_repo' scope for tag corrections
+-                    </p>
+-                </div>
+-                <div class="flex items-center gap-2">
+-                    <input type="checkbox" id="rememberToken" class="rounded">
+-                    <label for="rememberToken" class="text-sm text-gray-300">Remember token (stored locally)</label>
+-                </div>
+-                <div class="grid grid-cols-2 gap-3">
+-                    <button onclick="saveToken()" class="btn-primary">Save Token</button>
+-                    <button onclick="testToken()" class="quick-action-btn py-2">Test Connection</button>
+-                </div>
+-                <div class="border-t border-gray-600 pt-4">
+-                    <h4 class="font-medium mb-2">Token Status</h4>
+-                    <div id="tokenStatus" class="text-sm text-gray-400">
+-                        No token configured
+-                    </div>
+-                </div>
+-            </div>
++      </section>
++
++      <section class="glass-panel p-6 space-y-6">
++        <div class="flex items-center justify-between">
++          <h2 class="text-xl font-semibold">Processed tags</h2>
++          <span class="rounded-full border border-slate-500/40 bg-slate-900/50 px-3 py-1 text-xs font-semibold text-slate-300">
++            <span id="tagCounter">0</span>/<span id="tagLimit">75</span>
++          </span>
+         </div>
+-    </div>
+-
+-    <!-- Settings Panel (hidden by default) -->
+-    <div id="settingsPanel" class="fixed inset-0 z-50 hidden">
+-        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="toggleSettingsPanel()"></div>
+-        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 glass-panel p-6 w-full max-w-md">
+-            <h3 class="text-lg font-semibold mb-4">Import/Export Settings</h3>
+-            <div class="space-y-4">
+-                <button onclick="exportSettings()" class="btn-primary w-full">Export Settings</button>
+-                <input type="file" id="importFile" accept=".json" class="hidden" onchange="importSettings(event)">
+-                <button onclick="document.getElementById('importFile').click()" class="btn-primary w-full">Import Settings</button>
+-                <button onclick="resetToDefaults()" class="quick-action-btn w-full py-2">Reset to Defaults</button>
+-            </div>
++        <div id="chipContainer" class="min-h-[300px] space-y-3">
++          <p class="text-slate-500 text-sm italic">Tags that you process will appear here.</p>
+         </div>
+-    </div>
+-
+-<script>
+-    const GITHUB_USER = 'isaacwach234';
+-    const GITHUB_REPO = 'isaacwach234.github.io';
+-    
+-    let TAG_DATABASE = [], gitHubPat = null, tagCategorizer, tagIdCounter = 0;
+-    let baseTags = [], copyHistory = [], selectedTagIds = new Set(), sortableInstances = [];
+-    let autocomplete = { active: false, index: -1, currentWord: '', suggestions: [] };
+-    
+-    const element = (id) => document.getElementById(id);
+-    const body = document.body, tagInput = element('tagInput'), swapsInput = element('swapsInput'), implicationsInput = element('implicationsInput'), blacklistInput = element('blacklistInput'), t[...]
++        <div class="grid gap-3 sm:grid-cols-2">
++          <button id="copyButton" class="btn-primary flex items-center justify-center gap-2">
++            <span class="material-symbols-rounded">content_copy</span>
++            Copy tags
++          </button>
++          <button id="saveHistory" class="quick-btn flex items-center justify-center gap-2">
++            <span class="material-symbols-rounded">bookmark_add</span>
++            Save snapshot
++          </button>
++        </div>
++        <p id="copyMessage" class="text-xs text-emerald-400 h-4"></p>
++      </section>
++
++      <aside class="space-y-6">
++        <section class="glass-panel p-6 space-y-4">
++          <h3 class="text-lg font-semibold">Prompt health</h3>
++          <div class="grid gap-3">
++            <div class="stat-card">
++              <p class="text-xs uppercase tracking-wide text-slate-400">Total tags</p>
++              <p id="statTotal" class="text-2xl font-bold text-slate-100">0</p>
++            </div>
++            <div class="stat-card">
++              <p class="text-xs uppercase tracking-wide text-slate-400">Unique categories</p>
++              <p id="statCategories" class="text-xl font-semibold text-slate-100">0</p>
++              <p id="categoryList" class="mt-1 text-xs text-slate-400"></p>
++            </div>
++            <div class="stat-card">
++              <p class="text-xs uppercase tracking-wide text-slate-400">Removed duplicates</p>
++              <p id="statDuplicates" class="text-xl font-semibold text-slate-100">0</p>
++            </div>
++          </div>
++        </section>
++
++        <section class="glass-panel p-6 space-y-4">
++          <div class="flex items-center justify-between">
++            <h3 class="text-lg font-semibold">History</h3>
++            <button id="clearHistory" class="text-xs text-rose-300 hover:text-rose-200 transition">Clear</button>
++          </div>
++          <div id="historyList" class="space-y-3 max-h-[260px] overflow-y-auto">
++            <p class="text-slate-500 text-sm italic">No saved prompts yet.</p>
++          </div>
++        </section>
++      </aside>
++    </main>
++  </div>
++
++  <script>
++    const state = {
++      processedTags: [],
++      duplicateCount: 0,
++      suggestions: [],
++      suggestionIndex: -1,
++      tagsDb: [],
++      tagCategories: {},
++      history: [],
++    };
++    let chipSortable = null;
++
++    const body = document.body;
++    const themeButtons = document.querySelectorAll('[data-theme]');
++    const tagInput = document.getElementById('tagInput');
++    const prependInput = document.getElementById('prependInput');
++    const appendInput = document.getElementById('appendInput');
++    const dedupeToggle = document.getElementById('dedupeToggle');
++    const underscoreToggle = document.getElementById('underscoreToggle');
++    const sortSelect = document.getElementById('sortSelect');
++    const maxTagsInput = document.getElementById('maxTagsInput');
++    const chipContainer = document.getElementById('chipContainer');
++    const tagCounter = document.getElementById('tagCounter');
++    const tagLimit = document.getElementById('tagLimit');
++    const duplicateCountLabel = document.getElementById('duplicateCount');
++    const copyButton = document.getElementById('copyButton');
++    const copyMessage = document.getElementById('copyMessage');
++    const exportTagsButton = document.getElementById('exportTags');
++    const suggestionBox = document.getElementById('suggestion-box');
++    const saveHistoryButton = document.getElementById('saveHistory');
++    const historyList = document.getElementById('historyList');
++    const clearHistoryButton = document.getElementById('clearHistory');
++    const statTotal = document.getElementById('statTotal');
++    const statCategories = document.getElementById('statCategories');
++    const statDuplicates = document.getElementById('statDuplicates');
++    const categoryList = document.getElementById('categoryList');
++    const clearAllButton = document.getElementById('clearAll');
++    const presetFileInput = document.getElementById('presetFile');
++    const importPresetButton = document.getElementById('importPreset');
++
++    tagLimit.textContent = maxTagsInput.value;
++
++    function parseTags(raw) {
++      return raw
++        .split(/[,\n]/)
++        .map((entry) => entry.trim())
++        .filter(Boolean);
++    }
++
++    function normalizeTag(tag) {
++      const trimmed = tag.trim().toLowerCase();
++      if (underscoreToggle.checked) {
++        return trimmed.replace(/\s+/g, '_');
++      }
++      return trimmed.replace(/_/g, ' ').replace(/\s+/g, ' ');
++    }
++
++    function uniquePreserveOrder(arr) {
++      const seen = new Set();
++      const result = [];
++      for (const item of arr) {
++        if (!seen.has(item)) {
++          seen.add(item);
++          result.push(item);
++        }
++      }
++      return result;
++    }
++
++    function applySorting(tags) {
++      const order = sortSelect.value;
++      if (order === 'alpha') {
++        return [...tags].sort((a, b) => a.localeCompare(b));
++      }
++      if (order === 'reverse-alpha') {
++        return [...tags].sort((a, b) => b.localeCompare(a));
++      }
++      if (order === 'length') {
++        return [...tags].sort((a, b) => a.length - b.length);
++      }
++      if (order === 'category') {
++        return [...tags].sort((a, b) => {
++          const catA = state.tagCategories[a] || 'zzzz';
++          const catB = state.tagCategories[b] || 'zzzz';
++          if (catA === catB) return a.localeCompare(b);
++          return catA.localeCompare(catB);
++        });
++      }
++      return [...tags];
++    }
++
++    function computeProcessedTags() {
++      const baseTags = parseTags(tagInput.value);
++      const prefixTags = parseTags(prependInput.value);
++      const suffixTags = parseTags(appendInput.value);
++
++      let combined = [...prefixTags, ...baseTags, ...suffixTags].map(normalizeTag);
++
++      const beforeDedupe = combined.length;
++      if (dedupeToggle.checked) {
++        combined = uniquePreserveOrder(combined);
++      }
++      state.duplicateCount = beforeDedupe - combined.length;
++
++      combined = applySorting(combined);
++
++      const limit = Number(maxTagsInput.value) || 0;
++      if (limit > 0) {
++        combined = combined.slice(0, limit);
++      }
++
++      state.processedTags = combined;
++    }
++
++    function renderChips() {
++      chipContainer.innerHTML = '';
++      if (state.processedTags.length === 0) {
++        chipContainer.innerHTML = '<p class="text-slate-500 text-sm italic">Tags that you process will appear here.</p>';
++        return;
++      }
++
++      const fragment = document.createDocumentFragment();
++      state.processedTags.forEach((tag) => {
++        const chip = document.createElement('div');
++        chip.className = 'chip';
++        chip.dataset.tag = tag;
++        chip.innerHTML = `<span>${tag}</span>`;
++
++        const removeButton = document.createElement('button');
++        removeButton.type = 'button';
++        removeButton.innerHTML = '&times;';
++        removeButton.addEventListener('click', () => removeTag(tag));
++        chip.appendChild(removeButton);
++        fragment.appendChild(chip);
++      });
++      chipContainer.appendChild(fragment);
++
++      if (chipSortable) {
++        chipSortable.destroy();
++      }
++      chipSortable = Sortable.create(chipContainer, {
++        animation: 150,
++        onEnd: () => {
++          const ordered = Array.from(chipContainer.querySelectorAll('.chip')).map((el) => el.dataset.tag);
++          state.processedTags = ordered;
++          updateStats();
++        },
++      });
++    }
++
++    function removeTag(tag) {
++      const matchers = [tagInput, prependInput, appendInput];
++      for (const input of matchers) {
++        const tags = parseTags(input.value);
++        const index = tags.findIndex((entry) => normalizeTag(entry) === tag);
++        if (index !== -1) {
++          tags.splice(index, 1);
++          input.value = tags.join(', ');
++          break;
++        }
++      }
++      updateProcessedTags();
++    }
++
++    function updateStats() {
++      tagCounter.textContent = state.processedTags.length;
++      statTotal.textContent = state.processedTags.length;
++      statDuplicates.textContent = state.duplicateCount;
++      duplicateCountLabel.textContent = state.duplicateCount ? `${state.duplicateCount} duplicates removed` : '';
++
++      const categories = new Map();
++      for (const tag of state.processedTags) {
++        const category = state.tagCategories[tag];
++        if (!category) continue;
++        categories.set(category, (categories.get(category) || 0) + 1);
++      }
++
++      statCategories.textContent = categories.size;
++      if (categories.size === 0) {
++        categoryList.textContent = '';
++      } else {
++        const summary = Array.from(categories.entries())
++          .sort((a, b) => b[1] - a[1])
++          .slice(0, 4)
++          .map(([name, count]) => `${name} (${count})`)
++          .join(', ');
++        categoryList.textContent = summary;
++      }
++    }
++
++    function updateProcessedTags() {
++      computeProcessedTags();
++      renderChips();
++      updateStats();
++    }
++
++    function copyTagsToClipboard() {
++      if (state.processedTags.length === 0) return;
++      navigator.clipboard
++        .writeText(state.processedTags.join(', '))
++        .then(() => {
++          copyMessage.textContent = 'Tags copied to clipboard';
++          setTimeout(() => (copyMessage.textContent = ''), 2500);
++          addHistoryEntry('Copied to clipboard');
++        })
++        .catch(() => {
++          copyMessage.textContent = 'Clipboard permission denied';
++          setTimeout(() => (copyMessage.textContent = ''), 2500);
++        });
++    }
++
++    function addHistoryEntry(label = 'Snapshot saved') {
++      if (state.processedTags.length === 0) return;
++      const entry = {
++        id: Date.now(),
++        label,
++        tags: [...state.processedTags],
++        createdAt: new Date().toISOString(),
++      };
++      state.history.unshift(entry);
++      state.history = state.history.slice(0, 12);
++      localStorage.setItem('tagHelperHistory', JSON.stringify(state.history));
++      renderHistory();
++    }
++
++    function renderHistory() {
++      historyList.innerHTML = '';
++      if (state.history.length === 0) {
++        historyList.innerHTML = '<p class="text-slate-500 text-sm italic">No saved prompts yet.</p>';
++        return;
++      }
++
++      state.history.forEach((entry) => {
++        const wrapper = document.createElement('div');
++        wrapper.className = 'border border-slate-600/40 rounded-lg p-3 space-y-2 bg-slate-900/50';
++        const title = document.createElement('div');
++        title.className = 'flex items-center justify-between text-xs text-slate-400';
++        const date = new Date(entry.createdAt);
++        title.innerHTML = `<span>${entry.label}</span><span>${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>`;
++        wrapper.appendChild(title);
++
++        const tagsPreview = document.createElement('p');
++        tagsPreview.className = 'text-sm text-slate-200 break-words max-h-24 overflow-y-auto';
++        tagsPreview.textContent = entry.tags.join(', ');
++        wrapper.appendChild(tagsPreview);
++
++        const actions = document.createElement('div');
++        actions.className = 'flex items-center gap-2';
++        const applyBtn = document.createElement('button');
++        applyBtn.className = 'quick-btn px-3 py-1 text-xs';
++        applyBtn.textContent = 'Apply';
++        applyBtn.addEventListener('click', () => {
++          const formatted = underscoreToggle.checked
++            ? entry.tags
++            : entry.tags.map((tag) => tag.replace(/_/g, ' '));
++          tagInput.value = formatted.join(', ');
++          prependInput.value = '';
++          appendInput.value = '';
++          updateProcessedTags();
++        });
++        const copyBtn = document.createElement('button');
++        copyBtn.className = 'quick-btn px-3 py-1 text-xs';
++        copyBtn.textContent = 'Copy';
++        copyBtn.addEventListener('click', () => navigator.clipboard.writeText(entry.tags.join(', ')));
++        actions.appendChild(applyBtn);
++        actions.appendChild(copyBtn);
++        wrapper.appendChild(actions);
++        historyList.appendChild(wrapper);
++      });
++    }
++
++    function handleSuggestionNavigation(direction) {
++      if (state.suggestions.length === 0) return;
++      state.suggestionIndex = (state.suggestionIndex + direction + state.suggestions.length) % state.suggestions.length;
++      renderSuggestionBox();
++    }
++
++    function applySuggestion(index = state.suggestionIndex) {
++      if (index < 0 || index >= state.suggestions.length) return;
++      const rawSuggestion = state.suggestions[index];
++      const suggestion = underscoreToggle.checked ? rawSuggestion : rawSuggestion.replace(/_/g, ' ');
++      const cursor = tagInput.selectionStart;
++      const value = tagInput.value;
++      const textUntilCursor = value.slice(0, cursor);
++      const textAfterCursor = value.slice(cursor);
++      const fragments = textUntilCursor.split(/[\n,]/);
++      fragments[fragments.length - 1] = suggestion;
++      const replacement = fragments.join(', ');
++      const updatedValue = replacement + textAfterCursor;
++      tagInput.value = updatedValue;
++      hideSuggestionBox();
++      updateProcessedTags();
++      setTimeout(() => {
++        const newCursor = replacement.length;
++        tagInput.setSelectionRange(newCursor, newCursor);
++      }, 0);
++    }
++
++    function updateSuggestionBox() {
++      const cursor = tagInput.selectionStart;
++      const value = tagInput.value.slice(0, cursor);
++      const fragments = value.split(/[\n,]/);
++      const currentWord = fragments[fragments.length - 1].trim().toLowerCase();
++      if (!currentWord || currentWord.length < 2) {
++        hideSuggestionBox();
++        return;
++      }
++      const matches = [];
++      for (const tag of state.tagsDb) {
++        if (tag.startsWith(currentWord)) {
++          matches.push(tag);
++        }
++        if (matches.length >= 12) break;
++      }
++      state.suggestions = matches;
++      state.suggestionIndex = matches.length ? 0 : -1;
++      renderSuggestionBox();
++    }
++
++    function renderSuggestionBox() {
++      suggestionBox.innerHTML = '';
++      if (state.suggestions.length === 0) {
++        hideSuggestionBox();
++        return;
++      }
++      suggestionBox.classList.remove('hidden');
++      const fragment = document.createDocumentFragment();
++      state.suggestions.forEach((suggestion, index) => {
++        const item = document.createElement('div');
++        item.className = 'suggestion-item' + (index === state.suggestionIndex ? ' active' : '');
++        const displayLabel = underscoreToggle.checked ? suggestion : suggestion.replace(/_/g, ' ');
++        const category = state.tagCategories[suggestion] || state.tagCategories[displayLabel];
++        item.innerHTML = `<span>${displayLabel}</span>${category ? `<span class="text-xs text-slate-300">${category}</span>` : ''}`;
++        item.addEventListener('mousedown', (event) => {
++          event.preventDefault();
++          applySuggestion(index);
++        });
++        fragment.appendChild(item);
++      });
++      suggestionBox.appendChild(fragment);
++    }
++
++    function hideSuggestionBox() {
++      suggestionBox.classList.add('hidden');
++      state.suggestions = [];
++      state.suggestionIndex = -1;
++    }
++
++    function loadTheme() {
++      const savedTheme = localStorage.getItem('tagHelperTheme') || 'theme-indigo';
++      applyTheme(savedTheme);
++    }
++
++    function applyTheme(theme) {
++      body.classList.remove('theme-indigo', 'theme-emerald', 'theme-rose');
++      body.classList.add(theme);
++      localStorage.setItem('tagHelperTheme', theme);
++      themeButtons.forEach((button) => {
++        button.classList.toggle('active', button.dataset.theme === theme);
++      });
++    }
++
++    function loadHistory() {
++      const stored = localStorage.getItem('tagHelperHistory');
++      if (!stored) return;
++      try {
++        state.history = JSON.parse(stored) || [];
++        renderHistory();
++      } catch (error) {
++        console.error('Failed to load history', error);
++      }
++    }
++
++    function registerEvents() {
++      ;['input', 'change'].forEach((eventName) => {
++        tagInput.addEventListener(eventName, updateProcessedTags);
++        prependInput.addEventListener(eventName, updateProcessedTags);
++        appendInput.addEventListener(eventName, updateProcessedTags);
++        dedupeToggle.addEventListener(eventName, updateProcessedTags);
++        sortSelect.addEventListener(eventName, updateProcessedTags);
++      });
++
++      underscoreToggle.addEventListener('change', () => {
++        updateProcessedTags();
++        if (state.suggestions.length) {
++          updateSuggestionBox();
++        }
++      });
++
++      maxTagsInput.addEventListener('change', () => {
++        tagLimit.textContent = maxTagsInput.value;
++        updateProcessedTags();
++      });
++      maxTagsInput.addEventListener('input', () => {
++        tagLimit.textContent = maxTagsInput.value;
++      });
++
++      tagInput.addEventListener('input', updateSuggestionBox);
++      tagInput.addEventListener('keydown', (event) => {
++        if (state.suggestions.length === 0) return;
++        if (event.key === 'ArrowDown') {
++          event.preventDefault();
++          handleSuggestionNavigation(1);
++        } else if (event.key === 'ArrowUp') {
++          event.preventDefault();
++          handleSuggestionNavigation(-1);
++        } else if (event.key === 'Tab') {
++          event.preventDefault();
++          applySuggestion();
++        } else if (event.key === 'Enter') {
++          event.preventDefault();
++          applySuggestion();
++        } else if (event.key === 'Escape') {
++          hideSuggestionBox();
++        }
++      });
++
++      tagInput.addEventListener('blur', () => {
++        setTimeout(() => hideSuggestionBox(), 120);
++      });
++
++      copyButton.addEventListener('click', copyTagsToClipboard);
++      exportTagsButton.addEventListener('click', copyTagsToClipboard);
++      saveHistoryButton.addEventListener('click', () => addHistoryEntry('Manual snapshot'));
++      clearHistoryButton.addEventListener('click', () => {
++        state.history = [];
++        localStorage.removeItem('tagHelperHistory');
++        renderHistory();
++      });
++      clearAllButton.addEventListener('click', () => {
++        tagInput.value = '';
++        prependInput.value = '';
++        appendInput.value = '';
++        updateProcessedTags();
++      });
++
++      importPresetButton.addEventListener('click', () => presetFileInput.click());
++      presetFileInput.addEventListener('change', (event) => {
++        const file = event.target.files[0];
++        if (!file) return;
++        file.text().then((content) => {
++          try {
++            const data = JSON.parse(content);
++            tagInput.value = Array.isArray(data.tags) ? data.tags.join(', ') : data.tags || '';
++            prependInput.value = data.prepend || '';
++            appendInput.value = data.append || '';
++            dedupeToggle.checked = data.dedupe !== false;
++            underscoreToggle.checked = data.useUnderscore !== false;
++            sortSelect.value = data.sort || 'none';
++            if (data.limit) {
++              maxTagsInput.value = data.limit;
++              tagLimit.textContent = data.limit;
++            }
++            updateProcessedTags();
++          } catch (error) {
++            alert('Invalid preset file');
++          }
++        });
++      });
++
++      themeButtons.forEach((button) => {
++        button.addEventListener('click', () => applyTheme(button.dataset.theme));
++      });
++    }
++
++    function fetchData() {
++      Promise.all([
++        fetch('tags.json').then((res) => res.json()).catch(() => []),
++        fetch('tag_map.json').then((res) => res.json()).catch(() => ({})),
++      ]).then(([tags, tagMap]) => {
++        state.tagsDb = Array.isArray(tags) ? tags : [];
++        const normalizedMap = {};
++        Object.entries(tagMap).forEach(([tag, category]) => {
++          const lower = String(tag).toLowerCase();
++          const underscored = lower.replace(/\s+/g, '_');
++          const spaced = lower.replace(/_/g, ' ').replace(/\s+/g, ' ');
++          normalizedMap[underscored] = category;
++          normalizedMap[spaced] = category;
++        });
++        state.tagCategories = normalizedMap;
++        updateProcessedTags();
++      });
++    }
++
++    loadTheme();
++    loadHistory();
++    registerEvents();
++    fetchData();
++    updateProcessedTags();
++  </script>
++</body>
++</html>
+ 
+EOF
+)
