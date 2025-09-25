@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danbooru Tag Helper</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      /* Base styles */
+      body { font-family: 'Inter', sans-serif; background-color: #111827; color: #f3f4f6; }
+      textarea { resize: vertical; }
+      /* Highlight style */
+      .highlight { background-color: #a16207; color: #fefce8; border-radius: 0.25rem; padding: 0 0.125rem; font-weight: 600; box-shadow: inset 0 0 0 1px #facc15; }
+      /* Animation */
+      @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+      .fade-in { animation: fadeIn 0.3s ease-out forwards; }
+      /* Tag transitions */
+      #tagOutput span, #triggerDisplay span, #appendDisplay span { transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease; }
+      /* Icon styles */
+      .icon-img { width: 1.25rem; height: 1.25rem; display: inline-block; vertical-align: middle; filter: invert(1); }
+      .search-icon-img { width: 1.125rem; height: 1.125rem; filter: invert(70%) sepia(10%) saturate(200%) hue-rotate(180deg) brightness(90%) contrast(85%); }
+      .copy-icon-img { width: 1rem; height: 1rem; margin-right: 0.5rem; filter: invert(1); }
+      /* Count display */
+      .count-display { font-size: 0.875rem; color: #9ca3af; margin-left: 0.5rem; }
+      /* Input/Select base */
+      .input-base { border: 1px solid #4b5563; background-color: #374151; color: #f3f4f6; border-radius: 0.375rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); padding: 0.5rem 0.75rem; transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out; }
+      .input-base:focus { outline: 2px solid transparent; outline-offset: 2px; border-color: #4f46e5; box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.5); }
+      .input-base::placeholder { color: #6b7280; }
+      /* Checkbox base */
+       .checkbox-base { height: 1rem; width: 1rem; text-indigo-600 focus:ring-indigo-500 border-gray-600 rounded cursor-pointer bg-gray-700; }
+      /* Tag styles */
+      .tag-base { font-size: 0.875rem; font-weight: 500; padding: 0.125rem 0.625rem; border-radius: 9999px; border-width: 1px; }
+      .processed-tag { background-color: #3730a3; color: #c7d2fe; border-color: #6366f1; } /* indigo */
+      .trigger-tag { background-color: #581c87; color: #e9d5ff; border-color: #a855f7; } /* purple */
+      .append-tag { background-color: #134e4a; color: #ccfbf1; border-color: #2dd4bf; } /* teal */
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8 flex items-center justify-center">
+
+    <div class="bg-gray-800 p-6 md:p-8 rounded-lg shadow-xl w-full max-w-4xl relative"> <h1 class="text-3xl font-bold mb-6 text-gray-100 text-center">Danbooru Tag Helper</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label for="tagInput" class="block text-sm font-medium text-gray-300 mb-2">
+                    Enter tags (comma-separated):
+                    <span id="initialTagCountDisplay" class="count-display">(Initial: 0)</span>
+                </label>
+                <textarea id="tagInput" rows="4" class="w-full input-base" placeholder="e.g., 1girl, solo, looking_at_viewer..."></textarea>
+            </div>
+            <div>
+                <label for="blacklistInput" class="block text-sm font-medium text-gray-300 mb-2">Blacklist (exclude tags containing these):</label>
+                <textarea id="blacklistInput" rows="4" class="w-full input-base" placeholder="e.g., bad_anatomy, blurry, text..."></textarea>
+            </div>
+        </div>
+
+         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+             <div>
+                 <label for="triggerInput" class="block text-sm font-medium text-gray-300 mb-2">Prepend Trigger Words:</label>
+                 <input type="text" id="triggerInput" class="w-full input-base" placeholder="e.g., trigger_word, style_prompt...">
+                 <div class="mt-2 flex items-center">
+                      <input id="uniquifyTriggerToggle" type="checkbox" class="checkbox-base">
+                      <label for="uniquifyTriggerToggle" class="ml-2 block text-sm text-gray-300 cursor-pointer" title="Apply simple character substitutions (e->3, s->5, etc.)">Uniquify Triggers</label>
+                 </div>
+             </div>
+              <div>
+                 <label for="appendInput" class="block text-sm font-medium text-gray-300 mb-2">Append Tags:</label>
+                 <input type="text" id="appendInput" class="w-full input-base" placeholder="e.g., high_quality, best_quality...">
+                 </div>
+         </div>
+
+         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+             <div class="relative">
+                 <label for="searchInput" class="block text-sm font-medium text-gray-300 mb-2">Search Tags:</label>
+                 <div class="absolute inset-y-0 left-0 pl-3 pt-8 flex items-center pointer-events-none">
+                     <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/search.svg" alt="Search" class="search-icon-img" />
+                 </div>
+                 <input type="text" id="searchInput" class="w-full pl-10 input-base" placeholder="Search tags...">
+             </div>
+              <div>
+                  <label for="searchTargetSelect" class="block text-sm font-medium text-gray-300 mb-2">Search In:</label>
+                  <select id="searchTargetSelect" class="input-base text-sm w-full">
+                      <option value="processed" selected>Processed Tags (Highlight Matches)</option>
+                      <option value="original">Original Input (Show Match Count Only)</option>
+                  </select>
+              </div>
+         </div>
+
+
+        <div class="flex flex-wrap items-center justify-start gap-x-6 gap-y-3 mb-6">
+            <div class="flex items-center">
+                <input id="underscoreToggle" type="checkbox" class="checkbox-base" checked>
+                <label for="underscoreToggle" class="ml-2 block text-sm text-gray-300 cursor-pointer">Use Underscores</label>
+            </div>
+            <div>
+                 <label for="sortSelect" class="block text-sm font-medium text-gray-300 sr-only">Sort Order:</label>
+                 <select id="sortSelect" class="input-base text-sm">
+                     <option value="none">Sort: None</option>
+                     <option value="az">Sort: A-Z</option>
+                     <option value="za">Sort: Z-A</option>
+                 </select>
+            </div>
+             <div>
+                 <label for="maxTagsInput" class="block text-sm font-medium text-gray-300 sr-only">Max Tags:</label>
+                 <input type="number" id="maxTagsInput" value="15" min="1" max="100" class="input-base text-sm w-20" aria-label="Maximum Tags">
+                 <span class="text-sm text-gray-400 ml-1">Max Tags</span>
+             </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                 <h3 class="text-sm font-medium text-gray-400 mb-1">Trigger Words (Prepended):</h3>
+                 <div id="triggerDisplay" class="p-2 bg-gray-700 border border-gray-600 rounded-md min-h-[38px] flex flex-wrap gap-2">
+                     <span class="text-gray-500 italic text-sm">None entered...</span>
+                 </div>
+            </div>
+             <div>
+                 <h3 class="text-sm font-medium text-gray-400 mb-1">Append Tags (Appended):</h3>
+                 <div id="appendDisplay" class="p-2 bg-gray-700 border border-gray-600 rounded-md min-h-[38px] flex flex-wrap gap-2">
+                     <span class="text-gray-500 italic text-sm">None entered...</span>
+                 </div>
+            </div>
+        </div>
+
+
+        <div>
+            <h2 id="processedTagsLabel" class="text-lg font-semibold text-gray-200 mb-3">
+                Processed Tags (<span id="tagCount">0</span>/15):
+                <span id="searchMatchCountDisplay" class="count-display" style="display: none;">(0 matches)</span>
+            </h2>
+             <p id="limitMessage" class="text-sm text-red-400 mb-3" style="display: none;">Tag limit reached.</p>
+            <div id="tagOutput" class="p-4 bg-gray-700 border border-gray-600 rounded-md min-h-[60px] flex flex-wrap gap-2">
+                <span class="text-gray-400 italic">Start typing or paste tags above...</span>
+            </div>
+        </div>
+
+         <div class="mt-6 text-center">
+            <button id="copyButton" class="inline-flex items-center px-6 py-2.5 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-indigo-500 transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95" disabled>
+                <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/copy.svg" alt="Copy" class="copy-icon-img" />
+                Copy All Tags
+            </button>
+            <p id="copyMessage" class="text-sm text-green-400 mt-2" style="display: none;">Tags copied to clipboard!</p>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const tagInput = document.getElementById('tagInput');
+        const blacklistInput = document.getElementById('blacklistInput');
+        const triggerInput = document.getElementById('triggerInput');
+        const appendInput = document.getElementById('appendInput'); // New
+        const uniquifyTriggerToggle = document.getElementById('uniquifyTriggerToggle'); // New
+        const underscoreToggle = document.getElementById('underscoreToggle');
+        const searchInput = document.getElementById('searchInput');
+        const searchTargetSelect = document.getElementById('searchTargetSelect'); // New
+        const sortSelect = document.getElementById('sortSelect');
+        const maxTagsInput = document.getElementById('maxTagsInput');
+        const triggerDisplay = document.getElementById('triggerDisplay');
+        const appendDisplay = document.getElementById('appendDisplay'); // New
+        const tagOutput = document.getElementById('tagOutput');
+        const tagCountSpan = document.getElementById('tagCount'); // Note: May become unreliable if label is overwritten
+        const initialTagCountDisplay = document.getElementById('initialTagCountDisplay');
+        const searchMatchCountDisplay = document.getElementById('searchMatchCountDisplay'); // Note: May become unreliable
+        const limitMessage = document.getElementById('limitMessage');
+        const processedTagsLabel = document.getElementById('processedTagsLabel');
+        const copyButton = document.getElementById('copyButton');
+        const copyMessage = document.getElementById('copyMessage');
+
+        // --- State ---
+        let originalInputTags = []; // Store original tags before filtering/limiting
+        let baseTags = []; // Tags AFTER blacklist filtering, BEFORE limit/formatting
+        let currentBlacklist = [];
+        let currentTriggers = [];
+        let currentAppends = []; // New
+
+        // --- Constants for Uniquify ---
+        const UNIQUIFY_MAP = { 'a': '4', 'e': '3', 'i': '1', 'o': '0', 's': '5', 'g': '9' };
+        // Basic reverse map (might not be perfect if original had numbers)
+        const DEUNIQUIFY_MAP = Object.fromEntries(Object.entries(UNIQUIFY_MAP).map(([k, v]) => [v, k]));
+
+        // --- Functions ---
+
+        /** Gets the current max tags limit. */
+        function getCurrentMaxTags() {
+            const value = parseInt(maxTagsInput.value, 10);
+            return isNaN(value) || value < 1 ? 15 : value;
+        }
+
+        /** Simple "uniquify" transformation. */
+        function uniquifyWord(word) {
+            return word.split('').map(char => UNIQUIFY_MAP[char.toLowerCase()] || char).join('');
+        }
+
+        // --- Trigger Word Processing ---
+        function processTriggers() {
+            const rawTriggers = triggerInput.value;
+            currentTriggers = rawTriggers.split(',').map(w => w.trim()).filter(w => w !== '');
+            displayTriggers();
+        }
+
+        function displayTriggers() {
+            triggerDisplay.innerHTML = '';
+            const shouldUniquify = uniquifyTriggerToggle.checked;
+            const triggersToDisplay = shouldUniquify ? currentTriggers.map(uniquifyWord) : currentTriggers;
+
+            if (triggersToDisplay.length === 0) {
+                triggerDisplay.innerHTML = '<span class="text-gray-500 italic text-sm">None entered...</span>';
+                return;
+            }
+            triggersToDisplay.forEach(trigger => {
+                const el = document.createElement('span');
+                el.className = 'tag-base trigger-tag';
+                el.textContent = trigger;
+                triggerDisplay.appendChild(el);
+            });
+        }
+
+        // --- Append Tag Processing --- (New)
+        function processAppends() {
+            const rawAppends = appendInput.value;
+            currentAppends = rawAppends.split(',').map(w => w.trim()).filter(w => w !== '');
+            displayAppends();
+        }
+
+        function displayAppends() {
+            appendDisplay.innerHTML = '';
+            if (currentAppends.length === 0) {
+                appendDisplay.innerHTML = '<span class="text-gray-500 italic text-sm">None entered...</span>';
+                return;
+            }
+            currentAppends.forEach(append => {
+                const el = document.createElement('span');
+                el.className = 'tag-base append-tag'; // Use new style
+                el.textContent = append;
+                appendDisplay.appendChild(el);
+            });
+        }
+
+        // --- Blacklist Processing ---
+        function processBlacklist() {
+            const rawBlacklist = blacklistInput.value;
+            currentBlacklist = rawBlacklist.split(',').map(w => w.trim().toLowerCase()).filter(w => w !== '');
+            processInput();
+        }
+
+        // --- Main Input Processing ---
+        function processInput() {
+            const rawText = tagInput.value;
+            // Store original input tags (trimmed, non-empty)
+            originalInputTags = rawText.replace(/[\n\s]+/g, ' ').split(',').map(t => t.trim()).filter(t => t !== '');
+
+            initialTagCountDisplay.textContent = `(Initial: ${originalInputTags.length})`;
+
+            const filteredTags = originalInputTags.filter(tag => {
+                const tagLower = tag.toLowerCase();
+                return !currentBlacklist.some(blacklistedWord => tagLower.includes(blacklistedWord));
+            });
+
+            const currentMaxTags = getCurrentMaxTags();
+            baseTags = filteredTags.slice(0, currentMaxTags);
+
+            limitMessage.style.display = filteredTags.length > currentMaxTags ? 'block' : 'none';
+
+            displayTags(); // Update the display
+        }
+
+        /** Escapes HTML. */
+        function escapeHTML(str) {
+            const p = document.createElement('p');
+            p.textContent = str;
+            return p.innerHTML;
+        }
+
+        /** Formats, sorts, displays tags, updates counts. */
+        function displayTags() {
+            const useUnderscores = underscoreToggle.checked;
+            const searchTerm = searchInput.value.trim();
+            const searchTermLower = searchTerm.toLowerCase();
+            const sortOrder = sortSelect.value;
+            const searchTarget = searchTargetSelect.value; // New: 'processed' or 'original'
+            const currentMaxTags = getCurrentMaxTags();
+
+            tagOutput.innerHTML = '';
+            let displayedMatchCount = 0;
+            let highlightMatches = (searchTarget === 'processed'); // Only highlight if searching processed tags
+
+            // --- Update Heading ---
+            // It's safer to reconstruct the heading content
+            processedTagsLabel.innerHTML = `Processed Tags (<span id="tagCount">${baseTags.length}</span>/${currentMaxTags}): <span id="searchMatchCountDisplay" class="count-display" style="display: none;">(0 matches)</span>`;
+            const tagCountSpanInner = processedTagsLabel.querySelector('#tagCount'); // Re-select after innerHTML change
+            const searchMatchCountDisplayInner = processedTagsLabel.querySelector('#searchMatchCountDisplay'); // Re-select
+
+            // --- Handle Empty State ---
+            if (baseTags.length === 0 && searchTarget === 'processed') { // Also check search target for empty message logic
+                 tagOutput.innerHTML = '<span class="text-gray-400 italic">Start typing or paste tags above...</span>';
+                 if(tagCountSpanInner) tagCountSpanInner.textContent = '0';
+                 copyButton.disabled = true;
+                 if(searchMatchCountDisplayInner) searchMatchCountDisplayInner.style.display = 'none';
+                 // If searching original, we might still have matches even if processed is empty
+                 if (searchTarget === 'original' && searchTerm) {
+                     displayedMatchCount = originalInputTags.filter(t => t.toLowerCase().includes(searchTermLower)).length;
+                     if(searchMatchCountDisplayInner) {
+                         searchMatchCountDisplayInner.textContent = `(${displayedMatchCount} matches in original)`;
+                         searchMatchCountDisplayInner.style.display = 'inline';
+                     }
+                 }
+                 return; // Exit display function
+            }
+
+
+            // --- Prepare Tags for Display ---
+            // 1. Format (underscores/spaces) - Apply to baseTags
+            let finalTags = baseTags.map(tag => {
+                return useUnderscores ? tag.replace(/\s+/g, '_') : tag.replace(/_/g, ' ');
+            });
+
+            // 2. Sort the formatted tags
+            if (sortOrder === 'az') {
+                finalTags.sort((a, b) => a.localeCompare(b));
+            } else if (sortOrder === 'za') {
+                finalTags.sort((a, b) => b.localeCompare(a));
+            }
+
+            // --- Display Tags & Handle Search ---
+            finalTags.forEach(tag => {
+                const tagElement = document.createElement('span');
+                tagElement.className = 'tag-base processed-tag'; // Use base + specific class
+
+                const tagLower = tag.toLowerCase();
+                let displayHTML = escapeHTML(tag);
+
+                // Highlight only if searching processed tags and a match is found
+                if (highlightMatches && searchTermLower && tagLower.includes(searchTermLower)) {
+                    displayedMatchCount++; // Count matches in processed list
+                    const startIndex = tagLower.indexOf(searchTermLower);
+                    const endIndex = startIndex + searchTerm.length;
+                    displayHTML = escapeHTML(tag.substring(0, startIndex)) +
+                                  '<span class="highlight">' + escapeHTML(tag.substring(startIndex, endIndex)) + '</span>' +
+                                  escapeHTML(tag.substring(endIndex));
+                }
+
+                tagElement.innerHTML = displayHTML;
+                tagOutput.appendChild(tagElement);
+            });
+
+            // --- Calculate Match Count for Original Tags (if needed) ---
+            if (!highlightMatches && searchTermLower) { // If searching original
+                 displayedMatchCount = originalInputTags.filter(t => t.toLowerCase().includes(searchTermLower)).length;
+            }
+
+            // --- Update Counts ---
+            if(tagCountSpanInner) tagCountSpanInner.textContent = baseTags.length.toString(); // Processed tag count
+
+            // Update and show/hide search match count display
+            if(searchMatchCountDisplayInner) {
+                if (searchTerm) {
+                    const targetLabel = searchTarget === 'original' ? ' matches in original' : ' matches';
+                    searchMatchCountDisplayInner.textContent = `(${displayedMatchCount}${targetLabel})`;
+                    searchMatchCountDisplayInner.style.display = 'inline';
+                } else {
+                    searchMatchCountDisplayInner.style.display = 'none';
+                }
+            }
+
+            // --- Enable/Disable Copy Button ---
+            // Copy button should be enabled if there are triggers, appends, OR processed tags
+            copyButton.disabled = (currentTriggers.length === 0 && currentAppends.length === 0 && baseTags.length === 0);
+        }
+
+
+        /** Copies trigger words + processed tags + append tags to clipboard. */
+        function copyTagsToClipboard() {
+            // ... (Clipboard API check remains the same) ...
+             if (!navigator.clipboard || !navigator.clipboard.writeText) {
+                console.error('Clipboard API not supported/insecure context.');
+                copyMessage.textContent = 'Copy failed: Browser/context insecure.';
+                copyMessage.className = 'text-sm text-red-400 mt-2';
+                copyMessage.style.display = 'block';
+                setTimeout(() => { copyMessage.style.display = 'none'; }, 3000);
+                return;
+            }
+
+            const useUnderscores = underscoreToggle.checked;
+            const sortOrder = sortSelect.value;
+            const shouldUniquify = uniquifyTriggerToggle.checked;
+
+            // 1. Get PREPEND trigger words (apply uniquify if checked)
+            const triggerWordsArray = shouldUniquify ? currentTriggers.map(uniquifyWord) : currentTriggers;
+
+            // 2. Get formatted & sorted PROCESSED tags
+            let processedTagsArray = baseTags.map(tag => {
+                return useUnderscores ? tag.replace(/\s+/g, '_') : tag.replace(/_/g, ' ');
+            });
+            if (sortOrder === 'az') {
+                processedTagsArray.sort((a, b) => a.localeCompare(b));
+            } else if (sortOrder === 'za') {
+                processedTagsArray.sort((a, b) => b.localeCompare(a));
+            }
+
+            // 3. Get APPEND tags (no extra formatting/uniquify applied here)
+            const appendWordsArray = currentAppends;
+
+            // 4. Combine all parts
+            const combinedTags = [...triggerWordsArray, ...processedTagsArray, ...appendWordsArray];
+
+            // 5. Join and copy
+            const tagsToCopyString = combinedTags.join(', ');
+
+            navigator.clipboard.writeText(tagsToCopyString)
+                .then(() => {
+                    copyMessage.textContent = 'Tags copied to clipboard!';
+                    copyMessage.className = 'text-sm text-green-400 mt-2 fade-in';
+                    copyMessage.style.display = 'block';
+                    setTimeout(() => copyMessage.classList.remove('fade-in'), 300);
+                    setTimeout(() => { copyMessage.style.display = 'none'; }, 2000);
+                })
+                .catch(err => {
+                    console.error('Failed to copy tags: ', err);
+                    copyMessage.textContent = 'Copy failed! (See console)';
+                    copyMessage.className = 'text-sm text-red-400 mt-2';
+                    copyMessage.style.display = 'block';
+                     setTimeout(() => { copyMessage.style.display = 'none'; }, 3000);
+                });
+        }
+
+
+        // --- Event Listeners ---
+        tagInput.addEventListener('input', processInput);
+        blacklistInput.addEventListener('input', processBlacklist);
+        triggerInput.addEventListener('input', processTriggers);
+        appendInput.addEventListener('input', processAppends); // New
+        uniquifyTriggerToggle.addEventListener('change', displayTriggers); // New - Update display on toggle
+        underscoreToggle.addEventListener('change', displayTags);
+        searchInput.addEventListener('input', displayTags);
+        searchTargetSelect.addEventListener('change', displayTags); // New
+        sortSelect.addEventListener('change', displayTags);
+        maxTagsInput.addEventListener('input', processInput);
+        copyButton.addEventListener('click', copyTagsToClipboard);
+
+        // --- Initial Load ---
+        processTriggers(); // Process initial trigger words
+        processAppends(); // Process initial append tags
+        processBlacklist(); // Process initial blacklist
+        processInput(); // Process initial tags & apply filters/limits
+
+    </script>
+
+</body>
+</html>
