@@ -287,10 +287,138 @@
         background: rgba(var(--accent-color), 0.35);
         border-color: rgba(var(--accent-color), 0.75);
       }
-      
-      #autocomplete-box { 
-        position: absolute; 
-        z-index: 50; 
+
+      .tag-category-btn {
+        width: 1.6rem;
+        height: 1.6rem;
+        border-radius: 9999px;
+        border: 1px solid rgba(148, 163, 184, 0.4);
+        background: rgba(15, 23, 42, 0.6);
+        color: #93c5fd;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      .tag-category-btn:hover {
+        background: rgba(96, 165, 250, 0.25);
+        border-color: rgba(96, 165, 250, 0.6);
+        color: #bfdbfe;
+      }
+      .tag-category-btn:active {
+        transform: scale(0.95);
+      }
+
+      .category-picker-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        display: none;
+      }
+
+      .category-picker-overlay.active {
+        display: block;
+      }
+
+      .category-picker-panel {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: min(90vw, 420px);
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 1rem;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.65);
+        padding: 1.5rem;
+        backdrop-filter: blur(18px);
+        max-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .category-picker-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+
+      .category-picker-search {
+        width: 100%;
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        background: rgba(15, 23, 42, 0.55);
+        border-radius: 0.75rem;
+        padding: 0.6rem 0.9rem;
+        color: #e2e8f0;
+        font-size: 0.85rem;
+      }
+
+      .category-picker-search:focus {
+        outline: none;
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 2px rgba(var(--accent-color), 0.25);
+      }
+
+      .category-picker-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 0.6rem;
+        overflow-y: auto;
+        padding-right: 0.25rem;
+      }
+
+      .category-list-btn {
+        border-radius: 9999px;
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        background: rgba(15, 23, 42, 0.45);
+        color: #e2e8f0;
+        font-size: 0.8rem;
+        padding: 0.45rem 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+      }
+
+      .category-list-btn:hover,
+      .category-list-btn.active {
+        background: rgba(var(--accent-color), 0.35);
+        border-color: rgba(var(--accent-color), 0.8);
+        color: white;
+        box-shadow: 0 10px 25px rgba(var(--accent-color), 0.2);
+      }
+
+      .category-picker-empty {
+        font-size: 0.8rem;
+        text-align: center;
+        color: #cbd5f5;
+        padding: 1rem 0;
+      }
+
+      .category-picker-close {
+        background: transparent;
+        border: none;
+        color: #94a3b8;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 9999px;
+        transition: all 0.2s ease;
+      }
+
+      .category-picker-close:hover {
+        background: rgba(148, 163, 184, 0.15);
+        color: #f8fafc;
+      }
+
+      #autocomplete-box {
+        position: absolute;
+        z-index: 50;
         background: rgba(31, 41, 55, 0.95);
         backdrop-filter: blur(12px);
         border: 1px solid #4b5563; 
@@ -457,6 +585,10 @@
         .advanced-controls {
           grid-template-columns: 1fr;
         }
+        .category-picker-panel {
+          width: 92vw;
+          padding: 1.25rem;
+        }
       }
     </style>
 </head>
@@ -578,6 +710,7 @@
                     <select id="sortSelect" class="input-base text-sm w-full">
                         <option value="danbooru" selected>Sort: Danbooru</option>
                         <option value="smart">Sort: Smart</option>
+                        <option value="flow">Sort: Prompt Flow</option>
                         <option value="manual">Sort: Manual</option>
                         <option value="recent">Sort: Recent</option>
                         <option value="none">Sort: None</option>
@@ -768,6 +901,22 @@
         </div>
     </div>
 
+    <!-- Category Picker Panel -->
+    <div id="categoryPickerModal" class="category-picker-overlay">
+        <div id="categoryPickerBackdrop" class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+        <div class="category-picker-panel">
+            <div class="category-picker-header">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-100">Assign Category</h3>
+                    <p id="categoryPickerTitle" class="text-xs text-gray-400 mt-1 uppercase tracking-wider"></p>
+                </div>
+                <button id="categoryPickerClose" class="category-picker-close" aria-label="Close category picker">✕</button>
+            </div>
+            <input id="categoryPickerSearch" type="search" class="category-picker-search" placeholder="Search categories...">
+            <div id="categoryPickerList" class="category-picker-list"></div>
+        </div>
+    </div>
+
 <script>
     const GITHUB_USER = 'isaacwach234';
     const GITHUB_REPO = 'isaacwach234.github.io';
@@ -787,9 +936,92 @@
     const favoritesContainer = element('favorites-container'), clearFavoritesButton = element('clearFavoritesButton');
     const promptPreview = element('promptPreview'), promptPreviewMeta = element('promptPreviewMeta'), promptPreviewCopy = element('promptPreviewCopy');
     const ratingSafe = element('rating-safe'), ratingGeneral = element('rating-general'), ratingQuestionable = element('rating-questionable');
+    const categoryPickerModal = element('categoryPickerModal'), categoryPickerList = element('categoryPickerList');
+    const categoryPickerTitle = element('categoryPickerTitle'), categoryPickerSearch = element('categoryPickerSearch');
+    const categoryPickerBackdrop = element('categoryPickerBackdrop'), categoryPickerClose = element('categoryPickerClose');
 
     const HIDDEN_STORAGE_KEY = 'danbooru-muted-categories';
     const FAVORITES_STORAGE_KEY = 'danbooru-tag-favorites';
+
+    const PROMPT_FLOW_PHASES = [
+        {
+            key: 'quality',
+            label: 'Rendering & Quality',
+            description: 'Lead with fidelity, rendering engines, lighting and post-processing cues.',
+            categories: ['Quality', 'Style & Meta', 'Lighting & Effects', 'Rendering', 'Color & Lighting', 'Post-processing'],
+            keywords: ['quality', 'masterpiece', 'best', 'render', 'lighting', 'hdr', 'ultra', 'detailed', 'cinematic', 'studio']
+        },
+        {
+            key: 'composition',
+            label: 'Framing & Composition',
+            description: 'Establish the shot, camera angle, framing and focus hierarchy.',
+            categories: ['Composition', 'Camera & Perspective', 'Focus & Depth'],
+            keywords: ['angle', 'shot', 'view', 'perspective', 'framing', 'focus', 'zoom', 'bokeh']
+        },
+        {
+            key: 'subjects',
+            label: 'Primary Subjects',
+            description: 'Identify the core characters or creatures the prompt should feature.',
+            categories: ['Characters', 'Subject & Creatures'],
+            keywords: ['girl', 'boy', 'woman', 'man', 'character', 'solo', 'duo', 'group', 'monster', 'animal']
+        },
+        {
+            key: 'features',
+            label: 'Distinctive Features',
+            description: 'Call out defining traits, anatomy and facial details.',
+            categories: ['Face', 'Eyes', 'Hair', 'Body Parts'],
+            keywords: ['eyes', 'hair', 'face', 'expression', 'smile', 'pose', 'body', 'figure', 'physique']
+        },
+        {
+            key: 'wardrobe',
+            label: 'Wardrobe & Props',
+            description: 'Describe outfits, accessories and notable equipment.',
+            categories: ['Attire', 'Accessories', 'Held Items & Objects'],
+            keywords: ['outfit', 'uniform', 'dress', 'armor', 'suit', 'clothing', 'accessory', 'weapon', 'holding', 'prop']
+        },
+        {
+            key: 'action',
+            label: 'Action & Interaction',
+            description: 'Capture the motion, pose or interaction taking place.',
+            categories: ['Actions & Poses', 'Interaction'],
+            keywords: ['standing', 'sitting', 'running', 'jumping', 'dancing', 'gesturing', 'hugging', 'fighting', 'pose']
+        },
+        {
+            key: 'environment',
+            label: 'Environment & Atmosphere',
+            description: 'Set the scene, background, weather and ambient mood.',
+            categories: ['Setting & Environment', 'Background Elements', 'Weather & Atmosphere'],
+            keywords: ['background', 'landscape', 'indoors', 'outdoors', 'city', 'forest', 'room', 'sky', 'sunset', 'night', 'rain', 'storm']
+        },
+        {
+            key: 'extras',
+            label: 'Finishing Touches',
+            description: 'Add final stylistic or catch-all descriptors.',
+            categories: ['Uncategorized', 'Meta'],
+            keywords: ['signature', 'watermark', 'text', 'border', 'frame']
+        }
+    ];
+
+    const FLOW_PHASE_BY_KEY = new Map();
+    const FLOW_PHASE_BY_CATEGORY = new Map();
+    PROMPT_FLOW_PHASES.forEach(phase => {
+        FLOW_PHASE_BY_KEY.set(phase.key, phase);
+        phase.keywordMatchers = phase.keywords.map(keyword => keyword.toLowerCase());
+        phase.categories.forEach(categoryName => FLOW_PHASE_BY_CATEGORY.set(categoryName, phase.key));
+    });
+
+    const FLOW_PHASE_PRIORITY_KEYWORDS = {
+        quality: [['masterpiece', 8], ['best quality', 7], ['ultra detailed', 6], ['cinematic lighting', 5], ['dramatic lighting', 4], ['8k', 3], ['4k', 3], ['hdr', 2]],
+        composition: [['dynamic angle', 4], ['wide shot', 3], ['close-up', 3], ['looking at viewer', 2], ['from below', 2], ['from above', 2]],
+        subjects: [['solo', 5], ['duo', 4], ['group', 3], ['portrait', 3], ['full body', 2], ['character focus', 4]],
+        features: [['expression', 4], ['smile', 3], ['eye contact', 3], ['detailed eyes', 4], ['hair', 2], ['body', 2]],
+        wardrobe: [['uniform', 4], ['dress', 4], ['armor', 4], ['outfit', 3], ['accessories', 2], ['weapon', 3], ['holding', 2]],
+        action: [['dynamic pose', 4], ['action', 3], ['jumping', 3], ['running', 3], ['dancing', 2], ['gesturing', 2], ['standing', 1], ['sitting', 1]],
+        environment: [['dramatic sky', 4], ['sunset', 4], ['night', 3], ['rain', 3], ['forest', 3], ['city', 3], ['indoors', 2], ['outdoors', 2], ['background', 2]],
+        extras: [['clean background', 2], ['no text', 2], ['signature', -3], ['watermark', -4]]
+    };
+
+    const categoryPickerState = { tagId: null };
 
     class EnhancedTagCategorizer {
         constructor(tagMap, allTags, categoryOrder) {
@@ -933,6 +1165,125 @@
         if (!knownCategories.has(resolved)) {
             knownCategories.add(resolved);
             renderCategoryFilters();
+        }
+    }
+
+    const normalizeTagText = (tag) => tag.toLowerCase().replace(/_/g, ' ').trim();
+
+    function determinePromptFlowPhase(tag) {
+        const categoryName = tag.category || 'Uncategorized';
+        if (FLOW_PHASE_BY_CATEGORY.has(categoryName)) {
+            return FLOW_PHASE_BY_CATEGORY.get(categoryName);
+        }
+        const normalized = normalizeTagText(tag.original);
+        for (const phase of PROMPT_FLOW_PHASES) {
+            if (phase.keywordMatchers.some(keyword => normalized.includes(keyword))) {
+                return phase.key;
+            }
+        }
+        return 'extras';
+    }
+
+    function computePromptFlowScore(tag, phaseKey) {
+        const normalized = normalizeTagText(tag.weighted || tag.original);
+        const priorities = FLOW_PHASE_PRIORITY_KEYWORDS[phaseKey] || [];
+        let score = 0;
+        for (const [keyword, weight] of priorities) {
+            if (normalized.includes(keyword)) score += weight;
+        }
+        if (tag.categorySource === 'Primary') score += 0.5;
+        const weightMatch = tag.weighted && tag.weighted.match(/:(\d+(?:\.\d+)?)/);
+        if (weightMatch) score += parseFloat(weightMatch[1]) / 10;
+        return score;
+    }
+
+    function sortTagsByPromptFlow(tags) {
+        const groups = PROMPT_FLOW_PHASES.map(phase => ({ phase, tags: [] }));
+        const fallbackGroup = groups.find(group => group.phase.key === 'extras') || groups[groups.length - 1];
+        tags.forEach(tag => {
+            const key = determinePromptFlowPhase(tag);
+            const targetGroup = groups.find(group => group.phase.key === key) || fallbackGroup;
+            targetGroup.tags.push(tag);
+        });
+        groups.forEach(group => {
+            group.tags.sort((a, b) => {
+                const scoreDiff = computePromptFlowScore(b, group.phase.key) - computePromptFlowScore(a, group.phase.key);
+                if (scoreDiff !== 0) return scoreDiff;
+                const timeDiff = (a.addedAt || 0) - (b.addedAt || 0);
+                if (timeDiff !== 0) return timeDiff;
+                return a.original.localeCompare(b.original);
+            });
+        });
+        return groups;
+    }
+
+    function getAllKnownCategories() {
+        const categories = new Set([...tagCategorizer?.categoryOrder || [], ...knownCategories, 'Uncategorized']);
+        return Array.from(categories).filter(Boolean).sort((a, b) => a.localeCompare(b));
+    }
+
+    function renderCategoryPickerOptions(query = '') {
+        if (!categoryPickerList) return;
+        const search = query.trim().toLowerCase();
+        const categories = getAllKnownCategories().filter(category => !search || category.toLowerCase().includes(search));
+        const tag = baseTags.find(item => item.id === categoryPickerState.tagId);
+        categoryPickerList.innerHTML = '';
+        if (categories.length === 0) {
+            const empty = document.createElement('div');
+            empty.className = 'category-picker-empty';
+            empty.textContent = 'No categories matched your search.';
+            categoryPickerList.appendChild(empty);
+            return;
+        }
+        categories.forEach(category => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'category-list-btn';
+            btn.textContent = category;
+            if (tag && tag.category === category) btn.classList.add('active');
+            btn.addEventListener('click', () => assignCategoryToTag(category));
+            categoryPickerList.appendChild(btn);
+        });
+    }
+
+    function openCategoryPicker(tagId) {
+        const tag = baseTags.find(item => item.id === tagId);
+        if (!tag || !categoryPickerModal) return;
+        categoryPickerState.tagId = tagId;
+        if (categoryPickerTitle) {
+            categoryPickerTitle.textContent = tag.original.replace(/_/g, ' ');
+        }
+        if (categoryPickerSearch) {
+            categoryPickerSearch.value = '';
+        }
+        renderCategoryPickerOptions('');
+        categoryPickerModal.classList.add('active');
+        if (categoryPickerSearch) {
+            setTimeout(() => categoryPickerSearch.focus(), 50);
+        }
+    }
+
+    function closeCategoryPicker() {
+        if (!categoryPickerModal) return;
+        categoryPickerModal.classList.remove('active');
+        categoryPickerState.tagId = null;
+    }
+
+    function assignCategoryToTag(category) {
+        if (!categoryPickerState.tagId) return;
+        const tag = baseTags.find(item => item.id === categoryPickerState.tagId);
+        if (!tag) return;
+        tag.category = category;
+        tag.categorySource = 'Manual';
+        ensureCategoryRegistered(category);
+        if (tagCategorizer) {
+            tagCategorizer.updateIndex(tag.original, category);
+        }
+        closeCategoryPicker();
+        if (sortSelect.value === 'manual') {
+            displayTags();
+        } else {
+            displayTags();
         }
     }
 
@@ -1217,6 +1568,29 @@
                 groupDiv.appendChild(container);
                 tagOutput.appendChild(groupDiv);
             });
+        } else if (sortValue === 'flow') {
+            const flowGroups = sortTagsByPromptFlow(visibleTags);
+            flowGroups.forEach(({ phase, tags }) => {
+                if (!tags.length) return;
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'tag-group fade-in-up';
+                const title = document.createElement('h3');
+                title.className = 'tag-group-title';
+                title.textContent = phase.label;
+                groupDiv.appendChild(title);
+                if (phase.description) {
+                    const description = document.createElement('p');
+                    description.className = 'text-xs text-gray-400 mb-3';
+                    description.textContent = phase.description;
+                    groupDiv.appendChild(description);
+                }
+                const container = document.createElement('div');
+                container.className = 'tag-group-container';
+                container.dataset.groupName = phase.label;
+                tags.forEach(tag => container.appendChild(createTagElement(tag)));
+                groupDiv.appendChild(container);
+                tagOutput.appendChild(groupDiv);
+            });
         } else {
             let tagsToDisplay = [...visibleTags];
             if (sortValue === 'az') tagsToDisplay.sort((a, b) => a.original.localeCompare(b.original));
@@ -1307,6 +1681,20 @@
         }
 
         content.appendChild(controls);
+        const quickActions = document.createElement('div');
+        quickActions.className = 'flex items-center gap-1';
+        const categoryBtn = document.createElement('button');
+        categoryBtn.type = 'button';
+        categoryBtn.className = 'tag-category-btn';
+        categoryBtn.title = 'Assign category';
+        categoryBtn.setAttribute('aria-label', 'Assign category');
+        categoryBtn.textContent = '🗂';
+        categoryBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            openCategoryPicker(tag.id);
+        });
+        quickActions.appendChild(categoryBtn);
+        content.appendChild(quickActions);
         el.appendChild(content);
 
         el.addEventListener('click', (e) => handleTagClick(e, tag.id));
@@ -1405,20 +1793,31 @@
                 group: 'shared',
                 animation: 150,
                 ghostClass: 'opacity-50',
+                fallbackOnBody: true,
+                touchStartThreshold: 8,
+                fallbackTolerance: 6,
+                dragClass: 'opacity-70',
                 onEnd: (evt) => {
-                    try {
-                        const movedTag = baseTags.find(t => t.id === evt.item.dataset.id);
-                        const newCategory = evt.to.dataset.groupName;
-                        if (movedTag && newCategory) {
-                            movedTag.category = newCategory;
-                            ensureCategoryRegistered(newCategory);
+                    const previousSort = sortSelect.value;
+                    const movedTag = baseTags.find(t => t.id === evt.item.dataset.id);
+                    const newCategory = evt.to.dataset.groupName;
+                    const sameContainer = evt.from === evt.to;
+                    if (movedTag && newCategory) {
+                        movedTag.category = newCategory;
+                        movedTag.categorySource = 'Manual';
+                        ensureCategoryRegistered(newCategory);
+                        if (tagCategorizer) {
                             tagCategorizer.updateIndex(movedTag.original, newCategory);
                         }
+                    }
+                    if (previousSort === 'manual' || sameContainer) {
                         const allTagElements = Array.from(tagOutput.querySelectorAll('.tag-base'));
                         baseTags = allTagElements.map(el => baseTags.find(t => t && t.id === el.dataset.id)).filter(Boolean);
                         sortSelect.value = 'manual';
-                    } finally {
-                        displayTags();
+                    }
+                    displayTags();
+                    if (previousSort !== 'manual' && !sameContainer) {
+                        sortSelect.value = previousSort;
                     }
                 },
             }));
@@ -1544,10 +1943,19 @@
         copyButton.addEventListener('click', copyTagsToClipboard);
         if (promptPreviewCopy) promptPreviewCopy.addEventListener('click', copyTagsToClipboard);
         if (clearFavoritesButton) clearFavoritesButton.addEventListener('click', clearFavorites);
+        if (categoryPickerSearch) categoryPickerSearch.addEventListener('input', () => renderCategoryPickerOptions(categoryPickerSearch.value));
+        if (categoryPickerBackdrop) categoryPickerBackdrop.addEventListener('click', closeCategoryPicker);
+        if (categoryPickerClose) categoryPickerClose.addEventListener('click', closeCategoryPicker);
         suggestBtn.addEventListener('click', suggestCoherentTags);
         processAll();
         updateCopyHistory(null);
         updateTokenStatus();
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && categoryPickerModal?.classList.contains('active')) {
+            closeCategoryPicker();
+        }
     });
 </script>
 </body>
