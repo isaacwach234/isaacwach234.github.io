@@ -83,23 +83,24 @@
         transform: translateY(0);
       }
       
-      .tag-base { 
-        font-size: 0.875rem; 
-        font-weight: 500; 
-        padding: 0.5rem 1rem; 
-        border-radius: 2rem; 
+      .tag-base {
+        font-size: 0.875rem;
+        font-weight: 500;
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
         border: 2px solid;
-        display: inline-flex; 
-        align-items: center; 
-        gap: 0.5rem; 
-        cursor: grab; 
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: grab;
         background: var(--processed-tag-bg);
-        color: var(--processed-tag-text); 
-        border-color: var(--processed-tag-border); 
+        color: var(--processed-tag-text);
+        border-color: var(--processed-tag-border);
         transition: all 0.2s ease-in-out;
         backdrop-filter: blur(8px);
         position: relative;
         overflow: hidden;
+        touch-action: manipulation;
       }
       .tag-base::before {
         content: '';
@@ -124,6 +125,31 @@
         transform: translateY(-2px);
       }
       .tag-base:active { cursor: grabbing; }
+      body:not(.manual-sorting) .tag-base { cursor: default; }
+
+      .tag-drag-handle {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        width: 1.75rem;
+        height: 1.75rem;
+        border-radius: 9999px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: rgba(15, 23, 42, 0.35);
+        color: rgba(248, 250, 252, 0.75);
+        font-size: 0.75rem;
+      }
+      .tag-drag-handle svg {
+        width: 14px;
+        height: 14px;
+      }
+      body.manual-sorting .tag-drag-handle {
+        display: inline-flex;
+      }
+      .tag-drag-handle:focus-visible {
+        outline: 2px solid var(--accent-color);
+        outline-offset: 2px;
+      }
       
       .tag-group-title { 
         font-size: 0.8rem; 
@@ -143,12 +169,12 @@
         background: linear-gradient(90deg, var(--accent-color), transparent);
       }
       
-      .tag-group-container { 
-        display: flex; 
-        flex-wrap: wrap; 
-        gap: 0.75rem; 
-        min-height: 60px; 
-        padding: 1rem; 
+      .tag-group-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        min-height: 60px;
+        padding: 1rem;
         background: rgba(0,0,0,0.2);
         border-radius: 1rem;
         border: 1px dashed rgba(var(--accent-color), 0.3);
@@ -157,6 +183,135 @@
       .tag-group-container:hover {
         background: rgba(0,0,0,0.3);
         border-color: rgba(var(--accent-color), 0.5);
+      }
+
+      .category-toggle-btn {
+        padding: 0.35rem 0.75rem;
+        border-radius: 9999px;
+        border: 1px solid rgba(var(--accent-color), 0.4);
+        background: rgba(15, 23, 42, 0.6);
+        color: #e2e8f0;
+        font-size: 0.75rem;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+      }
+      .category-toggle-btn:hover {
+        background: rgba(var(--accent-color), 0.35);
+        border-color: rgba(var(--accent-color), 0.8);
+      }
+      .category-toggle-btn.muted {
+        opacity: 0.6;
+        background: rgba(148, 163, 184, 0.2);
+        border-color: rgba(148, 163, 184, 0.4);
+      }
+
+      #hiddenCategoriesBanner {
+        background: rgba(249, 115, 22, 0.12);
+        border: 1px solid rgba(249, 115, 22, 0.3);
+        color: #fb923c;
+        border-radius: 0.75rem;
+        padding: 0.75rem 1rem;
+      }
+
+      .prompt-preview-area {
+        background: rgba(15, 23, 42, 0.65);
+        border: 1px solid rgba(var(--accent-color), 0.25);
+        border-radius: 0.75rem;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      .prompt-preview-text {
+        width: 100%;
+        min-height: 110px;
+        background: rgba(15, 23, 42, 0.55);
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        border-radius: 0.75rem;
+        padding: 0.75rem;
+        font-size: 0.85rem;
+        color: #f8fafc;
+        resize: vertical;
+      }
+      .prompt-preview-text:focus {
+        outline: none;
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 2px rgba(var(--accent-color), 0.25);
+      }
+      .prompt-preview-meta {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      .tag-favorite-btn {
+        width: 1.6rem;
+        height: 1.6rem;
+        border-radius: 9999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid transparent;
+        background: rgba(148, 163, 184, 0.15);
+        color: #facc15;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      .tag-favorite-btn:hover {
+        background: rgba(234, 179, 8, 0.25);
+        border-color: rgba(234, 179, 8, 0.45);
+      }
+      .tag-favorite-btn.active {
+        background: rgba(250, 204, 21, 0.2);
+        border-color: rgba(250, 204, 21, 0.6);
+        color: #fbbf24;
+      }
+
+      .favorite-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(var(--accent-color), 0.25);
+        color: #e2e8f0;
+        border-radius: 9999px;
+        padding: 0.35rem 0.75rem;
+        font-size: 0.8rem;
+      }
+      .favorite-pill button {
+        background: transparent;
+        border: none;
+        color: #94a3b8;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+      }
+      .favorite-pill button:hover {
+        color: #f87171;
+      }
+
+      .tag-weight-btn {
+        width: 1.6rem;
+        height: 1.6rem;
+        border-radius: 9999px;
+        border: 1px solid rgba(148, 163, 184, 0.4);
+        background: rgba(148, 163, 184, 0.2);
+        color: #e2e8f0;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+      }
+      .tag-weight-btn:hover {
+        background: rgba(var(--accent-color), 0.35);
+        border-color: rgba(var(--accent-color), 0.75);
       }
       
       #autocomplete-box { 
@@ -272,6 +427,103 @@
         background: rgba(0,0,0,0.2);
         border-radius: 1rem;
         border: 1px solid rgba(var(--accent-color), 0.2);
+      }
+
+      .priority-phase-subtitle {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: rgba(203, 213, 225, 0.7);
+        margin-top: -0.5rem;
+        margin-bottom: 0.75rem;
+      }
+
+      .priority-category-section {
+        margin-bottom: 1.5rem;
+      }
+
+      .priority-category-title {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: rgba(226, 232, 240, 0.75);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 0.5rem;
+      }
+
+      .priority-flow-container {
+        border-style: solid;
+        background: rgba(15, 23, 42, 0.35);
+      }
+
+      .priority-category-empty {
+        font-size: 0.75rem;
+        color: rgba(148, 163, 184, 0.8);
+      }
+
+      .category-manager-overlay {
+        backdrop-filter: blur(18px);
+      }
+
+      .category-manager-panel {
+        width: 100%;
+        max-width: 28rem;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+      }
+
+      .category-manager-list {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        padding-right: 0.25rem;
+      }
+
+      .category-manager-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 0.65rem 0.85rem;
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        border-radius: 0.75rem;
+        background: rgba(15, 23, 42, 0.4);
+        transition: border-color 0.2s ease, background 0.2s ease;
+      }
+
+      .category-manager-item.active {
+        border-color: rgba(99, 102, 241, 0.6);
+        background: rgba(99, 102, 241, 0.15);
+      }
+
+      .category-manager-item span {
+        font-size: 0.8rem;
+        color: rgba(226, 232, 240, 0.9);
+      }
+
+      .category-manager-item small {
+        display: block;
+        font-size: 0.7rem;
+        color: rgba(148, 163, 184, 0.9);
+      }
+
+      .category-manager-footer {
+        display: grid;
+        gap: 0.75rem;
+      }
+
+      .category-manager-actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+      }
+
+      .category-manager-status {
+        min-height: 1rem;
+        font-size: 0.75rem;
+        color: rgba(148, 163, 184, 0.9);
       }
       
       .control-label {
@@ -449,12 +701,20 @@
                     <select id="sortSelect" class="input-base text-sm w-full">
                         <option value="danbooru" selected>Sort: Danbooru</option>
                         <option value="smart">Sort: Smart</option>
+                        <option value="priority">Sort: Prompt Flow</option>
                         <option value="manual">Sort: Manual</option>
+                        <option value="recent">Sort: Recent</option>
                         <option value="none">Sort: None</option>
                         <option value="az">Sort: A-Z</option>
                         <option value="za">Sort: Z-A</option>
                     </select>
-                    <input type="number" id="maxTagsInput" value="75" min="1" max="500" 
+                    <button id="manageCategoriesButton" type="button" class="quick-action-btn text-center py-2 w-full">
+                        <div class="text-xs">Manage Categories</div>
+                    </button>
+                    <p class="text-[0.7rem] text-gray-500 leading-snug">
+                        Reassign tags without dragging – perfect for touch devices.
+                    </p>
+                    <input type="number" id="maxTagsInput" value="75" min="1" max="500"
                            class="input-base text-sm w-full" placeholder="Max Tags">
                 </div>
             </div>
@@ -532,6 +792,12 @@
                             <span id="processedTagCount">0</span>/<span id="processedMaxTagCount">75</span>
                         </span>
                     </h2>
+                    <div class="space-y-3">
+                        <div class="flex flex-wrap gap-2" id="categoryToggleContainer"></div>
+                        <div id="hiddenCategoriesBanner" class="text-xs hidden">
+                            Muted categories are excluded from the preview and copy output.
+                        </div>
+                    </div>
                 </div>
 
                 <div id="tagOutput" class="glass-panel p-6 min-h-[500px] space-y-6 mb-6">
@@ -544,13 +810,38 @@
                     Copy All Tags
                 </button>
                 <p id="copyMessage" class="text-sm text-green-400 mt-3 h-5 text-center"></p>
+
+                <div class="prompt-preview-area mt-6">
+                    <div class="flex items-center justify-between gap-3">
+                        <h3 class="text-lg font-semibold text-gray-200">Prompt Preview</h3>
+                        <button id="promptPreviewCopy" class="quick-action-btn" disabled>Copy Preview</button>
+                    </div>
+                    <textarea id="promptPreview" class="prompt-preview-text" readonly placeholder="Prompt preview will appear here once tags are processed."></textarea>
+                    <div id="promptPreviewMeta" class="prompt-preview-meta">
+                        <span>Characters: 0</span>
+                        <span>Words: 0</span>
+                        <span>Approx. tokens: 0</span>
+                    </div>
+                </div>
             </div>
 
             <!-- History Section -->
-            <div class="lg:col-span-3">
-                <h3 class="text-lg font-semibold text-gray-200 mb-4">History</h3>
-                <div id="history-container" class="space-y-3">
-                    <p class="text-sm text-gray-500 italic">No history yet.</p>
+            <div class="lg:col-span-3 space-y-8">
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-200">Favorites</h3>
+                        <button id="clearFavoritesButton" class="quick-action-btn text-xs py-1 px-2">Clear</button>
+                    </div>
+                    <div id="favorites-container" class="space-y-2">
+                        <p class="text-sm text-gray-500 italic">No favorites saved yet. Click the star on a tag to pin it here.</p>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-200 mb-4">History</h3>
+                    <div id="history-container" class="space-y-3">
+                        <p class="text-sm text-gray-500 italic">No history yet.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -607,6 +898,41 @@
         </div>
     </div>
 
+    <!-- Category Manager Panel -->
+    <div id="categoryManagerPanel" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/60 category-manager-overlay" data-close="category-manager"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 glass-panel category-manager-panel p-6">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-100 mb-1">Category Manager</h3>
+                    <p class="text-xs text-gray-400 leading-relaxed">Select tags and assign them to a category without switching to manual sort.</p>
+                </div>
+                <button id="closeCategoryManager" type="button" class="quick-action-btn p-2" title="Close">
+                    <span class="text-lg leading-none">&times;</span>
+                </button>
+            </div>
+            <div>
+                <input id="categoryManagerSearch" type="search" class="input-base w-full text-sm" placeholder="Filter tags by name or category...">
+            </div>
+            <div id="categoryManagerList" class="category-manager-list space-y-2 pr-1">
+                <p class="text-sm text-gray-500 italic">No tags available yet.</p>
+            </div>
+            <div class="category-manager-footer">
+                <div class="category-manager-actions">
+                    <select id="categoryManagerSelect" class="input-base text-sm flex-1 min-w-[45%]"></select>
+                    <input id="categoryManagerNewInput" type="text" class="input-base text-sm flex-1 min-w-[45%]" placeholder="Or create a new category">
+                </div>
+                <div class="flex items-center justify-between gap-3 flex-wrap">
+                    <div id="categoryManagerStatus" class="category-manager-status"></div>
+                    <div class="flex gap-2">
+                        <button id="clearCategoryManagerSelection" type="button" class="quick-action-btn px-4 py-2 text-xs">Clear</button>
+                        <button id="applyCategoryManager" type="button" class="btn-primary text-sm px-4 py-2">Apply</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 <script>
     const GITHUB_USER = 'isaacwach234';
     const GITHUB_REPO = 'isaacwach234.github.io';
@@ -614,14 +940,151 @@
     let TAG_DATABASE = [], gitHubPat = null, tagCategorizer, tagIdCounter = 0;
     let baseTags = [], copyHistory = [], selectedTagIds = new Set(), sortableInstances = [];
     let autocomplete = { active: false, index: -1, currentWord: '', suggestions: [] };
+    let hiddenCategories = new Set(), knownCategories = new Set(), favoriteTags = new Map();
     
     const element = (id) => document.getElementById(id);
     const body = document.body, tagInput = element('tagInput'), swapsInput = element('swapsInput'), implicationsInput = element('implicationsInput'), blacklistInput = element('blacklistInput'), triggerInput = element('triggerInput'), appendInput = element('appendInput');
     const deduplicateToggle = element('deduplicateToggle'), underscoreToggle = element('underscoreToggle'), enableWeightingToggle = element('enableWeightingToggle');
-    const sortSelect = element('sortSelect'), maxTagsInput = element('maxTagsInput'), tagOutput = element('tagOutput'), processedTagsLabel = element('processedTagsLabel');
+    const sortSelect = element('sortSelect'), maxTagsInput = element('maxTagsInput'), tagOutput = element('tagOutput');
     const copyButton = element('copyButton'), copyMessage = element('copyMessage'), historyContainer = element('history-container'), autocompleteBox = element('autocomplete-box');
     const suggestBtn = element('suggest-btn'), themeButtons = document.querySelectorAll('.theme-button'), suggestionCountInput = element('suggestionCountInput');
+    const categoryToggleContainer = element('categoryToggleContainer'), hiddenCategoriesBanner = element('hiddenCategoriesBanner');
+    const favoritesContainer = element('favorites-container'), clearFavoritesButton = element('clearFavoritesButton');
+    const promptPreview = element('promptPreview'), promptPreviewMeta = element('promptPreviewMeta'), promptPreviewCopy = element('promptPreviewCopy');
     const ratingSafe = element('rating-safe'), ratingGeneral = element('rating-general'), ratingQuestionable = element('rating-questionable');
+    const manageCategoriesButton = element('manageCategoriesButton');
+    const categoryManagerPanel = element('categoryManagerPanel');
+    const categoryManagerList = element('categoryManagerList');
+    const categoryManagerSelect = element('categoryManagerSelect');
+    const categoryManagerSearch = element('categoryManagerSearch');
+    const categoryManagerNewInput = element('categoryManagerNewInput');
+    const categoryManagerStatus = element('categoryManagerStatus');
+    const applyCategoryManagerButton = element('applyCategoryManager');
+    const clearCategoryManagerSelectionButton = element('clearCategoryManagerSelection');
+    const closeCategoryManagerButton = element('closeCategoryManager');
+    const categoryManagerOverlay = document.querySelector('[data-close="category-manager"]');
+
+    const HIDDEN_STORAGE_KEY = 'danbooru-muted-categories';
+    const FAVORITES_STORAGE_KEY = 'danbooru-tag-favorites';
+    const SMART_SORT_MODES = new Set(['smart', 'priority']);
+    const CATEGORY_SORT_MODES = new Set(['danbooru', 'smart']);
+    const PRIORITY_FLOW = [
+        { id: 'foundation', title: 'Foundation & Output Control', description: 'Quality, safety, and core prompt controls.' },
+        { id: 'subjects', title: 'Subjects & Casting', description: 'Primary characters, species, and anatomy focus.' },
+        { id: 'appearance', title: 'Appearance & Wardrobe', description: 'Facial features, body details, outfits, and props.' },
+        { id: 'scene', title: 'Scene & Camera', description: 'Poses, actions, environment, lighting, and perspective.' },
+        { id: 'style', title: 'Style & Rendering', description: 'Artists, mediums, palettes, and finishing touches.' },
+        { id: 'extras', title: 'Everything Else', description: 'Tags that do not fit other groupings yet.' }
+    ];
+    const PRIORITY_CATEGORY_OVERRIDES = {
+        'Quality': 'foundation',
+        'Ratings': 'foundation',
+        'General Meta': 'foundation',
+        'Prompt Engineering': 'foundation',
+        'Negative Prompts': 'foundation',
+        'Model Settings': 'foundation',
+        'Trigger Words': 'foundation',
+        'Characters': 'subjects',
+        'Subject & Creatures': 'subjects',
+        'People & Poses': 'subjects',
+        'Body': 'appearance',
+        'Body Parts': 'appearance',
+        'Face': 'appearance',
+        'Eyes': 'appearance',
+        'Hair': 'appearance',
+        'Attire': 'appearance',
+        'Accessories': 'appearance',
+        'Held Items & Objects': 'appearance',
+        'Props': 'appearance',
+        'Actions & Poses': 'scene',
+        'Composition': 'scene',
+        'Camera & Perspective': 'scene',
+        'Setting & Environment': 'scene',
+        'Lighting & Color': 'scene',
+        'Weather & Atmosphere': 'scene',
+        'Style & Meta': 'style',
+        'Artists': 'style',
+        'Art Styles': 'style',
+        'Medium': 'style',
+        'Rendering': 'style',
+        'Post-Processing': 'style'
+    };
+    const PRIORITY_CATEGORY_RULES = [
+        { id: 'foundation', keywords: ['quality', 'rating', 'meta', 'safety', 'trigger', 'model', 'checkpoint', 'sampler', 'cfg', 'prompt', 'control', 'negative'] },
+        { id: 'subjects', keywords: ['character', 'subject', 'person', 'people', 'creature', 'species', 'anatomy', 'body', 'gender', 'age', 'cast'] },
+        { id: 'appearance', keywords: ['face', 'hair', 'eye', 'skin', 'body', 'attire', 'cloth', 'outfit', 'costume', 'accessor', 'prop', 'makeup', 'expression'] },
+        { id: 'scene', keywords: ['composition', 'pose', 'action', 'environment', 'setting', 'background', 'lighting', 'weather', 'camera', 'perspective', 'angle', 'scene'] },
+        { id: 'style', keywords: ['style', 'artist', 'art', 'medium', 'render', 'palette', 'color', 'effect', 'aesthetic', 'finish'] }
+    ];
+    const priorityPhaseCache = new Map();
+    const phaseOrderIndex = new Map(PRIORITY_FLOW.map((phase, index) => [phase.id, index]));
+    const categoryOrderIndex = new Map();
+    let categoryManagerSelection = new Set();
+
+    function seedCategoryOrderIndex(order) {
+        categoryOrderIndex.clear();
+        if (!order || !order.length) return;
+        order.forEach((name, index) => {
+            categoryOrderIndex.set(name, index);
+        });
+    }
+
+    function getCategoryOrderRank(name) {
+        if (!name) return Number.MAX_SAFE_INTEGER;
+        if (categoryOrderIndex.has(name)) return categoryOrderIndex.get(name);
+        const fallback = categoryOrderIndex.size + 100;
+        categoryOrderIndex.set(name, fallback);
+        return fallback;
+    }
+
+    function resolvePriorityPhase(categoryName) {
+        const resolved = categoryName || 'Uncategorized';
+        if (priorityPhaseCache.has(resolved)) return priorityPhaseCache.get(resolved);
+        if (PRIORITY_CATEGORY_OVERRIDES[resolved]) {
+            const mapped = PRIORITY_CATEGORY_OVERRIDES[resolved];
+            priorityPhaseCache.set(resolved, mapped);
+            return mapped;
+        }
+        const lowered = resolved.toLowerCase();
+        for (const rule of PRIORITY_CATEGORY_RULES) {
+            if (rule.keywords.some(keyword => lowered.includes(keyword))) {
+                priorityPhaseCache.set(resolved, rule.id);
+                return rule.id;
+            }
+        }
+        priorityPhaseCache.set(resolved, 'extras');
+        return 'extras';
+    }
+
+    function getPhaseSortIndex(phaseId) {
+        return phaseOrderIndex.has(phaseId) ? phaseOrderIndex.get(phaseId) : phaseOrderIndex.get('extras');
+    }
+
+    function isFavoriteTag(tag) {
+        return favoriteTags.has(getFavoriteKey(tag.original));
+    }
+
+    function getDisplayLabel(tag, options = {}) {
+        const { preferWeighted = enableWeightingToggle.checked } = options;
+        const base = preferWeighted ? (tag.weighted || tag.original) : tag.original;
+        return underscoreToggle.checked ? base.replace(/\s/g, '_') : base.replace(/_/g, ' ');
+    }
+
+    function compareTagsForPriority(a, b) {
+        const phaseDiff = getPhaseSortIndex(resolvePriorityPhase(a.category)) - getPhaseSortIndex(resolvePriorityPhase(b.category));
+        if (phaseDiff !== 0) return phaseDiff;
+        const categoryDiff = getCategoryOrderRank(a.category) - getCategoryOrderRank(b.category);
+        if (categoryDiff !== 0) return categoryDiff;
+        const favoriteDiff = Number(isFavoriteTag(b)) - Number(isFavoriteTag(a));
+        if (favoriteDiff !== 0) return favoriteDiff;
+        const recencyDiff = (b.addedAt || 0) - (a.addedAt || 0);
+        if (recencyDiff !== 0) return recencyDiff;
+        return a.original.localeCompare(b.original);
+    }
+
+    function syncSortModeState(currentSort = sortSelect.value) {
+        document.body.classList.toggle('manual-sorting', currentSort === 'manual');
+    }
 
     class EnhancedTagCategorizer {
         constructor(tagMap, allTags, categoryOrder) {
@@ -743,6 +1206,376 @@
         categorize(tagString) { return this.categorizeOriginal(tagString); }
         categorizeSmart(tagString) { return this.categorizeEnhanced(tagString); }
     }
+
+    const getFavoriteKey = (tag) => tag.toLowerCase().replace(/\s+/g, '_');
+
+    function loadHiddenCategories() {
+        try {
+            const stored = JSON.parse(localStorage.getItem(HIDDEN_STORAGE_KEY) || '[]');
+            hiddenCategories = new Set(stored);
+        } catch (error) {
+            console.warn('Failed to load muted categories from storage', error);
+            hiddenCategories = new Set();
+        }
+    }
+
+    function saveHiddenCategories() {
+        localStorage.setItem(HIDDEN_STORAGE_KEY, JSON.stringify(Array.from(hiddenCategories)));
+    }
+
+    function ensureCategoryRegistered(category) {
+        const resolved = category || 'Uncategorized';
+        if (!knownCategories.has(resolved)) {
+            knownCategories.add(resolved);
+            renderCategoryFilters();
+        }
+    }
+
+    function renderCategoryFilters() {
+        if (!categoryToggleContainer) return;
+        const categories = Array.from(knownCategories);
+        if (!categories.includes('Uncategorized')) categories.push('Uncategorized');
+        categories.sort((a, b) => a.localeCompare(b));
+        categoryToggleContainer.innerHTML = '';
+        if (categories.length === 0) {
+            const placeholder = document.createElement('p');
+            placeholder.className = 'text-xs text-gray-500';
+            placeholder.textContent = 'Categories will appear after your first processing run.';
+            categoryToggleContainer.appendChild(placeholder);
+            return;
+        }
+        const resetButton = document.createElement('button');
+        resetButton.type = 'button';
+        resetButton.className = `category-toggle-btn${hiddenCategories.size === 0 ? ' opacity-60 cursor-not-allowed' : ''}`;
+        resetButton.textContent = 'Show all';
+        resetButton.disabled = hiddenCategories.size === 0;
+        resetButton.addEventListener('click', () => {
+            hiddenCategories.clear();
+            saveHiddenCategories();
+            displayTags();
+        });
+        categoryToggleContainer.appendChild(resetButton);
+        categories.forEach(category => {
+            const count = baseTags.filter(tag => (tag.category || 'Uncategorized') === category).length;
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = `category-toggle-btn${hiddenCategories.has(category) ? ' muted' : ''}`;
+            btn.dataset.category = category;
+            btn.innerHTML = `<span>${category}</span><span class="text-[0.65rem] text-gray-400">${count}</span>`;
+            btn.addEventListener('click', () => toggleCategoryMute(category));
+            categoryToggleContainer.appendChild(btn);
+        });
+        updateHiddenCategoriesBanner();
+    }
+
+    function toggleCategoryMute(category) {
+        if (hiddenCategories.has(category)) hiddenCategories.delete(category);
+        else hiddenCategories.add(category);
+        saveHiddenCategories();
+        displayTags();
+    }
+
+    function updateHiddenCategoriesBanner() {
+        if (!hiddenCategoriesBanner) return;
+        if (hiddenCategories.size === 0) {
+            hiddenCategoriesBanner.classList.add('hidden');
+        } else {
+            hiddenCategoriesBanner.classList.remove('hidden');
+            hiddenCategoriesBanner.textContent = `Muted categories (${hiddenCategories.size}): ${Array.from(hiddenCategories).join(', ')}`;
+        }
+    }
+
+    function loadFavorites() {
+        try {
+            const stored = JSON.parse(localStorage.getItem(FAVORITES_STORAGE_KEY) || '[]');
+            favoriteTags = new Map(stored.map(tag => [getFavoriteKey(tag), tag]));
+        } catch (error) {
+            console.warn('Failed to load favorites from storage', error);
+            favoriteTags = new Map();
+        }
+    }
+
+    function saveFavorites() {
+        localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(Array.from(favoriteTags.values())));
+    }
+
+    function clearFavorites() {
+        favoriteTags.clear();
+        saveFavorites();
+        renderFavorites();
+        refreshFavoriteIndicators();
+    }
+
+    function renderFavorites() {
+        if (!favoritesContainer) return;
+        favoritesContainer.innerHTML = '';
+        if (favoriteTags.size === 0) {
+            favoritesContainer.innerHTML = '<p class="text-sm text-gray-500 italic">No favorites saved yet. Click the star on a tag to pin it here.</p>';
+            if (clearFavoritesButton) clearFavoritesButton.disabled = true;
+            return;
+        }
+        if (clearFavoritesButton) clearFavoritesButton.disabled = false;
+        const list = Array.from(favoriteTags.values()).sort((a, b) => a.localeCompare(b));
+        list.forEach(tag => {
+            const pill = document.createElement('div');
+            pill.className = 'favorite-pill';
+            pill.title = 'Click to insert this tag into the prompt';
+            const text = document.createElement('span');
+            text.className = 'truncate max-w-[160px]';
+            text.textContent = underscoreToggle.checked ? tag.replace(/\s/g, '_') : tag.replace(/_/g, ' ');
+            text.addEventListener('click', () => insertFavoriteTag(tag));
+            pill.appendChild(text);
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.innerHTML = '&times;';
+            removeBtn.addEventListener('click', () => {
+                favoriteTags.delete(getFavoriteKey(tag));
+                saveFavorites();
+                renderFavorites();
+                refreshFavoriteIndicators();
+            });
+            pill.appendChild(removeBtn);
+            favoritesContainer.appendChild(pill);
+        });
+    }
+
+    function toggleFavorite(tagOriginal) {
+        const key = getFavoriteKey(tagOriginal);
+        if (favoriteTags.has(key)) {
+            favoriteTags.delete(key);
+        } else {
+            favoriteTags.set(key, tagOriginal);
+        }
+        saveFavorites();
+        renderFavorites();
+        refreshFavoriteIndicators();
+    }
+
+    function refreshFavoriteIndicators() {
+        document.querySelectorAll('.tag-favorite-btn').forEach(btn => {
+            const original = btn.dataset.tagOriginal;
+            const isFavorite = favoriteTags.has(getFavoriteKey(original));
+            btn.classList.toggle('active', isFavorite);
+            btn.textContent = isFavorite ? '★' : '☆';
+        });
+        if (clearFavoritesButton) clearFavoritesButton.disabled = favoriteTags.size === 0;
+    }
+
+    function updateCategoryManagerStatus(message) {
+        if (!categoryManagerStatus) return;
+        categoryManagerStatus.textContent = message || '';
+    }
+
+    function renderCategoryManagerOptions() {
+        if (!categoryManagerSelect) return;
+        const categories = Array.from(knownCategories);
+        if (!categories.includes('Uncategorized')) categories.push('Uncategorized');
+        categories.sort((a, b) => a.localeCompare(b));
+        categoryManagerSelect.innerHTML = '<option value="">Choose an existing category</option>';
+        categories.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category;
+            option.textContent = category;
+            categoryManagerSelect.appendChild(option);
+        });
+    }
+
+    function refreshCategoryManagerList() {
+        if (!categoryManagerList) return;
+        categoryManagerList.innerHTML = '';
+        if (baseTags.length === 0) {
+            const empty = document.createElement('p');
+            empty.className = 'text-sm text-gray-500 italic';
+            empty.textContent = 'No tags available yet.';
+            categoryManagerList.appendChild(empty);
+            updateCategoryManagerStatus('Import or type tags to start categorizing.');
+            return;
+        }
+        const query = (categoryManagerSearch?.value || '').trim().toLowerCase();
+        const ordered = [...baseTags].sort(compareTagsForPriority);
+        let rendered = 0;
+        ordered.forEach(tag => {
+            const displayName = getDisplayLabel(tag, { preferWeighted: false });
+            const categoryName = tag.category || 'Uncategorized';
+            const sourceLabel = tag.categorySource ? ` • ${tag.categorySource}` : '';
+            const searchable = `${displayName} ${categoryName} ${sourceLabel}`.toLowerCase();
+            if (query && !searchable.includes(query)) return;
+            rendered++;
+            const row = document.createElement('label');
+            row.className = `category-manager-item${categoryManagerSelection.has(tag.id) ? ' active' : ''}`;
+            row.dataset.tagId = tag.id;
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'rounded mt-1';
+            checkbox.checked = categoryManagerSelection.has(tag.id);
+            checkbox.addEventListener('click', (event) => event.stopPropagation());
+            checkbox.addEventListener('change', (event) => {
+                if (event.target.checked) {
+                    categoryManagerSelection.add(tag.id);
+                } else {
+                    categoryManagerSelection.delete(tag.id);
+                }
+                row.classList.toggle('active', event.target.checked);
+                updateCategoryManagerStatus(`${categoryManagerSelection.size} tag${categoryManagerSelection.size === 1 ? '' : 's'} selected.`);
+            });
+            const info = document.createElement('div');
+            info.className = 'flex-1 min-w-0';
+            const nameEl = document.createElement('span');
+            nameEl.textContent = displayName;
+            const metaEl = document.createElement('small');
+            metaEl.textContent = `${categoryName}${sourceLabel}`;
+            info.appendChild(nameEl);
+            info.appendChild(metaEl);
+            row.appendChild(checkbox);
+            row.appendChild(info);
+            row.addEventListener('click', () => {
+                const isActive = categoryManagerSelection.has(tag.id);
+                if (isActive) {
+                    categoryManagerSelection.delete(tag.id);
+                    row.classList.remove('active');
+                    checkbox.checked = false;
+                } else {
+                    categoryManagerSelection.add(tag.id);
+                    row.classList.add('active');
+                    checkbox.checked = true;
+                }
+                updateCategoryManagerStatus(`${categoryManagerSelection.size} tag${categoryManagerSelection.size === 1 ? '' : 's'} selected.`);
+            });
+            categoryManagerList.appendChild(row);
+        });
+        if (rendered === 0) {
+            const empty = document.createElement('p');
+            empty.className = 'text-sm text-gray-500 italic';
+            empty.textContent = query ? 'No tags match your search.' : 'No tags available yet.';
+            categoryManagerList.appendChild(empty);
+            updateCategoryManagerStatus(query ? 'Try a different search term.' : 'Select tags to get started.');
+        } else if (categoryManagerSelection.size === 0) {
+            updateCategoryManagerStatus('Select tags to get started.');
+        }
+    }
+
+    function clearCategoryManagerSelection() {
+        categoryManagerSelection.clear();
+        refreshCategoryManagerList();
+        updateCategoryManagerStatus('Selection cleared.');
+    }
+
+    function openCategoryManager() {
+        if (!categoryManagerPanel) return;
+        categoryManagerSelection = new Set();
+        if (categoryManagerSearch) categoryManagerSearch.value = '';
+        renderCategoryManagerOptions();
+        refreshCategoryManagerList();
+        updateCategoryManagerStatus('Select tags to get started.');
+        categoryManagerPanel.classList.remove('hidden');
+        setTimeout(() => categoryManagerSearch?.focus(), 50);
+    }
+
+    function closeCategoryManager() {
+        if (!categoryManagerPanel) return;
+        categoryManagerPanel.classList.add('hidden');
+        updateCategoryManagerStatus('');
+    }
+
+    function applyCategoryManagerChanges() {
+        if (categoryManagerSelection.size === 0) {
+            updateCategoryManagerStatus('Select at least one tag to update.');
+            return;
+        }
+        const newCategoryCandidate = (categoryManagerNewInput?.value || '').trim();
+        const existingSelection = categoryManagerSelect?.value || '';
+        const resolvedCategory = newCategoryCandidate || existingSelection;
+        if (!resolvedCategory) {
+            updateCategoryManagerStatus('Choose an existing category or enter a new one.');
+            return;
+        }
+        const normalizedCategory = resolvedCategory;
+        const updated = [];
+        categoryManagerSelection.forEach(id => {
+            const tag = baseTags.find(t => t.id === id);
+            if (!tag) return;
+            tag.category = normalizedCategory;
+            tag.categorySource = 'Manual (Manager)';
+            ensureCategoryRegistered(normalizedCategory);
+            tagCategorizer.updateIndex(tag.original, normalizedCategory);
+            updated.push(tag);
+        });
+        if (updated.length === 0) {
+            updateCategoryManagerStatus('No matching tags were updated.');
+            return;
+        }
+        categoryManagerSelection.clear();
+        if (categoryManagerNewInput) categoryManagerNewInput.value = '';
+        if (categoryManagerSelect) categoryManagerSelect.value = normalizedCategory;
+        renderCategoryFilters();
+        displayTags();
+        updateCategoryManagerStatus(`Updated ${updated.length} tag${updated.length === 1 ? '' : 's'} to ${normalizedCategory}.`);
+    }
+
+    function insertFavoriteTag(tag) {
+        const existing = tagInput.value.trim();
+        const normalizedTag = tag.replace(/_/g, ' ');
+        const separator = existing && !existing.endsWith(',') ? ', ' : '';
+        const candidate = `${existing}${separator}${normalizedTag}`.trim();
+        tagInput.value = candidate;
+        processAll();
+    }
+
+    function getProcessedTagElements() {
+        return Array.from(tagOutput.querySelectorAll('.tag-base'));
+    }
+
+    function getActiveTags() {
+        return baseTags.filter(tag => !hiddenCategories.has(tag.category || 'Uncategorized'));
+    }
+
+    function getProcessedTagsForOutput() {
+        const elements = getProcessedTagElements();
+        return elements.map(el => {
+            const weightedTag = el.dataset.weightedTag;
+            return underscoreToggle.checked ? weightedTag.replace(/\s/g, '_') : weightedTag.replace(/_/g, ' ');
+        });
+    }
+
+    function getPromptParts() {
+        const prepend = triggerInput.value.split(',').map(t => t.trim()).filter(Boolean);
+        const append = appendInput.value.split(',').map(t => t.trim()).filter(Boolean);
+        const core = getProcessedTagsForOutput();
+        return { prepend, core, append };
+    }
+
+    function buildFinalPrompt() {
+        const { prepend, core, append } = getPromptParts();
+        return [...prepend, ...core, ...append].join(', ');
+    }
+
+    function estimateTokenCount(text) {
+        if (!text || !text.trim()) return 0;
+        const words = text.trim().split(/\s+/).filter(Boolean).length;
+        return Math.max(words, Math.round(words * 1.3));
+    }
+
+    function updatePromptPreview() {
+        if (!promptPreview) return;
+        const finalString = buildFinalPrompt();
+        promptPreview.value = finalString;
+        const characters = finalString.length;
+        const words = finalString.trim() ? finalString.trim().split(/\s+/).filter(Boolean).length : 0;
+        const tokens = estimateTokenCount(finalString);
+        if (promptPreviewMeta) {
+            const [charEl, wordEl, tokenEl] = promptPreviewMeta.querySelectorAll('span');
+            if (charEl) charEl.textContent = `Characters: ${characters}`;
+            if (wordEl) wordEl.textContent = `Words: ${words}`;
+            if (tokenEl) tokenEl.textContent = `Approx. tokens: ${tokens}`;
+        }
+        const isEmpty = finalString.length === 0;
+        if (promptPreviewCopy) {
+            promptPreviewCopy.disabled = isEmpty;
+        }
+        if (copyButton) {
+            copyButton.disabled = isEmpty;
+        }
+    }
     
     function processAll() {
         if (!tagCategorizer) return;
@@ -761,36 +1594,149 @@
         let filteredTags = rawTags.filter(tag => !blacklist.has(tag.toLowerCase().replace(/_/g, ' ')));
         filteredTags = filteredTags.slice(0, parseInt(maxTagsInput.value, 10) || 75);
         const newBaseTags = [];
-        const oldTagsMeta = new Map(baseTags.map(t => [t.original, { id: t.id, weighted: t.weighted }]));
+        const oldTagsMeta = new Map(baseTags.map(t => [t.original, { id: t.id, weighted: t.weighted, addedAt: t.addedAt }]));
         for (const tag of filteredTags) {
-            const isSmartSort = sortSelect.value === 'smart';
+            const isSmartSort = SMART_SORT_MODES.has(sortSelect.value);
             const { category, source } = isSmartSort ? tagCategorizer.categorizeSmart(tag) : tagCategorizer.categorize(tag);
             const oldMeta = oldTagsMeta.get(tag);
-            newBaseTags.push({ original: tag, weighted: oldMeta ? oldMeta.weighted : tag, id: oldMeta ? oldMeta.id : `tag-${tagIdCounter++}`, category, categorySource: source });
+            const assignedCategory = category || 'Uncategorized';
+            ensureCategoryRegistered(assignedCategory);
+            newBaseTags.push({
+                original: tag,
+                weighted: oldMeta ? oldMeta.weighted : tag,
+                id: oldMeta ? oldMeta.id : `tag-${tagIdCounter++}`,
+                category: assignedCategory,
+                categorySource: source,
+                addedAt: oldMeta && oldMeta.addedAt ? oldMeta.addedAt : Date.now()
+            });
         }
         if (!enableWeightingToggle.checked) newBaseTags.forEach(t => t.weighted = t.original);
         baseTags = newBaseTags;
+        renderCategoryFilters();
         displayTags();
-        updateStats();
     }
 
     function displayTags() {
+        renderCategoryFilters();
         tagOutput.innerHTML = '';
-        copyButton.disabled = baseTags.length === 0;
+        const sortValue = sortSelect.value;
+        syncSortModeState(sortValue);
+        const visibleTags = getActiveTags();
+
         if (baseTags.length === 0) {
             tagOutput.innerHTML = '<div class="text-gray-500 italic text-center py-12">Start typing or paste tags above to begin...</div>';
+            updateHiddenCategoriesBanner();
             updateStats();
+            updatePromptPreview();
+            refreshFavoriteIndicators();
+            destroySortableInstances();
             return;
         }
-        if (sortSelect.value === 'danbooru' || sortSelect.value === 'smart') {
-            const groups = baseTags.reduce((acc, tag) => { const c = tag.category || 'Uncategorized'; if (!acc[c]) acc[c] = []; acc[c].push(tag); return acc; }, {});
-            const sortedCategoryOrder = [...tagCategorizer.categoryOrder, 'Uncategorized'].filter(c => c !== 'Other');
-            sortedCategoryOrder.forEach(categoryName => {
-                const tagsForCategory = groups[categoryName];
-                if (!tagsForCategory || tagsForCategory.length === 0) return;
+
+        if (visibleTags.length === 0) {
+            tagOutput.innerHTML = '<div class="text-amber-300 text-center py-12">All categories are currently muted. Enable a category to see its tags.</div>';
+            updateHiddenCategoriesBanner();
+            updateStats();
+            updatePromptPreview();
+            refreshFavoriteIndicators();
+            destroySortableInstances();
+            return;
+        }
+
+        if (sortValue === 'priority') {
+            const categoriesMap = new Map();
+            visibleTags.forEach(tag => {
+                const categoryName = tag.category || 'Uncategorized';
+                if (!categoriesMap.has(categoryName)) categoriesMap.set(categoryName, []);
+                categoriesMap.get(categoryName).push(tag);
+            });
+            const sortedCategories = Array.from(categoriesMap.keys()).sort((a, b) => {
+                const phaseDiff = getPhaseSortIndex(resolvePriorityPhase(a)) - getPhaseSortIndex(resolvePriorityPhase(b));
+                if (phaseDiff !== 0) return phaseDiff;
+                const rankDiff = getCategoryOrderRank(a) - getCategoryOrderRank(b);
+                if (rankDiff !== 0) return rankDiff;
+                return a.localeCompare(b);
+            });
+            const categoriesByPhase = new Map(PRIORITY_FLOW.map(phase => [phase.id, []]));
+            sortedCategories.forEach(categoryName => {
+                const tagsForCategory = categoriesMap.get(categoryName) || [];
+                tagsForCategory.sort((a, b) => {
+                    const favoriteDiff = Number(isFavoriteTag(b)) - Number(isFavoriteTag(a));
+                    if (favoriteDiff !== 0) return favoriteDiff;
+                    const recencyDiff = (b.addedAt || 0) - (a.addedAt || 0);
+                    if (recencyDiff !== 0) return recencyDiff;
+                    return a.original.localeCompare(b.original);
+                });
+                const phaseId = resolvePriorityPhase(categoryName);
+                categoriesByPhase.get(phaseId).push({ name: categoryName, tags: tagsForCategory });
+            });
+            let rendered = false;
+            PRIORITY_FLOW.forEach(phase => {
+                const sections = categoriesByPhase.get(phase.id) || [];
+                if (!sections.length) return;
+                rendered = true;
                 const groupDiv = document.createElement('div');
                 groupDiv.className = 'tag-group fade-in-up';
-                groupDiv.innerHTML = `<h3 class="tag-group-title">${categoryName}</h3>`;
+                const headerWrapper = document.createElement('div');
+                headerWrapper.className = 'flex flex-col gap-1 mb-2';
+                const titleEl = document.createElement('h3');
+                titleEl.className = 'tag-group-title';
+                titleEl.textContent = phase.title;
+                headerWrapper.appendChild(titleEl);
+                if (phase.description) {
+                    const subtitle = document.createElement('p');
+                    subtitle.className = 'priority-phase-subtitle';
+                    subtitle.textContent = phase.description;
+                    headerWrapper.appendChild(subtitle);
+                }
+                groupDiv.appendChild(headerWrapper);
+                sections.forEach(sectionData => {
+                    const section = document.createElement('div');
+                    section.className = 'priority-category-section';
+                    const catTitle = document.createElement('div');
+                    catTitle.className = 'priority-category-title';
+                    catTitle.textContent = sectionData.name;
+                    section.appendChild(catTitle);
+                    if (sectionData.tags.length === 0) {
+                        const emptyState = document.createElement('p');
+                        emptyState.className = 'priority-category-empty';
+                        emptyState.textContent = 'No tags in this bucket yet.';
+                        section.appendChild(emptyState);
+                    } else {
+                        const container = document.createElement('div');
+                        container.className = 'tag-group-container priority-flow-container';
+                        container.dataset.groupName = sectionData.name;
+                        sectionData.tags.forEach(tag => container.appendChild(createTagElement(tag)));
+                        section.appendChild(container);
+                    }
+                    groupDiv.appendChild(section);
+                });
+                tagOutput.appendChild(groupDiv);
+            });
+            if (!rendered) {
+                tagOutput.innerHTML = '<div class="text-gray-500 italic text-center py-12">No tags match the current filters.</div>';
+            }
+        } else if (CATEGORY_SORT_MODES.has(sortValue)) {
+            const groups = visibleTags.reduce((acc, tag) => {
+                const categoryName = tag.category || 'Uncategorized';
+                if (!acc.has(categoryName)) acc.set(categoryName, []);
+                acc.get(categoryName).push(tag);
+                return acc;
+            }, new Map());
+            const sortedCategories = Array.from(groups.keys()).sort((a, b) => {
+                const orderDiff = getCategoryOrderRank(a) - getCategoryOrderRank(b);
+                if (orderDiff !== 0) return orderDiff;
+                return a.localeCompare(b);
+            });
+            sortedCategories.forEach(categoryName => {
+                const tagsForCategory = groups.get(categoryName) || [];
+                if (tagsForCategory.length === 0) return;
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'tag-group fade-in-up';
+                const titleEl = document.createElement('h3');
+                titleEl.className = 'tag-group-title';
+                titleEl.textContent = categoryName;
+                groupDiv.appendChild(titleEl);
                 const container = document.createElement('div');
                 container.className = 'tag-group-container';
                 container.dataset.groupName = categoryName;
@@ -799,19 +1745,115 @@
                 tagOutput.appendChild(groupDiv);
             });
         } else {
-            let tagsToDisplay = [...baseTags];
-            if (sortSelect.value === 'az') tagsToDisplay.sort((a, b) => a.original.localeCompare(b.original));
-            else if (sortSelect.value === 'za') tagsToDisplay.sort((a, b) => b.original.localeCompare(a.original));
+            let tagsToDisplay = [...visibleTags];
+            if (sortValue === 'az') tagsToDisplay.sort((a, b) => a.original.localeCompare(b.original));
+            else if (sortValue === 'za') tagsToDisplay.sort((a, b) => b.original.localeCompare(a.original));
+            else if (sortValue === 'recent') tagsToDisplay.sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
             const container = document.createElement('div');
             container.className = 'tag-group-container';
             container.dataset.groupName = 'all';
             tagsToDisplay.forEach(tag => container.appendChild(createTagElement(tag)));
             tagOutput.appendChild(container);
         }
-        initSortable();
+
+        if (sortValue === 'manual') {
+            initSortable();
+        } else {
+            destroySortableInstances();
+        }
+
+        updateHiddenCategoriesBanner();
+        updateStats();
+        updatePromptPreview();
+        refreshFavoriteIndicators();
+
+        if (categoryManagerPanel && !categoryManagerPanel.classList.contains('hidden')) {
+            renderCategoryManagerOptions();
+            refreshCategoryManagerList();
+        }
     }
     
-    function createTagElement(tag) { const el = document.createElement('div'); el.className = 'tag-base processed-tag'; el.dataset.id = tag.id; el.dataset.weightedTag = tag.weighted; if (selectedTagIds.has(tag.id)) el.classList.add('selected'); el.style.borderStyle = tag.categorySource !== 'Primary' ? 'dashed' : 'solid'; el.title = `(${tag.categorySource}) ${tag.original}\nCategory: ${tag.category}\n\nCtrl+Click to multi-select.\nRight-click for options.`; const useUnderscores = underscoreToggle.checked; const displayTag = useUnderscores ? tag.weighted.replace(/\s/g, '_') : tag.weighted.replace(/_/g, ' '); if (enableWeightingToggle.checked) { el.innerHTML = `<button class="tag-weight-btn" onclick="updateTagWeight('${tag.id}','decrease')">-</button><span class="tag-text px-1">${displayTag}</span><button class="tag-weight-btn" onclick="updateTagWeight('${tag.id}','increase')">+</button>`; } else { el.innerHTML = `<span class="tag-text">${displayTag}</span>`; } el.addEventListener('click', (e) => handleTagClick(e, tag.id)); el.addEventListener('contextmenu', (e) => { e.preventDefault(); showCorrectionMenu(e, tag); }); return el; }
+    function createTagElement(tag) {
+        const el = document.createElement('div');
+        el.className = 'tag-base processed-tag';
+        el.dataset.id = tag.id;
+        el.dataset.weightedTag = tag.weighted;
+        el.dataset.tagOriginal = tag.original;
+        el.dataset.category = tag.category || 'Uncategorized';
+        if (selectedTagIds.has(tag.id)) el.classList.add('selected');
+        el.style.borderStyle = tag.categorySource !== 'Primary' ? 'dashed' : 'solid';
+        el.title = `(${tag.categorySource}) ${tag.original}\nCategory: ${tag.category}\n\nCtrl+Click to multi-select.\nRight-click for options.`;
+
+        const content = document.createElement('div');
+        content.className = 'flex items-center gap-2';
+
+        if (document.body.classList.contains('manual-sorting')) {
+            const dragHandle = document.createElement('button');
+            dragHandle.type = 'button';
+            dragHandle.className = 'tag-drag-handle';
+            dragHandle.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="6" r="1"></circle><circle cx="15" cy="6" r="1"></circle><circle cx="9" cy="12" r="1"></circle><circle cx="15" cy="12" r="1"></circle><circle cx="9" cy="18" r="1"></circle><circle cx="15" cy="18" r="1"></circle></svg>';
+            dragHandle.setAttribute('aria-label', 'Drag to reorder');
+            dragHandle.addEventListener('click', (event) => event.preventDefault());
+            content.appendChild(dragHandle);
+        }
+
+        const favoriteBtn = document.createElement('button');
+        favoriteBtn.type = 'button';
+        favoriteBtn.className = 'tag-favorite-btn';
+        favoriteBtn.dataset.tagOriginal = tag.original;
+        const isFavorite = favoriteTags.has(getFavoriteKey(tag.original));
+        if (isFavorite) favoriteBtn.classList.add('active');
+        favoriteBtn.textContent = isFavorite ? '★' : '☆';
+        favoriteBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            toggleFavorite(tag.original);
+        });
+        content.appendChild(favoriteBtn);
+
+        const controls = document.createElement('div');
+        controls.className = 'flex items-center gap-1';
+        const displayTag = getDisplayLabel(tag);
+
+        if (enableWeightingToggle.checked) {
+            const decreaseBtn = document.createElement('button');
+            decreaseBtn.type = 'button';
+            decreaseBtn.className = 'tag-weight-btn';
+            decreaseBtn.textContent = '-';
+            decreaseBtn.addEventListener('click', (event) => {
+                event.stopPropagation();
+                updateTagWeight(tag.id, 'decrease');
+            });
+
+            const tagLabel = document.createElement('span');
+            tagLabel.className = 'tag-text px-1';
+            tagLabel.textContent = displayTag;
+
+            const increaseBtn = document.createElement('button');
+            increaseBtn.type = 'button';
+            increaseBtn.className = 'tag-weight-btn';
+            increaseBtn.textContent = '+';
+            increaseBtn.addEventListener('click', (event) => {
+                event.stopPropagation();
+                updateTagWeight(tag.id, 'increase');
+            });
+
+            controls.appendChild(decreaseBtn);
+            controls.appendChild(tagLabel);
+            controls.appendChild(increaseBtn);
+        } else {
+            const tagLabel = document.createElement('span');
+            tagLabel.className = 'tag-text';
+            tagLabel.textContent = displayTag;
+            controls.appendChild(tagLabel);
+        }
+
+        content.appendChild(controls);
+        el.appendChild(content);
+
+        el.addEventListener('click', (e) => handleTagClick(e, tag.id));
+        el.addEventListener('contextmenu', (e) => { e.preventDefault(); showCorrectionMenu(e, tag); });
+        return el;
+    }
     function handleTagClick(event, tagId) { const tagElement = event.currentTarget; if (event.ctrlKey || event.metaKey) { if (selectedTagIds.has(tagId)) { selectedTagIds.delete(tagId); tagElement.classList.remove('selected'); } else { selectedTagIds.add(tagId); tagElement.classList.add('selected'); } } else { document.querySelectorAll('.tag-base.selected').forEach(el => el.classList.remove('selected')); selectedTagIds.clear(); selectedTagIds.add(tagId); tagElement.classList.add('selected'); } }
     function showCorrectionMenu(event, clickedTag) { const menuId = 'correction-menu'; document.getElementById(menuId)?.remove(); if (selectedTagIds.size === 0 || !selectedTagIds.has(clickedTag.id)) { selectedTagIds.clear(); document.querySelectorAll('.tag-base.selected').forEach(el => el.classList.remove('selected')); selectedTagIds.add(clickedTag.id); document.querySelector(`[data-id="${clickedTag.id}"]`)?.classList.add('selected'); } const menu = document.createElement('div'); menu.id = menuId; menu.className = 'absolute z-20 bg-gray-800 border border-gray-600 rounded-md shadow-lg py-1 text-sm'; menu.style.left = `${event.pageX}px`; menu.style.top = `${event.pageY}px`; let title = selectedTagIds.size > 1 ? `Correct ${selectedTagIds.size} Tags` : `Correct '${clickedTag.original}'`; let menuHTML = `<div class="px-3 py-1 text-gray-400 border-b border-gray-700">${title}</div>`; tagCategorizer.categories.forEach(cat => { menuHTML += `<a href="#" class="block px-3 py-1 text-gray-200 hover:bg-indigo-600" onclick="submitCategoryUpdate(event,'${cat}')">${cat}</a>`; }); menu.innerHTML = menuHTML; document.body.appendChild(menu); document.addEventListener('click', () => menu.remove(), { once: true }); }
     
@@ -833,6 +1875,7 @@
             if (!updateResponse.ok) { const errorData = await updateResponse.json(); throw new Error(`GitHub API Error: ${errorData.message}`); }
             copyMessage.textContent = `Success! Updated ${changesCount} tag(s).`;
             tagsToUpdate.forEach(tag => { tagCategorizer.updateIndex(tag.original, newCategory); tag.category = newCategory; tag.categorySource = 'Primary'; });
+            ensureCategoryRegistered(newCategory);
             selectedTagIds.clear(); displayTags();
         } catch (error) { console.error("Update failed:", error); copyMessage.textContent = `Error: ${error.message}`; if (error.message.includes("401")) gitHubPat = null;  } 
         finally { setTimeout(() => copyMessage.textContent = '', 5000); }
@@ -854,6 +1897,8 @@
             const tagMap = await mapResponse.json();
             const categoryOrder = ['Quality', 'Composition', 'Characters', 'Subject & Creatures', 'Face', 'Eyes', 'Hair', 'Body Parts', 'Attire', 'Accessories', 'Held Items & Objects', 'Actions & Poses', 'Setting & Environment', 'Style & Meta'];
             tagCategorizer = new EnhancedTagCategorizer(tagMap, TAG_DATABASE, categoryOrder);
+            seedCategoryOrderIndex(categoryOrder);
+            knownCategories = new Set([...tagCategorizer.categories, 'Uncategorized']);
             document.title = 'Danbooru Tag Helper (Ready)';
         } catch (error) {
             console.error("FATAL ERROR loading data:", error);
@@ -866,57 +1911,122 @@
     }
     
     function copyTagsToClipboard() {
-        const tagElements = tagOutput.querySelectorAll('.tag-base');
-        const processed = Array.from(tagElements).map(el => {
-            const weightedTag = el.dataset.weightedTag;
-            return underscoreToggle.checked ? weightedTag.replace(/\s/g, '_') : weightedTag.replace(/_/g, ' ');
+        const finalString = buildFinalPrompt();
+        if (!finalString) {
+            copyMessage.textContent = 'Nothing to copy yet!';
+            setTimeout(() => copyMessage.textContent = '', 2000);
+            return;
+        }
+        navigator.clipboard.writeText(finalString).then(() => {
+            copyMessage.textContent = 'Tags copied!';
+            updateCopyHistory(finalString);
+            updatePromptPreview();
+            setTimeout(() => copyMessage.textContent = '', 2000);
+        }).catch(err => {
+            copyMessage.textContent = 'Copy failed!';
+            console.error('Clipboard write failed: ', err);
         });
-        const finalString = [ ...triggerInput.value.split(',').map(t => t.trim()).filter(Boolean), ...processed, ...appendInput.value.split(',').map(t => t.trim()).filter(Boolean) ].join(', ');
-        navigator.clipboard.writeText(finalString).then(() => { copyMessage.textContent = 'Tags copied!'; updateCopyHistory(finalString); setTimeout(() => copyMessage.textContent = '', 2000);
-        }).catch(err => { copyMessage.textContent = 'Copy failed!'; console.error("Clipboard write failed: ", err); });
     }
 
     window.updateTagWeight = (id, action) => { const tag = baseTags.find(t => t.id === id); if (!tag) return; let current = tag.weighted, original = tag.original; if (action === 'increase') { if (current.startsWith('((')) current = `(((${original})))`; else if (current.startsWith('(')) current = `((${original}))`; else if (current.startsWith('[')) current = original; else current = `(${original})`; } else { if (current.startsWith('[[')) current = `[[[${original}]]]`; else if (current.startsWith('[')) current = `[[${original}]]`; else if (current.startsWith('(')) current = original; else current = `[${original}]`; } tag.weighted = current; displayTags(); };
-    function initSortable() { if (sortableInstances.length) sortableInstances.forEach(s => s.destroy()); sortableInstances = []; tagOutput.querySelectorAll('.tag-group-container').forEach(container => { sortableInstances.push(new Sortable(container, { group: 'shared', animation: 150, ghostClass: 'opacity-50', onEnd: (evt) => { try { const movedTag = baseTags.find(t => t.id === evt.item.dataset.id); const newCategory = evt.to.dataset.groupName; if (movedTag && newCategory) { movedTag.category = newCategory; tagCategorizer.updateIndex(movedTag.original, newCategory); } const allTagElements = Array.from(tagOutput.querySelectorAll('.tag-base')); baseTags = allTagElements.map(el => baseTags.find(t => t.id === el.dataset.id)).filter(Boolean); sortSelect.value = 'manual'; } finally { displayTags(); } }, })); }); }
-    function handleAutocomplete(e) {
-    if (!tagCategorizer) return;
-    const text = tagInput.value, cursorPos = tagInput.selectionStart;
-    const lastComma = text.lastIndexOf(',', cursorPos - 1);
-    autocomplete.currentWord = text.substring(lastComma + 1, cursorPos).trim();
-    const items = autocompleteBox.children;
-
-    // 1. Add 'Tab' to the list of keys to watch for when autocomplete is active.
-    if (autocomplete.active && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === 'Tab')) {
-        e.preventDefault(); // This is crucial! It stops the default Tab behavior.
-
-        // 2. Make 'Tab' do the same thing as 'Enter'.
-        if (e.key === 'Enter' || e.key === 'Tab') {
-            if (autocomplete.index > -1 && items[autocomplete.index]) {
-                selectAutocompleteItem(items[autocomplete.index].dataset.tag);
-            }
-            hideAutocomplete(); // Explicitly hide the box on selection
-            return; // Stop further processing
+    function destroySortableInstances() {
+        if (sortableInstances.length) {
+            sortableInstances.forEach(instance => instance.destroy());
+            sortableInstances = [];
         }
-        
-        // This part for arrow keys remains the same.
-        items[autocomplete.index]?.classList.remove('selected');
-        if (e.key === 'ArrowDown') autocomplete.index = (autocomplete.index + 1) % items.length;
-        if (e.key === 'ArrowUp') autocomplete.index = (autocomplete.index - 1 + items.length) % items.length;
-        items[autocomplete.index]?.classList.add('selected');
-        return;
+        document.querySelectorAll('.tag-group-container.dragging').forEach(container => container.classList.remove('dragging'));
     }
 
-    if (!autocomplete.currentWord) {
-        hideAutocomplete();
-        return;
+    function initSortable() {
+        if (sortSelect.value !== 'manual') {
+            destroySortableInstances();
+            return;
+        }
+        destroySortableInstances();
+        tagOutput.querySelectorAll('.tag-group-container').forEach(container => {
+            sortableInstances.push(new Sortable(container, {
+                group: 'shared',
+                animation: 150,
+                ghostClass: 'opacity-50',
+                handle: '.tag-drag-handle',
+                delay: 120,
+                delayOnTouchOnly: true,
+                touchStartThreshold: 6,
+                fallbackOnBody: true,
+                onStart: (evt) => {
+                    evt.from?.classList.add('dragging');
+                },
+                onEnd: (evt) => {
+                    evt.from?.classList.remove('dragging');
+                    evt.to?.classList.remove('dragging');
+                    try {
+                        const movedTag = baseTags.find(t => t.id === evt.item.dataset.id);
+                        const newCategory = evt.to.dataset.groupName;
+                        if (movedTag && newCategory) {
+                            movedTag.category = newCategory;
+                            ensureCategoryRegistered(newCategory);
+                            tagCategorizer.updateIndex(movedTag.original, newCategory);
+                        }
+                        const allTagElements = Array.from(tagOutput.querySelectorAll('.tag-base'));
+                        baseTags = allTagElements.map(el => baseTags.find(t => t && t.id === el.dataset.id)).filter(Boolean);
+                    } finally {
+                        displayTags();
+                    }
+                },
+            }));
+        });
     }
-    autocomplete.suggestions = TAG_DATABASE.filter(t => t.startsWith(autocomplete.currentWord.replace(/ /g, '_'))).slice(0, 5);
-    if (autocomplete.suggestions.length > 0) {
-        renderAutocomplete();
-    } else {
-        hideAutocomplete();
+    function handleAutocompleteInput() {
+        if (!tagCategorizer) return;
+        const text = tagInput.value;
+        const cursorPos = tagInput.selectionStart || text.length;
+        const lastComma = text.lastIndexOf(',', cursorPos - 1);
+        autocomplete.currentWord = text.substring(lastComma + 1, cursorPos).trim();
+        if (!autocomplete.currentWord) {
+            hideAutocomplete();
+            return;
+        }
+        const query = autocomplete.currentWord.replace(/ /g, '_');
+        autocomplete.suggestions = TAG_DATABASE.filter(t => t.startsWith(query)).slice(0, 5);
+        if (autocomplete.suggestions.length > 0) {
+            renderAutocomplete();
+        } else {
+            hideAutocomplete();
+        }
     }
-}
+
+    function handleAutocompleteKeydown(e) {
+        if (!tagCategorizer) return;
+        if (e.key === 'Escape') {
+            if (autocomplete.active) {
+                e.preventDefault();
+                hideAutocomplete();
+            }
+            return;
+        }
+        if (!autocomplete.active) return;
+        const items = autocompleteBox.children;
+        if (!items.length) return;
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (autocomplete.index >= 0) items[autocomplete.index]?.classList.remove('selected');
+            if (autocomplete.index === -1) {
+                autocomplete.index = e.key === 'ArrowDown' ? 0 : items.length - 1;
+            } else if (e.key === 'ArrowDown') {
+                autocomplete.index = (autocomplete.index + 1) % items.length;
+            } else {
+                autocomplete.index = (autocomplete.index - 1 + items.length) % items.length;
+            }
+            items[autocomplete.index]?.classList.add('selected');
+        } else if (e.key === 'Enter' || e.key === 'Tab') {
+            if (autocomplete.index === -1 && items[0]) autocomplete.index = 0;
+            if (autocomplete.index > -1 && items[autocomplete.index]) {
+                e.preventDefault();
+                selectAutocompleteItem(items[autocomplete.index].dataset.tag);
+                hideAutocomplete();
+            }
+        }
+    }
     function renderAutocomplete() { autocompleteBox.innerHTML = autocomplete.suggestions.map((s) => `<div class="autocomplete-item p-2 cursor-pointer" data-tag="${s}" onmousedown="selectAutocompleteItem('${s}')">${s.replace(/_/g, ' ')}</div>`).join(''); autocomplete.active = true; autocomplete.index = -1; autocompleteBox.style.display = 'block'; }
     window.selectAutocompleteItem = (tag) => { const text = tagInput.value, cursorPos = tagInput.selectionStart; const lastComma = text.lastIndexOf(',', cursorPos - 1); const before = text.substring(0, lastComma + 1); tagInput.value = `${before} ${tag.replace(/_/g, ' ')}, ${text.substring(cursorPos)}`; hideAutocomplete(); tagInput.focus(); processAll(); };
     function hideAutocomplete() { autocomplete.active = false; autocompleteBox.style.display = 'none'; }
@@ -932,20 +2042,62 @@
     function toggleSettingsPanel() { element('settingsPanel').classList.toggle('hidden'); }
     function clearAll() { if (confirm('Clear all tags and settings?')) { element('tagInput').value = ''; element('triggerInput').value = ''; element('appendInput').value = ''; element('swapsInput').value = ''; element('implicationsInput').value = ''; element('blacklistInput').value = ''; processAll(); } }
     function randomizeTags() { if (baseTags.length === 0) return; for (let i = baseTags.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [baseTags[i], baseTags[j]] = [baseTags[j], baseTags[i]]; } displayTags(); }
-    function optimizeOrder() { const categoryPriority = { 'Quality': 1, 'Composition': 2, 'Characters': 3, 'Subject & Creatures': 4, 'Face': 5, 'Eyes': 6, 'Hair': 7, 'Body Parts': 8, 'Attire': 9, 'Accessories': 10, 'Held Items & Objects': 11, 'Actions & Poses': 12, 'Setting & Environment': 13, 'Style & Meta': 14 }; baseTags.sort((a, b) => { const aPriority = categoryPriority[a.category] || 99; const bPriority = categoryPriority[b.category] || 99; if (aPriority !== bPriority) return aPriority - bPriority; return a.original.localeCompare(b.original); }); displayTags(); copyMessage.textContent = 'Tags optimized!'; setTimeout(() => copyMessage.textContent = '', 2000); }
+    function optimizeOrder() {
+        if (baseTags.length === 0) return;
+        baseTags.sort((a, b) => {
+            const phaseDiff = getPhaseSortIndex(resolvePriorityPhase(a.category)) - getPhaseSortIndex(resolvePriorityPhase(b.category));
+            if (phaseDiff !== 0) return phaseDiff;
+            const categoryDiff = getCategoryOrderRank(a.category) - getCategoryOrderRank(b.category);
+            if (categoryDiff !== 0) return categoryDiff;
+            const favoriteDiff = Number(isFavoriteTag(b)) - Number(isFavoriteTag(a));
+            if (favoriteDiff !== 0) return favoriteDiff;
+            const recencyDiff = (b.addedAt || 0) - (a.addedAt || 0);
+            if (recencyDiff !== 0) return recencyDiff;
+            return a.original.localeCompare(b.original);
+        });
+        displayTags();
+        copyMessage.textContent = 'Tags optimized!';
+        setTimeout(() => copyMessage.textContent = '', 2000);
+    }
     function exportTags() { const tags = Array.from(tagOutput.querySelectorAll('.tag-base')).map(el => el.dataset.weightedTag || el.textContent.trim()); const data = { tags: tags, settings: { prepend: triggerInput.value, append: appendInput.value, maxTags: maxTagsInput.value, sorting: sortSelect.value }, timestamp: new Date().toISOString() }; const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `danbooru-tags-${new Date().toISOString().split('T')[0]}.json`; a.click(); URL.revokeObjectURL(a.href); }
     function importTags() { const input = document.createElement('input'); input.type = 'file'; input.accept = '.json,.txt'; input.onchange = (e) => { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (re) => { try { const content = re.target.result; if (file.name.endsWith('.json')) { const data = JSON.parse(content); if (data.tags) tagInput.value = data.tags.join(', '); if (data.settings) { if (data.settings.prepend) triggerInput.value = data.settings.prepend; if (data.settings.append) appendInput.value = data.settings.append; if (data.settings.maxTags) maxTagsInput.value = data.settings.maxTags; if (data.settings.sorting) sortSelect.value = data.settings.sorting; } } else { tagInput.value = content.trim(); } processAll(); } catch (error) { alert('Error importing file: ' + error.message); } }; reader.readAsText(file); }; input.click(); }
     function exportSettings() { const settings = { theme: document.body.className.match(/theme-\w+/)?.[0] || 'theme-indigo', prepend: triggerInput.value, append: appendInput.value, swaps: swapsInput.value, implications: implicationsInput.value, blacklist: blacklistInput.value, maxTags: maxTagsInput.value, sorting: sortSelect.value, deduplicate: deduplicateToggle.checked, underscores: underscoreToggle.checked, weighting: enableWeightingToggle.checked, ratings: { safe: ratingSafe.checked, general: ratingGeneral.checked, questionable: ratingQuestionable.checked } }; const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `danbooru-helper-settings-${new Date().toISOString().split('T')[0]}.json`; a.click(); URL.revokeObjectURL(a.href); }
     function importSettings(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { try { const settings = JSON.parse(e.target.result); if (settings.theme) applyTheme(settings.theme); if (settings.prepend !== undefined) triggerInput.value = settings.prepend; if (settings.append !== undefined) appendInput.value = settings.append; if (settings.swaps !== undefined) swapsInput.value = settings.swaps; if (settings.implications !== undefined) implicationsInput.value = settings.implications; if (settings.blacklist !== undefined) blacklistInput.value = settings.blacklist; if (settings.maxTags !== undefined) maxTagsInput.value = settings.maxTags; if (settings.sorting !== undefined) sortSelect.value = settings.sorting; if (settings.deduplicate !== undefined) deduplicateToggle.checked = settings.deduplicate; if (settings.underscores !== undefined) underscoreToggle.checked = settings.underscores; if (settings.weighting !== undefined) enableWeightingToggle.checked = settings.weighting; if (settings.ratings) { if (settings.ratings.safe !== undefined) ratingSafe.checked = settings.ratings.safe; if (settings.ratings.general !== undefined) ratingGeneral.checked = settings.ratings.general; if (settings.ratings.questionable !== undefined) ratingQuestionable.checked = settings.ratings.questionable; } toggleSettingsPanel(); processAll(); copyMessage.textContent = 'Settings imported!'; setTimeout(() => copyMessage.textContent = '', 3000); } catch (error) { alert('Error importing settings: ' + error.message); } }; reader.readAsText(file); }
     function resetToDefaults() { if (confirm('Reset all settings to defaults?')) { tagInput.value = ''; triggerInput.value = ''; appendInput.value = ''; swapsInput.value = ''; implicationsInput.value = ''; blacklistInput.value = ''; maxTagsInput.value = '75'; sortSelect.value = 'danbooru'; suggestionCountInput.value = '15'; deduplicateToggle.checked = true; underscoreToggle.checked = true; enableWeightingToggle.checked = false; ratingSafe.checked = true; ratingGeneral.checked = true; ratingQuestionable.checked = false; applyTheme('theme-indigo'); toggleSettingsPanel(); processAll(); } }
     function applyTheme(theme) { document.documentElement.className = 'dark'; document.body.className = `p-4 md:p-6 lg:p-8 ${theme}`; document.querySelectorAll('.theme-button').forEach(btn => { btn.classList.toggle('active', btn.dataset.theme === theme); }); localStorage.setItem('danbooru-tag-helper-theme', theme); document.documentElement.style.setProperty('--transition', 'all 0.3s ease-in-out'); setTimeout(() => { document.documentElement.style.removeProperty('--transition'); }, 300); }
-    function updateStats() { const tagCount = baseTags.length; const maxTags = parseInt(maxTagsInput.value) || 75; const categoryCount = new Set(baseTags.map(t => t.category)).size; const historyCount = copyHistory.length; element('tagCount').textContent = tagCount; element('maxTagCount').textContent = maxTags; element('categoryCount').textContent = categoryCount; element('historyCount').textContent = historyCount; element('processedTagCount').textContent = tagCount; element('processedMaxTagCount').textContent = maxTags; const tagCountEl = element('tagCount'); const percentage = (tagCount / maxTags) * 100; if (percentage > 90) { tagCountEl.style.color = '#ef4444'; } else if (percentage > 75) { tagCountEl.style.color = '#f59e0b'; } else { tagCountEl.style.color = 'var(--accent-color)'; } }
+    function updateStats() {
+        const activeTags = getActiveTags();
+        const tagCount = activeTags.length;
+        const maxTags = parseInt(maxTagsInput.value, 10) || 75;
+        const categoryCount = new Set(activeTags.map(t => t.category)).size;
+        const historyCount = copyHistory.length;
+        element('tagCount').textContent = tagCount;
+        element('maxTagCount').textContent = maxTags;
+        element('categoryCount').textContent = categoryCount;
+        element('historyCount').textContent = historyCount;
+        element('processedTagCount').textContent = tagCount;
+        element('processedMaxTagCount').textContent = maxTags;
+        const tagCountEl = element('tagCount');
+        const percentage = maxTags ? (tagCount / maxTags) * 100 : 0;
+        if (percentage > 90) {
+            tagCountEl.style.color = '#ef4444';
+        } else if (percentage > 75) {
+            tagCountEl.style.color = '#f59e0b';
+        } else {
+            tagCountEl.style.color = 'var(--accent-color)';
+        }
+    }
 
     document.addEventListener('DOMContentLoaded', async () => {
         initializeToken();
         await loadExternalData();
         const savedTheme = localStorage.getItem('danbooru-tag-helper-theme') || 'theme-indigo';
         applyTheme(savedTheme);
+        loadHiddenCategories();
+        loadFavorites();
+        renderFavorites();
+        renderCategoryFilters();
+        updateHiddenCategoriesBanner();
         const savedHistory = localStorage.getItem('danbooru-tag-history');
         if (savedHistory) { copyHistory = JSON.parse(savedHistory); }
         document.querySelectorAll('.theme-button').forEach(btn => btn.addEventListener('click', () => applyTheme(btn.dataset.theme)));
@@ -953,14 +2105,30 @@
         inputsForProcessing.forEach(input => input.addEventListener('input', processAll));
         const inputsForDisplay = [deduplicateToggle, underscoreToggle, enableWeightingToggle, sortSelect];
         inputsForDisplay.forEach(input => input.addEventListener('change', displayTags));
-        tagInput.addEventListener('keyup', handleAutocomplete);
-        tagInput.addEventListener('keydown', handleAutocomplete);
+        underscoreToggle.addEventListener('change', renderFavorites);
+        tagInput.addEventListener('input', handleAutocompleteInput);
+        tagInput.addEventListener('keydown', handleAutocompleteKeydown);
         tagInput.addEventListener('blur', () => setTimeout(hideAutocomplete, 150));
         copyButton.addEventListener('click', copyTagsToClipboard);
+        if (promptPreviewCopy) promptPreviewCopy.addEventListener('click', copyTagsToClipboard);
+        if (clearFavoritesButton) clearFavoritesButton.addEventListener('click', clearFavorites);
+        if (manageCategoriesButton) manageCategoriesButton.addEventListener('click', openCategoryManager);
+        if (closeCategoryManagerButton) closeCategoryManagerButton.addEventListener('click', closeCategoryManager);
+        if (categoryManagerOverlay) categoryManagerOverlay.addEventListener('click', closeCategoryManager);
+        if (applyCategoryManagerButton) applyCategoryManagerButton.addEventListener('click', applyCategoryManagerChanges);
+        if (clearCategoryManagerSelectionButton) clearCategoryManagerSelectionButton.addEventListener('click', clearCategoryManagerSelection);
+        if (categoryManagerSearch) categoryManagerSearch.addEventListener('input', refreshCategoryManagerList);
+        if (categoryManagerSelect) categoryManagerSelect.addEventListener('change', () => updateCategoryManagerStatus(''));
+        if (categoryManagerNewInput) categoryManagerNewInput.addEventListener('input', () => updateCategoryManagerStatus(''));
         suggestBtn.addEventListener('click', suggestCoherentTags);
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && categoryManagerPanel && !categoryManagerPanel.classList.contains('hidden')) {
+                closeCategoryManager();
+            }
+        });
+        syncSortModeState(sortSelect.value);
         processAll();
         updateCopyHistory(null);
-        updateStats();
         updateTokenStatus();
     });
 </script>
