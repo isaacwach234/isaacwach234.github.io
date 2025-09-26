@@ -6,6 +6,7 @@
     <title>Danbooru Tag Helper</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" integrity="sha512-FzM3x0X58FJ7lWd0vN0Y4QyGXp0dwnNno7+HLl2S9R0u8mG+qsHmnRscq/B2XzuVh++xSz86g/FTuH/PhD1SZg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -22,6 +23,7 @@
       }
       
       /* Theme variations */
+      .theme-indigo { --accent-color: #4f46e5; --accent-color-hover: #4338ca; --processed-tag-bg: rgba(79, 70, 229, 0.22); --processed-tag-text: rgba(224, 231, 255, 1); --processed-tag-border: #6366f1; }
       .theme-blue { --accent-color: #2563eb; --accent-color-hover: #1d4ed8; --processed-tag-bg: rgba(37, 99, 235, 0.2); --processed-tag-text: rgba(191, 219, 254, 1); --processed-tag-border: #2563eb; }
       .theme-teal { --accent-color: #0d9488; --accent-color-hover: #0f766e; --processed-tag-bg: rgba(13, 148, 136, 0.2); --processed-tag-text: rgba(153, 246, 228, 1); --processed-tag-border: #0d9488; }
       .theme-crimson { --accent-color: #dc2626; --accent-color-hover: #b91c1c; --processed-tag-bg: rgba(220, 38, 38, 0.2); --processed-tag-text: rgba(254, 202, 202, 1); --processed-tag-border: #dc2626; }
@@ -30,6 +32,13 @@
       .theme-amber { --accent-color: #f59e0b; --accent-color-hover: #d97706; --processed-tag-bg: rgba(245, 158, 11, 0.2); --processed-tag-text: rgba(254, 243, 199, 1); --processed-tag-border: #f59e0b; }
       .theme-rose { --accent-color: #f43f5e; --accent-color-hover: #e11d48; --processed-tag-bg: rgba(244, 63, 94, 0.2); --processed-tag-text: rgba(254, 205, 211, 1); --processed-tag-border: #f43f5e; }
       .theme-cyan { --accent-color: #06b6d4; --accent-color-hover: #0891b2; --processed-tag-bg: rgba(6, 182, 212, 0.2); --processed-tag-text: rgba(165, 243, 252, 1); --processed-tag-border: #06b6d4; }
+      .theme-neon { --accent-color: #08f7fe; --accent-color-hover: #00a8ff; --processed-tag-bg: rgba(8, 247, 254, 0.18); --processed-tag-text: rgba(240, 255, 255, 1); --processed-tag-border: #f0f; --glass-bg: rgba(10, 5, 25, 0.92); --glass-border: rgba(8, 247, 254, 0.25); }
+
+      .theme-neon { background: radial-gradient(circle at top left, #120458 0%, #000b1e 60%, #001f3f 100%); color: #f8fbff; }
+      .theme-neon .glass-panel { background: rgba(10, 5, 40, 0.9); border-color: rgba(8, 247, 254, 0.35); box-shadow: 0 18px 36px rgba(0, 255, 213, 0.18); }
+      .theme-neon .tag-group-container { background: rgba(255, 255, 255, 0.02); border-color: rgba(8, 247, 254, 0.3); }
+      .theme-neon .tag-group-container:hover { background: rgba(8, 247, 254, 0.08); border-color: rgba(255, 0, 255, 0.45); }
+      .theme-neon .stat-value { color: #08f7fe; }
       
       body { 
         font-family: 'Inter', sans-serif; 
@@ -441,24 +450,45 @@
         border-bottom: none;
       }
       
-      .theme-button { 
-        width: 2rem; 
-        height: 2rem; 
-        border-radius: 50%; 
-        border: 3px solid transparent; 
-        cursor: pointer; 
-        transition: all 0.2s ease-in-out;
-        position: relative;
-        overflow: hidden;
+      .theme-button {
+        width: 2.25rem;
+        height: 2.25rem;
+        border: none;
+        padding: 0;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: transform 0.2s ease-in-out;
+        background: transparent;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-appearance: none;
+        appearance: none;
+      }
+      .theme-button:focus-visible {
+        outline: 2px solid rgba(255,255,255,0.6);
+        outline-offset: 2px;
       }
       .theme-button:hover {
         transform: scale(1.05);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
       }
-      .theme-button.active { 
-        border-color: white;
-        box-shadow: 0 0 0 2px rgba(255,255,255,0.5), 0 8px 25px rgba(0,0,0,0.4);
-        transform: scale(1.1);
+      .theme-button-swatch {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        border: 3px solid rgba(255,255,255,0.35);
+        box-shadow: inset 0 0 10px rgba(0,0,0,0.35);
+        display: block;
+        pointer-events: none;
+        transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out, transform 0.2s ease-in-out;
+      }
+      .theme-button:hover .theme-button-swatch {
+        box-shadow: inset 0 0 12px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.25);
+      }
+      .theme-button.active .theme-button-swatch {
+        border-color: #fff;
+        box-shadow: inset 0 0 14px rgba(0,0,0,0.45), 0 0 20px rgba(255, 255, 255, 0.45);
+        transform: scale(1.05);
       }
       
       .floating-panel {
@@ -596,15 +626,16 @@
     <!-- Floating theme panel -->
     <div class="floating-panel">
         <span class="text-sm font-medium text-gray-300">Theme:</span>
-        <button class="theme-button" style="background: linear-gradient(135deg, #4f46e5, #6366f1);" data-theme="theme-indigo" title="Indigo"></button>
-        <button class="theme-button" style="background: linear-gradient(135deg, #2563eb, #3b82f6);" data-theme="theme-blue" title="Blue"></button>
-        <button class="theme-button" style="background: linear-gradient(135deg, #0d9488, #14b8a6);" data-theme="theme-teal" title="Teal"></button>
-        <button class="theme-button" style="background: linear-gradient(135deg, #dc2626, #ef4444);" data-theme="theme-crimson" title="Crimson"></button>
-        <button class="theme-button" style="background: linear-gradient(135deg, #10b981, #34d399);" data-theme="theme-emerald" title="Emerald"></button>
-        <button class="theme-button" style="background: linear-gradient(135deg, #8b5cf6, #a78bfa);" data-theme="theme-purple" title="Purple"></button>
-        <button class="theme-button" style="background: linear-gradient(135deg, #f59e0b, #fbbf24);" data-theme="theme-amber" title="Amber"></button>
-        <button class="theme-button" style="background: linear-gradient(135deg, #f43f5e, #fb7185);" data-theme="theme-rose" title="Rose"></button>
-        <button class="theme-button" style="background: linear-gradient(135deg, #06b6d4, #22d3ee);" data-theme="theme-cyan" title="Cyan"></button>
+        <button class="theme-button" data-theme="theme-indigo" title="Indigo"><span class="theme-button-swatch" style="background: linear-gradient(135deg, #4f46e5, #6366f1);"></span></button>
+        <button class="theme-button" data-theme="theme-blue" title="Blue"><span class="theme-button-swatch" style="background: linear-gradient(135deg, #2563eb, #3b82f6);"></span></button>
+        <button class="theme-button" data-theme="theme-teal" title="Teal"><span class="theme-button-swatch" style="background: linear-gradient(135deg, #0d9488, #14b8a6);"></span></button>
+        <button class="theme-button" data-theme="theme-crimson" title="Crimson"><span class="theme-button-swatch" style="background: linear-gradient(135deg, #dc2626, #ef4444);"></span></button>
+        <button class="theme-button" data-theme="theme-emerald" title="Emerald"><span class="theme-button-swatch" style="background: linear-gradient(135deg, #10b981, #34d399);"></span></button>
+        <button class="theme-button" data-theme="theme-purple" title="Purple"><span class="theme-button-swatch" style="background: linear-gradient(135deg, #8b5cf6, #a78bfa);"></span></button>
+        <button class="theme-button" data-theme="theme-amber" title="Amber"><span class="theme-button-swatch" style="background: linear-gradient(135deg, #f59e0b, #fbbf24);"></span></button>
+        <button class="theme-button" data-theme="theme-rose" title="Rose"><span class="theme-button-swatch" style="background: linear-gradient(135deg, #f43f5e, #fb7185);"></span></button>
+        <button class="theme-button" data-theme="theme-cyan" title="Cyan"><span class="theme-button-swatch" style="background: linear-gradient(135deg, #06b6d4, #22d3ee);"></span></button>
+        <button class="theme-button" data-theme="theme-neon" title="Neon"><span class="theme-button-swatch" style="background: linear-gradient(135deg, #08f7fe, #f0f, #00ff85);"></span></button>
         
         <div class="w-px h-6 bg-gray-600 mx-2"></div>
         
@@ -1895,7 +1926,42 @@
     function exportSettings() { const settings = { theme: document.body.className.match(/theme-\w+/)?.[0] || 'theme-indigo', prepend: triggerInput.value, append: appendInput.value, swaps: swapsInput.value, implications: implicationsInput.value, blacklist: blacklistInput.value, maxTags: maxTagsInput.value, sorting: sortSelect.value, deduplicate: deduplicateToggle.checked, underscores: underscoreToggle.checked, weighting: enableWeightingToggle.checked, ratings: { safe: ratingSafe.checked, general: ratingGeneral.checked, questionable: ratingQuestionable.checked } }; const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `danbooru-helper-settings-${new Date().toISOString().split('T')[0]}.json`; a.click(); URL.revokeObjectURL(a.href); }
     function importSettings(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { try { const settings = JSON.parse(e.target.result); if (settings.theme) applyTheme(settings.theme); if (settings.prepend !== undefined) triggerInput.value = settings.prepend; if (settings.append !== undefined) appendInput.value = settings.append; if (settings.swaps !== undefined) swapsInput.value = settings.swaps; if (settings.implications !== undefined) implicationsInput.value = settings.implications; if (settings.blacklist !== undefined) blacklistInput.value = settings.blacklist; if (settings.maxTags !== undefined) maxTagsInput.value = settings.maxTags; if (settings.sorting !== undefined) sortSelect.value = settings.sorting; if (settings.deduplicate !== undefined) deduplicateToggle.checked = settings.deduplicate; if (settings.underscores !== undefined) underscoreToggle.checked = settings.underscores; if (settings.weighting !== undefined) enableWeightingToggle.checked = settings.weighting; if (settings.ratings) { if (settings.ratings.safe !== undefined) ratingSafe.checked = settings.ratings.safe; if (settings.ratings.general !== undefined) ratingGeneral.checked = settings.ratings.general; if (settings.ratings.questionable !== undefined) ratingQuestionable.checked = settings.ratings.questionable; } toggleSettingsPanel(); processAll(); copyMessage.textContent = 'Settings imported!'; setTimeout(() => copyMessage.textContent = '', 3000); } catch (error) { alert('Error importing settings: ' + error.message); } }; reader.readAsText(file); }
     function resetToDefaults() { if (confirm('Reset all settings to defaults?')) { tagInput.value = ''; triggerInput.value = ''; appendInput.value = ''; swapsInput.value = ''; implicationsInput.value = ''; blacklistInput.value = ''; maxTagsInput.value = '75'; sortSelect.value = 'danbooru'; suggestionCountInput.value = '15'; deduplicateToggle.checked = true; underscoreToggle.checked = true; enableWeightingToggle.checked = false; ratingSafe.checked = true; ratingGeneral.checked = true; ratingQuestionable.checked = false; applyTheme('theme-indigo'); toggleSettingsPanel(); processAll(); } }
-    function applyTheme(theme) { document.documentElement.className = 'dark'; document.body.className = `p-4 md:p-6 lg:p-8 ${theme}`; document.querySelectorAll('.theme-button').forEach(btn => { btn.classList.toggle('active', btn.dataset.theme === theme); }); localStorage.setItem('danbooru-tag-helper-theme', theme); document.documentElement.style.setProperty('--transition', 'all 0.3s ease-in-out'); setTimeout(() => { document.documentElement.style.removeProperty('--transition'); }, 300); }
+    function runEntranceAnimations() {
+        if (!window.gsap) return;
+        const panels = document.querySelectorAll('.glass-panel');
+        window.gsap.from('.floating-panel', { y: -24, opacity: 0, duration: 0.8, ease: 'power3.out' });
+        if (panels.length) {
+            window.gsap.from(panels, { y: 28, opacity: 0, duration: 0.9, ease: 'power3.out', stagger: 0.1 });
+        }
+        window.gsap.from('.theme-button', { scale: 0, opacity: 0, duration: 0.6, ease: 'back.out(1.7)', stagger: 0.05 });
+    }
+
+    function applyTheme(theme) {
+        document.documentElement.className = 'dark';
+        document.body.className = `p-4 md:p-6 lg:p-8 ${theme}`;
+        document.querySelectorAll('.theme-button').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.theme === theme);
+        });
+        localStorage.setItem('danbooru-tag-helper-theme', theme);
+        document.documentElement.style.setProperty('--transition', 'all 0.3s ease-in-out');
+        if (window.gsap) {
+            const activeSwatch = document.querySelector('.theme-button.active .theme-button-swatch');
+            if (activeSwatch) {
+                window.gsap.fromTo(activeSwatch, { scale: 0.85 }, { scale: 1.05, duration: 0.45, ease: 'back.out(1.8)' });
+            }
+            window.gsap.fromTo(
+                document.body,
+                { filter: 'saturate(0.85)' },
+                {
+                    filter: 'saturate(1)',
+                    duration: 0.4,
+                    ease: 'power1.out',
+                    onComplete: () => document.body.style.removeProperty('filter')
+                }
+            );
+        }
+        setTimeout(() => { document.documentElement.style.removeProperty('--transition'); }, 300);
+    }
     function updateStats() {
         const activeTags = getActiveTags();
         const tagCount = activeTags.length;
@@ -1932,6 +1998,7 @@
         const savedHistory = localStorage.getItem('danbooru-tag-history');
         if (savedHistory) { copyHistory = JSON.parse(savedHistory); }
         document.querySelectorAll('.theme-button').forEach(btn => btn.addEventListener('click', () => applyTheme(btn.dataset.theme)));
+        runEntranceAnimations();
         const inputsForProcessing = [tagInput, swapsInput, implicationsInput, blacklistInput, triggerInput, appendInput, maxTagsInput];
         inputsForProcessing.forEach(input => input.addEventListener('input', processAll));
         const inputsForDisplay = [deduplicateToggle, underscoreToggle, enableWeightingToggle, sortSelect];
