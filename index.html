@@ -186,6 +186,115 @@
         border-color: rgba(var(--accent-color-rgb), 0.5);
       }
 
+      .help-tooltip-wrapper {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        margin-left: 0.5rem;
+      }
+
+      .help-icon {
+        width: 1.5rem;
+        height: 1.5rem;
+        border-radius: 9999px;
+        border: 1px solid var(--glass-border);
+        background: rgba(15, 23, 42, 0.8);
+        color: var(--processed-tag-text);
+        font-size: 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .help-icon:hover,
+      .help-icon:focus {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(var(--accent-color-rgb), 0.25);
+        outline: none;
+      }
+
+      .help-tooltip {
+        position: absolute;
+        bottom: calc(100% + 0.5rem);
+        left: 50%;
+        transform: translateX(-50%) translateY(6px);
+        background: rgba(15, 23, 42, 0.95);
+        color: #f8fafc;
+        padding: 0.75rem 1rem;
+        border-radius: 0.75rem;
+        border: 1px solid var(--glass-border);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+        font-size: 0.75rem;
+        line-height: 1.3;
+        width: min(18rem, 70vw);
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+        z-index: 50;
+      }
+
+      .help-tooltip::after {
+        content: '';
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border-width: 6px;
+        border-style: solid;
+        border-color: rgba(15, 23, 42, 0.95) transparent transparent transparent;
+      }
+
+      .help-tooltip-wrapper:hover .help-tooltip,
+      .help-tooltip-wrapper:focus-within .help-tooltip {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0px);
+        pointer-events: auto;
+      }
+
+      .how-to-panel {
+        border: 1px solid var(--glass-border);
+        border-radius: 0.75rem;
+        background: rgba(15, 23, 42, 0.55);
+        padding: 1rem 1.25rem;
+      }
+
+      .how-to-panel summary {
+        cursor: pointer;
+        font-weight: 600;
+        color: #e2e8f0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .how-to-panel summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .how-to-panel summary::before {
+        content: '\25bc';
+        font-size: 0.75rem;
+        transition: transform 0.2s ease;
+      }
+
+      .how-to-panel[open] summary::before {
+        transform: rotate(-180deg);
+      }
+
+      .how-to-panel ul {
+        margin-top: 0.75rem;
+        list-style: decimal;
+        padding-left: 1.5rem;
+        color: #cbd5e1;
+        font-size: 0.9rem;
+      }
+
+      .text-accent {
+        color: var(--accent-color);
+      }
+
       .category-toggle-btn {
         padding: 0.35rem 0.75rem;
         border-radius: 9999px;
@@ -520,6 +629,17 @@
         color: white;
         transform: translateY(-1px);
       }
+      .quick-action-btn:disabled,
+      .quick-action-btn[disabled] {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+      .quick-action-btn:disabled:hover,
+      .quick-action-btn[disabled]:hover {
+        background: rgba(55, 65, 81, 0.6);
+        color: #e2e8f0;
+      }
       
       .stats-panel {
         display: grid;
@@ -624,6 +744,18 @@
           width: 92vw;
           padding: 1.25rem;
         }
+
+        .help-tooltip {
+          left: auto;
+          right: 0;
+          transform: translateY(6px);
+        }
+
+        .help-tooltip::after {
+          left: auto;
+          right: 1.5rem;
+          transform: none;
+        }
       }
     </style>
 </head>
@@ -676,6 +808,21 @@
             </h1>
             <p class="text-gray-400 text-lg">Advanced AI Art Prompt Management</p>
         </div>
+
+        <details id="howToPanel" class="how-to-panel mb-8" open>
+            <summary>
+                <svg class="w-4 h-4 text-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l3 3" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3a9 9 0 100 18 9 9 0 000-18z" />
+                </svg>
+                How to use the helper
+            </summary>
+            <ul>
+                <li>Paste or type prompts into <strong>Main Tags</strong>; use Aliases and Implications to auto-correct or auto-expand tricky tags.</li>
+                <li>Tune <strong>Processing Options</strong> and choose a sorting mode to organize tags; drag or tap categories to mute or re-order as needed.</li>
+                <li>Review the <strong>Prompt Preview</strong> for counts, then copy or export tags in your preferred format.</li>
+            </ul>
+        </details>
 
         <!-- Stats Panel -->
         <div class="stats-panel">
@@ -760,18 +907,24 @@
 
             <div class="control-group">
                 <div class="control-label">Quick Actions</div>
-                <div class="grid grid-cols-2 gap-2">
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     <button onclick="randomizeTags()" class="quick-action-btn text-center py-2">
                         <div class="text-xs">Randomize</div>
                     </button>
                     <button onclick="optimizeOrder()" class="quick-action-btn text-center py-2">
                         <div class="text-xs">Optimize</div>
                     </button>
-                    <button onclick="exportTags()" class="quick-action-btn text-center py-2">
-                        <div class="text-xs">Export</div>
+                    <button onclick="exportTags('json')" class="quick-action-btn text-center py-2">
+                        <div class="text-xs">Export JSON</div>
+                    </button>
+                    <button onclick="exportTags('txt')" class="quick-action-btn text-center py-2">
+                        <div class="text-xs">Export TXT</div>
                     </button>
                     <button onclick="importTags()" class="quick-action-btn text-center py-2">
                         <div class="text-xs">Import</div>
+                    </button>
+                    <button id="copyJsonButton" onclick="copyPromptAsJson()" class="quick-action-btn text-center py-2">
+                        <div class="text-xs">Copy JSON</div>
                     </button>
                 </div>
             </div>
@@ -803,20 +956,44 @@
                 </div>
 
                 <div>
-                    <label for="swapsInput" class="control-label mb-2 block">Aliases / Swaps</label>
-                    <textarea id="swapsInput" rows="3" class="input-base w-full" 
+                    <div class="flex items-center mb-2">
+                        <label for="swapsInput" class="control-label block flex-1 mb-0">Aliases / Swaps</label>
+                        <div class="help-tooltip-wrapper">
+                            <button type="button" class="help-icon" aria-label="Learn about aliases" aria-describedby="tooltip-aliases">?</button>
+                            <div class="help-tooltip" role="tooltip" id="tooltip-aliases">
+                                Map shorthand words to the tags you actually want. Example: convert <em>girl</em> to <em>1girl</em> every time it appears.
+                            </div>
+                        </div>
+                    </div>
+                    <textarea id="swapsInput" rows="3" class="input-base w-full"
                               placeholder="girl -> 1girl, boobs -> large_breasts"></textarea>
                 </div>
 
                 <div>
-                    <label for="implicationsInput" class="control-label mb-2 block">Implications</label>
-                    <textarea id="implicationsInput" rows="3" class="input-base w-full" 
+                    <div class="flex items-center mb-2">
+                        <label for="implicationsInput" class="control-label block flex-1 mb-0">Implications</label>
+                        <div class="help-tooltip-wrapper">
+                            <button type="button" class="help-icon" aria-label="Learn about implications" aria-describedby="tooltip-implications">?</button>
+                            <div class="help-tooltip" role="tooltip" id="tooltip-implications">
+                                Automatically append related tags whenever a trigger appears. Use <code>tag =&gt; extra_tag, another_tag</code> to expand prompts.
+                            </div>
+                        </div>
+                    </div>
+                    <textarea id="implicationsInput" rows="3" class="input-base w-full"
                               placeholder="1girl => backlighting"></textarea>
                 </div>
 
                 <div>
-                    <label for="blacklistInput" class="control-label mb-2 block">Blacklist</label>
-                    <textarea id="blacklistInput" rows="2" class="input-base w-full" 
+                    <div class="flex items-center mb-2">
+                        <label for="blacklistInput" class="control-label block flex-1 mb-0">Blacklist</label>
+                        <div class="help-tooltip-wrapper">
+                            <button type="button" class="help-icon" aria-label="Learn about the blacklist" aria-describedby="tooltip-blacklist">?</button>
+                            <div class="help-tooltip" role="tooltip" id="tooltip-blacklist">
+                                Filter out any tag that matches. Separate entries with commas and they’ll never reach the prompt.
+                            </div>
+                        </div>
+                    </div>
+                    <textarea id="blacklistInput" rows="2" class="input-base w-full"
                               placeholder="bad_anatomy, blurry, text"></textarea>
                 </div>
             </div>
@@ -977,6 +1154,8 @@
     const categoryPickerModal = element('categoryPickerModal'), categoryPickerList = element('categoryPickerList');
     const categoryPickerTitle = element('categoryPickerTitle'), categoryPickerSearch = element('categoryPickerSearch');
     const categoryPickerBackdrop = element('categoryPickerBackdrop'), categoryPickerClose = element('categoryPickerClose');
+    const howToPanel = element('howToPanel');
+    const copyJsonButton = element('copyJsonButton');
 
     const HIDDEN_STORAGE_KEY = 'danbooru-muted-categories';
     const FAVORITES_STORAGE_KEY = 'danbooru-tag-favorites';
@@ -1060,6 +1239,15 @@
     };
 
     const categoryPickerState = { tagId: null };
+
+    function debounce(fn, wait = 300) {
+        let timeout;
+        return function(...args) {
+            const context = this;
+            clearTimeout(timeout);
+            timeout = setTimeout(() => fn.apply(context, args), wait);
+        };
+    }
 
     class EnhancedTagCategorizer {
         constructor(tagMap, allTags, categoryOrder) {
@@ -1518,6 +1706,9 @@
         if (copyButton) {
             copyButton.disabled = isEmpty;
         }
+        if (copyJsonButton) {
+            copyJsonButton.disabled = isEmpty;
+        }
     }
     
     function processAll() {
@@ -1889,7 +2080,24 @@
         }
     }
 
+    function focusRelativeElement(element, backwards = false) {
+        const focusableSelectors = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+        const focusable = Array.from(document.querySelectorAll(focusableSelectors))
+            .filter(el => !el.hasAttribute('disabled') && el.tabIndex !== -1 && el.getAttribute('aria-hidden') !== 'true' && (el.offsetParent !== null || el.getClientRects().length > 0));
+        const currentIndex = focusable.indexOf(element);
+        if (currentIndex === -1) return;
+        let nextIndex = backwards ? currentIndex - 1 : currentIndex + 1;
+        if (nextIndex < 0) nextIndex = focusable.length - 1;
+        if (nextIndex >= focusable.length) nextIndex = 0;
+        focusable[nextIndex].focus();
+    }
+
     function handleAutocompleteKeydown(e) {
+        if (e.key === 'Tab' && !autocomplete.active) {
+            e.preventDefault();
+            focusRelativeElement(tagInput, e.shiftKey);
+            return;
+        }
         if (!tagCategorizer) return;
         if (e.key === 'Escape') {
             if (autocomplete.active) {
@@ -1937,8 +2145,113 @@
     function clearAll() { if (confirm('Clear all tags and settings?')) { element('tagInput').value = ''; element('triggerInput').value = ''; element('appendInput').value = ''; element('swapsInput').value = ''; element('implicationsInput').value = ''; element('blacklistInput').value = ''; processAll(); } }
     function randomizeTags() { if (baseTags.length === 0) return; for (let i = baseTags.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [baseTags[i], baseTags[j]] = [baseTags[j], baseTags[i]]; } displayTags(); }
     function optimizeOrder() { const categoryPriority = { 'Quality': 1, 'Composition': 2, 'Characters': 3, 'Subject & Creatures': 4, 'Face': 5, 'Eyes': 6, 'Hair': 7, 'Body Parts': 8, 'Attire': 9, 'Accessories': 10, 'Held Items & Objects': 11, 'Actions & Poses': 12, 'Setting & Environment': 13, 'Style & Meta': 14 }; baseTags.sort((a, b) => { const aPriority = categoryPriority[a.category] || 99; const bPriority = categoryPriority[b.category] || 99; if (aPriority !== bPriority) return aPriority - bPriority; return a.original.localeCompare(b.original); }); displayTags(); copyMessage.textContent = 'Tags optimized!'; setTimeout(() => copyMessage.textContent = '', 2000); }
-    function exportTags() { const tags = Array.from(tagOutput.querySelectorAll('.tag-base')).map(el => el.dataset.weightedTag || el.textContent.trim()); const data = { tags: tags, settings: { prepend: triggerInput.value, append: appendInput.value, maxTags: maxTagsInput.value, sorting: sortSelect.value }, timestamp: new Date().toISOString() }; const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `danbooru-tags-${new Date().toISOString().split('T')[0]}.json`; a.click(); URL.revokeObjectURL(a.href); }
-    function importTags() { const input = document.createElement('input'); input.type = 'file'; input.accept = '.json,.txt'; input.onchange = (e) => { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (re) => { try { const content = re.target.result; if (file.name.endsWith('.json')) { const data = JSON.parse(content); if (data.tags) tagInput.value = data.tags.join(', '); if (data.settings) { if (data.settings.prepend) triggerInput.value = data.settings.prepend; if (data.settings.append) appendInput.value = data.settings.append; if (data.settings.maxTags) maxTagsInput.value = data.settings.maxTags; if (data.settings.sorting) sortSelect.value = data.settings.sorting; } } else { tagInput.value = content.trim(); } processAll(); } catch (error) { alert('Error importing file: ' + error.message); } }; reader.readAsText(file); }; input.click(); }
+    function collectExportPayload() {
+        const tags = getProcessedTagsForOutput();
+        const payload = {
+            tags,
+            prompt: buildFinalPrompt(),
+            settings: {
+                prepend: triggerInput.value,
+                append: appendInput.value,
+                maxTags: maxTagsInput.value,
+                sorting: sortSelect.value,
+                deduplicate: deduplicateToggle.checked,
+                underscores: underscoreToggle.checked,
+                weighting: enableWeightingToggle.checked
+            },
+            hiddenCategories: Array.from(hiddenCategories),
+            timestamp: new Date().toISOString()
+        };
+        return payload;
+    }
+
+    function downloadBlob(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function exportTags(format = 'json') {
+        const payload = collectExportPayload();
+        if (!payload.tags.length && !payload.prompt) {
+            alert('Add some tags before exporting.');
+            return;
+        }
+        const dateStamp = new Date().toISOString().split('T')[0];
+        if (format === 'txt') {
+            const textContent = payload.prompt || payload.tags.join(', ');
+            const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
+            downloadBlob(blob, `danbooru-tags-${dateStamp}.txt`);
+        } else {
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+            downloadBlob(blob, `danbooru-tags-${dateStamp}.json`);
+        }
+        if (copyMessage) {
+            copyMessage.textContent = `Exported ${format.toUpperCase()}!`;
+            setTimeout(() => copyMessage.textContent = '', 2500);
+        }
+    }
+
+    function copyPromptAsJson() {
+        const payload = collectExportPayload();
+        if (!payload.tags.length && !payload.prompt) {
+            alert('Add some tags before copying export JSON.');
+            return;
+        }
+        navigator.clipboard.writeText(JSON.stringify(payload, null, 2)).then(() => {
+            if (copyMessage) {
+                copyMessage.textContent = 'Export JSON copied to clipboard!';
+                setTimeout(() => copyMessage.textContent = '', 2500);
+            }
+        }).catch(() => alert('Unable to copy JSON to clipboard.'));
+    }
+
+    function importTags() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json,.txt';
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (re) => {
+                try {
+                    const content = re.target.result;
+                    if (file.name.endsWith('.json')) {
+                        const data = JSON.parse(content);
+                        if (data.prompt) {
+                            tagInput.value = data.prompt;
+                        } else if (Array.isArray(data.tags)) {
+                            tagInput.value = data.tags.join(', ');
+                        }
+                        if (data.settings) {
+                            if (data.settings.prepend !== undefined) triggerInput.value = data.settings.prepend;
+                            if (data.settings.append !== undefined) appendInput.value = data.settings.append;
+                            if (data.settings.maxTags !== undefined) maxTagsInput.value = data.settings.maxTags;
+                            if (data.settings.sorting !== undefined) sortSelect.value = data.settings.sorting;
+                            if (data.settings.deduplicate !== undefined) deduplicateToggle.checked = data.settings.deduplicate;
+                            if (data.settings.underscores !== undefined) underscoreToggle.checked = data.settings.underscores;
+                            if (data.settings.weighting !== undefined) enableWeightingToggle.checked = data.settings.weighting;
+                        }
+                        if (Array.isArray(data.hiddenCategories)) {
+                            hiddenCategories = new Set(data.hiddenCategories);
+                            saveHiddenCategories();
+                        }
+                    } else {
+                        tagInput.value = content.trim().replace(/\n+/g, ', ');
+                    }
+                    processAll();
+                } catch (error) {
+                    alert('Error importing file: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        };
+        input.click();
+    }
     function exportSettings() { const settings = { theme: document.body.className.match(/theme-\w+/)?.[0] || 'theme-indigo', prepend: triggerInput.value, append: appendInput.value, swaps: swapsInput.value, implications: implicationsInput.value, blacklist: blacklistInput.value, maxTags: maxTagsInput.value, sorting: sortSelect.value, deduplicate: deduplicateToggle.checked, underscores: underscoreToggle.checked, weighting: enableWeightingToggle.checked, ratings: { safe: ratingSafe.checked, general: ratingGeneral.checked, questionable: ratingQuestionable.checked } }; const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `danbooru-helper-settings-${new Date().toISOString().split('T')[0]}.json`; a.click(); URL.revokeObjectURL(a.href); }
     function importSettings(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { try { const settings = JSON.parse(e.target.result); if (settings.theme) applyTheme(settings.theme); if (settings.prepend !== undefined) triggerInput.value = settings.prepend; if (settings.append !== undefined) appendInput.value = settings.append; if (settings.swaps !== undefined) swapsInput.value = settings.swaps; if (settings.implications !== undefined) implicationsInput.value = settings.implications; if (settings.blacklist !== undefined) blacklistInput.value = settings.blacklist; if (settings.maxTags !== undefined) maxTagsInput.value = settings.maxTags; if (settings.sorting !== undefined) sortSelect.value = settings.sorting; if (settings.deduplicate !== undefined) deduplicateToggle.checked = settings.deduplicate; if (settings.underscores !== undefined) underscoreToggle.checked = settings.underscores; if (settings.weighting !== undefined) enableWeightingToggle.checked = settings.weighting; if (settings.ratings) { if (settings.ratings.safe !== undefined) ratingSafe.checked = settings.ratings.safe; if (settings.ratings.general !== undefined) ratingGeneral.checked = settings.ratings.general; if (settings.ratings.questionable !== undefined) ratingQuestionable.checked = settings.ratings.questionable; } toggleSettingsPanel(); processAll(); copyMessage.textContent = 'Settings imported!'; setTimeout(() => copyMessage.textContent = '', 3000); } catch (error) { alert('Error importing settings: ' + error.message); } }; reader.readAsText(file); }
     function resetToDefaults() { if (confirm('Reset all settings to defaults?')) { tagInput.value = ''; triggerInput.value = ''; appendInput.value = ''; swapsInput.value = ''; implicationsInput.value = ''; blacklistInput.value = ''; maxTagsInput.value = '75'; sortSelect.value = 'danbooru'; suggestionCountInput.value = '15'; deduplicateToggle.checked = true; underscoreToggle.checked = true; enableWeightingToggle.checked = false; ratingSafe.checked = true; ratingGeneral.checked = true; ratingQuestionable.checked = false; applyTheme('theme-indigo'); toggleSettingsPanel(); processAll(); } }
@@ -1989,6 +2302,17 @@
         const savedTheme = localStorage.getItem('danbooru-tag-helper-theme') || 'theme-indigo';
         applyTheme(savedTheme);
         runEntranceAnimations();
+        if (howToPanel) {
+            const storedState = localStorage.getItem('danbooru-howto-open');
+            if (storedState === 'true') {
+                howToPanel.setAttribute('open', '');
+            } else if (storedState === 'false') {
+                howToPanel.removeAttribute('open');
+            }
+            howToPanel.addEventListener('toggle', () => {
+                localStorage.setItem('danbooru-howto-open', howToPanel.open);
+            });
+        }
         loadHiddenCategories();
         loadFavorites();
         renderFavorites();
@@ -1997,14 +2321,21 @@
         const savedHistory = localStorage.getItem('danbooru-tag-history');
         if (savedHistory) { copyHistory = JSON.parse(savedHistory); }
         document.querySelectorAll('.theme-button').forEach(btn => btn.addEventListener('click', () => applyTheme(btn.dataset.theme)));
-        const inputsForProcessing = [tagInput, swapsInput, implicationsInput, blacklistInput, triggerInput, appendInput, maxTagsInput];
-        inputsForProcessing.forEach(input => input.addEventListener('input', processAll));
+        const debouncedTagProcessing = debounce(processAll, 300);
+        const inputsForProcessing = [swapsInput, implicationsInput, blacklistInput, triggerInput, appendInput, maxTagsInput];
+        inputsForProcessing.forEach(input => input && input.addEventListener('input', processAll));
+        if (tagInput) {
+            tagInput.addEventListener('input', debouncedTagProcessing);
+            tagInput.addEventListener('change', processAll);
+        }
         const inputsForDisplay = [deduplicateToggle, underscoreToggle, enableWeightingToggle, sortSelect];
         inputsForDisplay.forEach(input => input.addEventListener('change', displayTags));
         underscoreToggle.addEventListener('change', renderFavorites);
-        tagInput.addEventListener('input', handleAutocompleteInput);
-        tagInput.addEventListener('keydown', handleAutocompleteKeydown);
-        tagInput.addEventListener('blur', () => setTimeout(hideAutocomplete, 150));
+        if (tagInput) {
+            tagInput.addEventListener('input', handleAutocompleteInput);
+            tagInput.addEventListener('keydown', handleAutocompleteKeydown);
+            tagInput.addEventListener('blur', () => setTimeout(hideAutocomplete, 150));
+        }
         copyButton.addEventListener('click', copyTagsToClipboard);
         if (promptPreviewCopy) promptPreviewCopy.addEventListener('click', copyTagsToClipboard);
         if (clearFavoritesButton) clearFavoritesButton.addEventListener('click', clearFavorites);
