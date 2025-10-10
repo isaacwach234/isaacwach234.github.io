@@ -1,0 +1,363 @@
+# Migration Checklist
+
+## 📋 Quick Start Guide
+
+Follow this checklist to migrate from your single-file structure to the new modular system.
+
+## ✅ Pre-Migration
+
+- [ ] **Backup everything**
+  ```bash
+  git checkout -b backup-before-modular
+  git commit -am "Backup before modular refactor"
+  git push origin backup-before-modular
+  ```
+
+- [ ] **Test current version** - Ensure everything works before migration
+
+- [ ] **Document custom changes** - Note any customizations you've made
+
+## 📁 File Creation
+
+### Create New JavaScript Files
+
+- [ ] **tagUtils.js** - Copy from artifact "tagUtils.js"
+- [ ] **smartCategorizer.js** - Copy from artifact "smartCategorizer.js"
+- [ ] **promptFlow.js** - Copy from artifact "promptFlow.js"
+- [ ] **main.js** - Extract initialization code from current index.html
+
+### Create Stylesheet
+
+- [ ] **styles.css** - Copy from artifact "styles.css"
+
+### Update Existing Files
+
+- [ ] **index.html** - Replace with new modular version
+- [ ] **README.md** - Update with new features (optional)
+
+## 🔧 Code Extraction
+
+If you prefer to keep your existing code, extract these sections:
+
+### From Current index.html → main.js
+- [ ] Global variables and constants
+- [ ] `initializeApp()` function
+- [ ] Event listener setup
+- [ ] Token management functions
+- [ ] Settings import/export functions
+
+### From Current index.html → processing.js (create)
+- [ ] `processAll()` function
+- [ ] Tag processing logic
+- [ ] Swap/implication handling
+- [ ] Blacklist filtering
+- [ ] Deduplication logic
+
+### From Current index.html → ui.js (create)
+- [ ] `displayTags()` function
+- [ ] `createTagElement()` function
+- [ ] `renderCategoryFilters()` function
+- [ ] `updateStats()` function
+- [ ] `updatePromptPreview()` function
+- [ ] Animation functions
+
+## 🔗 HTML Updates
+
+- [ ] Add CSS link in `<head>`:
+  ```html
+  <link rel="stylesheet" href="styles.css">
+  ```
+
+- [ ] Add script tags before `</body>`:
+  ```html
+  <script src="tagUtils.js"></script>
+  <script src="smartCategorizer.js"></script>
+  <script src="promptFlow.js"></script>
+  <script src="main.js"></script>
+  <script src="ui.js"></script>
+  <script src="processing.js"></script>
+  ```
+
+- [ ] Update sort dropdown to include "Illustrious" option
+
+- [ ] Add "Remove Weights" button to floating panel
+
+- [ ] Update help panel text with new features
+
+## 🎨 Feature Integration
+
+### Illustrious Prompt Flow
+
+- [ ] Import `promptFlow.js`
+- [ ] Add "Illustrious" option to sort dropdown
+- [ ] Set as default sorting mode (optional)
+- [ ] Update `displayTags()` to handle Illustrious sorting:
+  ```javascript
+  if (sortValue === 'illustrious') {
+      const groups = promptFlow.sortTagsByIllustriousFlow(visibleTags);
+      // Render groups with phase descriptions
+  }
+  ```
+
+### Weight Removal Feature
+
+- [ ] Import `tagUtils.js`
+- [ ] Add button to UI
+- [ ] Wire up `removeAllWeights()` function
+- [ ] Test with various weight formats
+
+### Smart Categorization
+
+- [ ] Import `smartCategorizer.js`
+- [ ] Replace `EnhancedTagCategorizer` with `SmartTagCategorizer`
+- [ ] Update initialization:
+  ```javascript
+  tagCategorizer = new SmartTagCategorizer(tagMap, TAG_DATABASE, categoryOrder);
+  ```
+- [ ] Use categorizer in `processAll()`:
+  ```javascript
+  const { category, source, confidence } = tagCategorizer.categorize(tag);
+  ```
+
+### Underscore Default Change
+
+- [ ] Set default to `false` in HTML:
+  ```html
+  <input id="underscoreToggle" type="checkbox" class="rounded">
+  <!-- Remove 'checked' attribute -->
+  ```
+- [ ] Load preference from localStorage:
+  ```javascript
+  const saved = localStorage.getItem('danbooru-underscore-enabled');
+  underscoreToggle.checked = saved === 'true';
+  ```
+- [ ] Save on change:
+  ```javascript
+  underscoreToggle.addEventListener('change', () => {
+      localStorage.setItem('danbooru-underscore-enabled', underscoreToggle.checked);
+  });
+  ```
+
+## 🧪 Testing
+
+### Functionality Tests
+
+- [ ] **Tag Processing**
+  - [ ] Paste tags and verify they appear
+  - [ ] Test with weights: `((tag))`, `[tag]`, `(tag:1.2)`
+  - [ ] Test swaps/aliases
+  - [ ] Test implications
+  - [ ] Test blacklist
+
+- [ ] **Sorting Modes**
+  - [ ] Danbooru (category-based)
+  - [ ] Illustrious (prompt flow) ← NEW
+  - [ ] Smart (enhanced categorization) ← NEW
+  - [ ] Manual (drag & drop)
+  - [ ] A-Z, Z-A, Recent, None
+
+- [ ] **Weight Removal** ← NEW
+  - [ ] Click "Remove Weights" button
+  - [ ] Verify all weights stripped
+  - [ ] Check tags are reprocessed
+
+- [ ] **Categorization**
+  - [ ] Known tags categorized correctly
+  - [ ] Unknown tags auto-categorized
+  - [ ] Confidence scores displayed
+  - [ ] Manual category assignment works
+
+- [ ] **UI Features**
+  - [ ] Theme switching
+  - [ ] Favorites add/remove
+  - [ ] History tracking
+  - [ ] Category muting
+  - [ ] Prompt preview
+  - [ ] Copy to clipboard
+
+### Browser Testing
+
+- [ ] **Chrome/Edge** - Test all features
+- [ ] **Firefox** - Test all features
+- [ ] **Safari** - Test all features (if available)
+- [ ] **Mobile** - Test responsive layout
+
+### Performance Testing
+
+- [ ] **Small prompts** (10-20 tags) - Should be instant
+- [ ] **Medium prompts** (50-75 tags) - Should be <500ms
+- [ ] **Large prompts** (100+ tags) - Should be <1s
+- [ ] **Initial load** - Should be <2s
+
+## 🚀 Deployment
+
+### Local Testing
+
+- [ ] Run local server:
+  ```bash
+  python -m http.server 8000
+  # or
+  npx serve
+  ```
+- [ ] Test at `http://localhost:8000`
+- [ ] Check browser console for errors
+- [ ] Verify all features work
+
+### Git Commit
+
+- [ ] Stage all changes:
+  ```bash
+  git add .
+  ```
+- [ ] Create descriptive commit:
+  ```bash
+  git commit -m "feat: Modular structure + Illustrious ordering + Smart categorization
+  
+  - Split monolithic HTML into separate JS modules
+  - Add Illustrious prompt flow ordering (artist→char→pose→scene→effects→quality)
+  - Implement SmartTagCategorizer with 5 strategies
+  - Add weight removal feature
+  - Change underscore default to false
+  - Extract CSS to styles.css
+  - Add comprehensive documentation"
+  ```
+
+### Push to GitHub
+
+- [ ] Push to main:
+  ```bash
+  git push origin main
+  ```
+- [ ] Wait for GitHub Pages build (1-2 minutes)
+- [ ] Test live site: `https://isaacwach234.github.io/`
+
+### Verify Deployment
+
+- [ ] Visit live site
+- [ ] Open browser DevTools (F12)
+- [ ] Check Console for errors
+- [ ] Test all major features
+- [ ] Verify files are loading (Network tab)
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**Issue**: JavaScript files not loading
+- [ ] Check file paths in index.html
+- [ ] Verify files are in repository root
+- [ ] Check browser Network tab for 404 errors
+
+**Issue**: Styles not applying
+- [ ] Verify styles.css is linked correctly
+- [ ] Check for CSS syntax errors
+- [ ] Clear browser cache (Ctrl+Shift+R)
+
+**Issue**: Tags not processing
+- [ ] Check browser console for errors
+- [ ] Verify tags.json and tag_map.json are accessible
+- [ ] Check if processAll() is being called
+
+**Issue**: Illustrious sort not working
+- [ ] Verify promptFlow.js is loaded
+- [ ] Check if sortSelect has "illustrious" option
+- [ ] Look for JavaScript errors in console
+
+**Issue**: Categories wrong
+- [ ] Check SmartTagCategorizer initialization
+- [ ] Verify tag_map.json is loading
+- [ ] Review confidence scores
+
+## 📊 Post-Migration Verification
+
+### Feature Checklist
+
+Core Features:
+- [ ] Tag input and processing
+- [ ] All 8 sort modes working
+- [ ] Weight removal working
+- [ ] Category assignment
+- [ ] Favorites system
+- [ ] History tracking
+- [ ] Import/export settings
+- [ ] GitHub token management
+
+New Features:
+- [ ] Illustrious prompt flow
+- [ ] Smart categorization
+- [ ] Confidence scores
+- [ ] Weight removal button
+- [ ] Underscore default off
+
+### Performance Checklist
+
+- [ ] Initial load under 2 seconds
+- [ ] Tag processing under 500ms
+- [ ] UI updates smooth
+- [ ] No memory leaks
+- [ ] No console errors
+
+### Data Integrity
+
+- [ ] Existing favorites preserved
+- [ ] History preserved
+- [ ] Theme preference preserved
+- [ ] GitHub token preserved
+- [ ] Hidden categories preserved
+
+## 📝 Documentation
+
+- [ ] Update README.md with:
+  - [ ] New features section
+  - [ ] Illustrious ordering explanation
+  - [ ] Weight removal documentation
+  - [ ] Smart categorization info
+
+- [ ] Create CHANGELOG.md (optional)
+
+- [ ] Add issue templates (optional)
+
+## 🎉 Success Criteria
+
+Migration is complete when:
+
+✅ All files created and organized
+✅ All features working
+✅ No console errors
+✅ Performance acceptable
+✅ Deployed to GitHub Pages
+✅ Live site tested and verified
+✅ Documentation updated
+
+## 🔄 Rollback Plan
+
+If issues arise:
+
+```bash
+# Rollback to backup
+git checkout backup-before-modular
+git push origin main --force
+
+# Or revert last commit
+git revert HEAD
+git push origin main
+```
+
+## 📞 Need Help?
+
+1. Check browser console (F12)
+2. Review `IMPLEMENTATION_GUIDE.md`
+3. Check `CATEGORIZATION_IMPROVEMENTS.md`
+4. Open GitHub issue with:
+   - Browser and version
+   - Steps to reproduce
+   - Console errors
+   - Screenshots
+
+---
+
+**Estimated Migration Time**: 2-3 hours
+
+**Recommended Approach**: Do it in stages, test after each stage
+
+Good luck! 🚀
