@@ -119,7 +119,7 @@ const FAVORITES_STORAGE_KEY = STORAGE_KEYS.favorites;
             key: 'extras',
             label: 'Finishing Touches',
             description: 'Add final stylistic or catch-all descriptors.',
-            categories: ['Uncategorized', 'Meta'],
+            categories: ['Uncategorized', 'Style & Meta'],
             keywords: ['signature', 'watermark', 'text', 'border', 'frame']
         }
     ];
@@ -168,7 +168,7 @@ const FAVORITES_STORAGE_KEY = STORAGE_KEYS.favorites;
             key: 'effects',
             label: 'Effects & Aesthetic Detail',
             description: 'Finish descriptive details with lighting, particles or stylistic flourishes.',
-            categories: ['Lighting & Effects', 'Post-processing', 'Color & Lighting', 'Meta'],
+            categories: ['Lighting & Effects', 'Post-processing', 'Color & Lighting', 'Style & Meta'],
             keywords: ['dramatic lighting', 'bokeh', 'glow', 'particles', 'effect', 'aesthetic', 'watercolor', 'film grain']
         },
         {
@@ -822,16 +822,19 @@ const FAVORITES_STORAGE_KEY = STORAGE_KEYS.favorites;
             // FIX: Use relative URLs for fetching data from a GitHub Pages site.
             // This works both locally and when deployed.
             const timestamp = `t=${new Date().getTime()}`;
-            const [tagsResponse, mapResponse] = await Promise.all([
+            const [tagsResponse, mapResponse, metadataResponse] = await Promise.all([
                 fetch(`tags.json?${timestamp}`),
-                fetch(`tag_map.json?${timestamp}`)
+                fetch(`tag_map.json?${timestamp}`),
+                fetch(`data/tag_metadata.json?${timestamp}`)
             ]);
             if (!tagsResponse.ok) throw new Error(`Failed to fetch tags.json: ${tagsResponse.statusText}`);
             if (!mapResponse.ok) throw new Error(`Failed to fetch tag_map.json: ${mapResponse.statusText}`);
+            if (!metadataResponse.ok) throw new Error(`Failed to fetch tag_metadata.json: ${metadataResponse.statusText}`);
             state.TAG_DATABASE = await tagsResponse.json();
             const tagMap = await mapResponse.json();
-            const categoryOrder = ['Quality', 'Composition', 'Characters', 'Subject & Creatures', 'Face', 'Eyes', 'Hair', 'Body Parts', 'Attire', 'Accessories', 'Held Items & Objects', 'Actions & Poses', 'Setting & Environment', 'Style & Meta'];
-            state.tagCategorizer = new EnhancedTagCategorizer(tagMap, state.TAG_DATABASE, categoryOrder);
+            const tagMetadata = await metadataResponse.json();
+            const categoryOrder = ['Artists', 'Quality', 'Composition', 'Characters', 'Subject & Creatures', 'Face', 'Eyes', 'Hair', 'Body Parts', 'Attire', 'Accessories', 'Held Items & Objects', 'Actions & Poses', 'Setting & Environment', 'Style & Meta'];
+            state.tagCategorizer = new EnhancedTagCategorizer(tagMap, state.TAG_DATABASE, categoryOrder, tagMetadata);
             state.knownCategories = new Set([...state.tagCategorizer.categories, 'Uncategorized']);
             document.title = 'Danbooru Tag Helper (Ready)';
         } catch (error) {
