@@ -1,12 +1,24 @@
 export class EnhancedTagCategorizer {
-  constructor(tagMap, allTags, categoryOrder) {
-    this.primaryIndex = tagMap;
+  constructor(tagMap, allTags, categoryOrder, tagMetadata = {}) {
+    this.primaryIndex = { ...tagMap };
+    this.metadataIndex = this.buildMetadataIndex(tagMetadata);
     this.categoryOrder = categoryOrder;
-    this.categories = [...new Set([...Object.values(tagMap), ...categoryOrder, 'Uncategorized'])];
+    this.categories = [...new Set([...Object.values(this.primaryIndex), ...categoryOrder, 'Uncategorized'])];
     this.patternIndex = { ends: {}, starts: {} };
     this.keywordIndex = {};
     this.buildHeuristicIndexes(allTags);
     this.buildEnhancedHeuristics();
+  }
+
+  buildMetadataIndex(tagMetadata) {
+    const normalized = {};
+    if (!tagMetadata) return normalized;
+    Object.entries(tagMetadata).forEach(([name, type]) => {
+      if (!name || !type) return;
+      const key = name.toLowerCase().replace(/ /g, '_');
+      normalized[key] = type;
+    });
+    return normalized;
   }
 
   buildHeuristicIndexes(allTags) {
@@ -62,12 +74,27 @@ export class EnhancedTagCategorizer {
     this.settingKeywords = new Set(['background', 'outdoor', 'indoor', 'room', 'bedroom', 'bathroom', 'kitchen', 'school', 'office', 'beach', 'forest', 'city', 'sky', 'night', 'day', 'sunset', 'sunrise', 'moon', 'star', 'cloud']);
   }
 
+  resolveMetadataCategory(tag) {
+    const type = this.metadataIndex?.[tag];
+    if (!type) return null;
+    const overrides = {
+      artist: 'Artists',
+      meta: 'Style & Meta',
+      character: 'Characters',
+    };
+    return overrides[type] || null;
+  }
+
   updateIndex(tag, newCategory) {
     this.primaryIndex[tag.toLowerCase().replace(/ /g, '_')] = newCategory;
   }
 
   categorizeEnhanced(tagString) {
     const tag = tagString.toLowerCase().replace(/ /g, '_');
+    const metadataCategory = this.resolveMetadataCategory(tag);
+    if (metadataCategory) {
+      return { category: metadataCategory, source: 'Danbooru Metadata', confidence: 1.0 };
+    }
     if (this.primaryIndex[tag]) {
       return { category: this.primaryIndex[tag], source: 'Primary', confidence: 1.0 };
     }
@@ -102,6 +129,8 @@ export class EnhancedTagCategorizer {
 
   categorizeOriginal(tagString) {
     const tag = tagString.toLowerCase().replace(/ /g, '_');
+    const metadataCategory = this.resolveMetadataCategory(tag);
+    if (metadataCategory) return { category: metadataCategory, source: 'Danbooru Metadata' };
     if (this.primaryIndex[tag]) return { category: this.primaryIndex[tag], source: 'Primary' };
     if (tag.includes('(') && tag.includes(')')) {
       const seriesMatch = tag.match(/\(([^)]+)\)/);
