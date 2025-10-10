@@ -41,6 +41,7 @@ export const elements = {
   deduplicateToggle: element('deduplicateToggle'),
   underscoreToggle: element('underscoreToggle'),
   enableWeightingToggle: element('enableWeightingToggle'),
+  clearWeightsButton: element('clearWeightsButton'),
   sortSelect: element('sortSelect'),
   maxTagsInput: element('maxTagsInput'),
   tagOutput: element('tagOutput'),

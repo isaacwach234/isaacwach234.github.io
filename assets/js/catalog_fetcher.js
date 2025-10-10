@@ -92,15 +92,14 @@ export class DanbooruCatalogBuilder {
     this.sleepMs = options.sleepMs ?? 1100;
   }
 
-  buildAuthHeader() {
-    if (!this.username || !this.apiKey) return null;
-    return `Basic ${btoa(`${this.username}:${this.apiKey}`)}`;
+  appendAuthParams(params) {
+    if (!this.username || !this.apiKey) return;
+    params.set('login', this.username);
+    params.set('api_key', this.apiKey);
   }
 
   async fetchJson(url, attempt = 0) {
     const headers = { Accept: 'application/json' };
-    const authHeader = this.buildAuthHeader();
-    if (authHeader) headers.Authorization = authHeader;
     try {
       const response = await fetch(url, { headers, mode: 'cors' });
       if (response.status === 429) {
@@ -114,7 +113,14 @@ export class DanbooruCatalogBuilder {
       }
       return await response.json();
     } catch (error) {
-      if (attempt >= this.retries) throw error;
+      if (attempt >= this.retries) {
+        if (error instanceof TypeError) {
+          const enhanced = new Error('Unable to reach Danbooru. Your browser or network may be blocking cross-origin requests. Try providing an API key, using HTTPS, or fetching the catalog via a trusted proxy.');
+          enhanced.cause = error;
+          throw enhanced;
+        }
+        throw error;
+      }
       await sleep(this.sleepMs * (attempt + 1));
       return this.fetchJson(url, attempt + 1);
     }
@@ -176,6 +182,7 @@ export class DanbooruCatalogBuilder {
       params.set('search[order]', this.order);
       params.set('limit', String(pageSize));
       params.set('page', String(page));
+      this.appendAuthParams(params);
       if (this.minPostCount) params.set('search[post_count_gte]', String(this.minPostCount));
       const url = `${this.baseUrl.replace(/\/$/, '')}/tags.json?${params.toString()}`;
       this.onProgress(`Requesting page ${page} (${Math.min(totalAdded + pageSize, this.limit)} / ${this.limit})…`);

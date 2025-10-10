@@ -22,6 +22,7 @@ const {
     deduplicateToggle,
     underscoreToggle,
     enableWeightingToggle,
+    clearWeightsButton,
     sortSelect,
     maxTagsInput,
     tagOutput,
@@ -357,6 +358,15 @@ const SMART_SORT_MODES = new Set(['smart', 'flow', 'illustrious']);
 
     function setupCatalogControls() {
         if (!catalogRefreshButton) return;
+        if (!state.catalogCacheInfo) {
+            const cachedPayload = loadCachedCatalog();
+            if (cachedPayload && cachedPayload.data) {
+                state.catalogCacheInfo = cachedPayload;
+                state.tagCatalog = cachedPayload.data;
+                state.latestCatalogPayload = cachedPayload.data;
+                rebuildCategorizerWithCatalog({ reprocess: state.baseTags.length > 0 });
+            }
+        }
         if (!catalogRefreshButton.dataset.originalText) {
             catalogRefreshButton.dataset.originalText = catalogRefreshButton.textContent;
         }
@@ -651,6 +661,42 @@ const SMART_SORT_MODES = new Set(['smart', 'flow', 'illustrious']);
         processAll();
     }
 
+    function updateWeightControls() {
+        if (!clearWeightsButton) return;
+        const hasWeighted = state.baseTags.some(tag => tag.weighted !== tag.original);
+        clearWeightsButton.disabled = !hasWeighted;
+    }
+
+    function clearTagWeights({ silent = false } = {}) {
+        if (!state.baseTags.length) {
+            if (!silent && copyMessage) {
+                copyMessage.textContent = 'No tags available to clear.';
+                setTimeout(() => {
+                    if (copyMessage.textContent === 'No tags available to clear.') copyMessage.textContent = '';
+                }, 2200);
+            }
+            return 0;
+        }
+        let changed = 0;
+        state.baseTags.forEach(tag => {
+            if (tag.weighted !== tag.original) {
+                tag.weighted = tag.original;
+                changed += 1;
+            }
+        });
+        if (!silent && copyMessage) {
+            copyMessage.textContent = changed
+                ? `Removed weighting from ${changed} tag${changed === 1 ? '' : 's'}.`
+                : 'No weighted tags to clear.';
+            setTimeout(() => {
+                if (copyMessage.textContent.startsWith('Removed weighting') || copyMessage.textContent === 'No weighted tags to clear.') {
+                    copyMessage.textContent = '';
+                }
+            }, 2400);
+        }
+        return changed;
+    }
+
     function getProcessedTagElements() {
         return Array.from(tagOutput.querySelectorAll('.tag-base'));
     }
@@ -761,6 +807,7 @@ const SMART_SORT_MODES = new Set(['smart', 'flow', 'illustrious']);
         renderCategoryFilters();
         tagOutput.innerHTML = '';
         const visibleTags = getActiveTags();
+        updateWeightControls();
 
         if (state.baseTags.length === 0) {
             tagOutput.innerHTML = '<div class="text-gray-500 italic text-center py-12">Start typing or paste tags above to begin...</div>';
@@ -987,6 +1034,11 @@ const SMART_SORT_MODES = new Set(['smart', 'flow', 'illustrious']);
             const tagMetadata = await metadataResponse.json();
             const tagCatalog = catalogResponse.ok ? await catalogResponse.json() : {};
             const categoryOrder = ['Artists', 'Quality', 'Composition', 'Characters', 'Subject & Creatures', 'Face', 'Eyes', 'Hair', 'Body Parts', 'Attire', 'Accessories', 'Held Items & Objects', 'Actions & Poses', 'Setting & Environment', 'Style & Meta'];
+            state.tagMap = tagMap;
+            state.tagMetadata = tagMetadata;
+            state.categoryOrder = categoryOrder;
+            state.tagCatalog = tagCatalog;
+            state.latestCatalogPayload = tagCatalog;
             state.tagCategorizer = new EnhancedTagCategorizer(tagMap, state.TAG_DATABASE, categoryOrder, tagMetadata, tagCatalog);
             state.knownCategories = new Set([...state.tagCategorizer.categories, 'Uncategorized']);
             document.title = 'Danbooru Tag Helper (Ready)';
@@ -1260,7 +1312,28 @@ const SMART_SORT_MODES = new Set(['smart', 'flow', 'illustrious']);
     }
     function exportSettings() { const settings = { theme: document.body.className.match(/theme-\w+/)?.[0] || 'theme-indigo', prepend: triggerInput.value, append: appendInput.value, swaps: swapsInput.value, implications: implicationsInput.value, blacklist: blacklistInput.value, maxTags: maxTagsInput.value, sorting: sortSelect.value, deduplicate: deduplicateToggle.checked, underscores: underscoreToggle.checked, weighting: enableWeightingToggle.checked, ratings: { safe: ratingSafe.checked, general: ratingGeneral.checked, questionable: ratingQuestionable.checked } }; const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `danbooru-helper-settings-${new Date().toISOString().split('T')[0]}.json`; a.click(); URL.revokeObjectURL(a.href); }
     function importSettings(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { try { const settings = JSON.parse(e.target.result); if (settings.theme) applyTheme(settings.theme); if (settings.prepend !== undefined) triggerInput.value = settings.prepend; if (settings.append !== undefined) appendInput.value = settings.append; if (settings.swaps !== undefined) swapsInput.value = settings.swaps; if (settings.implications !== undefined) implicationsInput.value = settings.implications; if (settings.blacklist !== undefined) blacklistInput.value = settings.blacklist; if (settings.maxTags !== undefined) maxTagsInput.value = settings.maxTags; if (settings.sorting !== undefined) sortSelect.value = settings.sorting; if (settings.deduplicate !== undefined) deduplicateToggle.checked = settings.deduplicate; if (settings.underscores !== undefined) underscoreToggle.checked = settings.underscores; if (settings.weighting !== undefined) enableWeightingToggle.checked = settings.weighting; if (settings.ratings) { if (settings.ratings.safe !== undefined) ratingSafe.checked = settings.ratings.safe; if (settings.ratings.general !== undefined) ratingGeneral.checked = settings.ratings.general; if (settings.ratings.questionable !== undefined) ratingQuestionable.checked = settings.ratings.questionable; } toggleSettingsPanel(); processAll(); copyMessage.textContent = 'Settings imported!'; setTimeout(() => copyMessage.textContent = '', 3000); } catch (error) { alert('Error importing settings: ' + error.message); } }; reader.readAsText(file); }
-    function resetToDefaults() { if (confirm('Reset all settings to defaults?')) { tagInput.value = ''; triggerInput.value = ''; appendInput.value = ''; swapsInput.value = ''; implicationsInput.value = ''; blacklistInput.value = ''; maxTagsInput.value = '75'; sortSelect.value = 'danbooru'; suggestionCountInput.value = '15'; deduplicateToggle.checked = true; underscoreToggle.checked = true; enableWeightingToggle.checked = false; ratingSafe.checked = true; ratingGeneral.checked = true; ratingQuestionable.checked = false; applyTheme('theme-indigo'); toggleSettingsPanel(); processAll(); } }
+    function resetToDefaults() {
+        if (!confirm('Reset all settings to defaults?')) return;
+        tagInput.value = '';
+        triggerInput.value = '';
+        appendInput.value = '';
+        swapsInput.value = '';
+        implicationsInput.value = '';
+        blacklistInput.value = '';
+        maxTagsInput.value = '75';
+        sortSelect.value = 'danbooru';
+        suggestionCountInput.value = '15';
+        deduplicateToggle.checked = true;
+        underscoreToggle.checked = false;
+        enableWeightingToggle.checked = false;
+        ratingSafe.checked = true;
+        ratingGeneral.checked = true;
+        ratingQuestionable.checked = false;
+        applyTheme('theme-indigo');
+        clearTagWeights({ silent: true });
+        toggleSettingsPanel();
+        processAll();
+    }
 
     Object.assign(window, {
         showTokenSettings,
@@ -1352,7 +1425,7 @@ const SMART_SORT_MODES = new Set(['smart', 'flow', 'illustrious']);
             tagInput.addEventListener('input', debouncedTagProcessing);
             tagInput.addEventListener('change', processAll);
         }
-        const inputsForDisplay = [deduplicateToggle, underscoreToggle, enableWeightingToggle];
+        const inputsForDisplay = [deduplicateToggle, underscoreToggle];
         inputsForDisplay.forEach(input => input.addEventListener('change', displayTags));
         if (sortSelect) {
             sortSelect.addEventListener('change', () => {
@@ -1360,6 +1433,24 @@ const SMART_SORT_MODES = new Set(['smart', 'flow', 'illustrious']);
             });
         }
         underscoreToggle.addEventListener('change', renderFavorites);
+        if (enableWeightingToggle) {
+            enableWeightingToggle.addEventListener('change', () => {
+                if (!enableWeightingToggle.checked) {
+                    const changed = clearTagWeights({ silent: true });
+                    if (changed > 0) {
+                        displayTags();
+                        return;
+                    }
+                }
+                displayTags();
+            });
+        }
+        if (clearWeightsButton) {
+            clearWeightsButton.addEventListener('click', () => {
+                clearTagWeights();
+                displayTags();
+            });
+        }
         if (tagInput) {
             tagInput.addEventListener('input', handleAutocompleteInput);
             tagInput.addEventListener('keydown', handleAutocompleteKeydown);
