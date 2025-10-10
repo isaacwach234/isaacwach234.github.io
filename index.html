@@ -820,6 +820,7 @@
             <ul>
                 <li>Paste or type prompts into <strong>Main Tags</strong>; use Aliases and Implications to auto-correct or auto-expand tricky tags.</li>
                 <li>Tune <strong>Processing Options</strong> and choose a sorting mode to organize tags; drag or tap categories to mute or re-order as needed.</li>
+                <li>Select <strong>Sort: Illustrious Guide</strong> to format prompts as Artist → Subject → Pose → Scene → Effects → Quality per the Illustrious prompt guide.</li>
                 <li>Review the <strong>Prompt Preview</strong> for counts, then copy or export tags in your preferred format.</li>
             </ul>
         </details>
@@ -894,6 +895,7 @@
                         <option value="danbooru" selected>Sort: Danbooru</option>
                         <option value="smart">Sort: Smart</option>
                         <option value="flow">Sort: Prompt Flow</option>
+                        <option value="illustrious">Sort: Illustrious Guide</option>
                         <option value="manual">Sort: Manual</option>
                         <option value="recent">Sort: Recent</option>
                         <option value="none">Sort: None</option>
@@ -1219,14 +1221,6 @@
         }
     ];
 
-    const FLOW_PHASE_BY_KEY = new Map();
-    const FLOW_PHASE_BY_CATEGORY = new Map();
-    PROMPT_FLOW_PHASES.forEach(phase => {
-        FLOW_PHASE_BY_KEY.set(phase.key, phase);
-        phase.keywordMatchers = phase.keywords.map(keyword => keyword.toLowerCase());
-        phase.categories.forEach(categoryName => FLOW_PHASE_BY_CATEGORY.set(categoryName, phase.key));
-    });
-
     const FLOW_PHASE_PRIORITY_KEYWORDS = {
         quality: [['masterpiece', 8], ['best quality', 7], ['ultra detailed', 6], ['cinematic lighting', 5], ['dramatic lighting', 4], ['8k', 3], ['4k', 3], ['hdr', 2]],
         composition: [['dynamic angle', 4], ['wide shot', 3], ['close-up', 3], ['looking at viewer', 2], ['from below', 2], ['from above', 2]],
@@ -1237,6 +1231,80 @@
         environment: [['dramatic sky', 4], ['sunset', 4], ['night', 3], ['rain', 3], ['forest', 3], ['city', 3], ['indoors', 2], ['outdoors', 2], ['background', 2]],
         extras: [['clean background', 2], ['no text', 2], ['signature', -3], ['watermark', -4]]
     };
+
+    const ILLUSTRIOUS_PROMPT_PHASES = [
+        {
+            key: 'artistStyle',
+            label: 'Artist & Style',
+            description: 'Optionally begin with artist tags or stylistic influences (use weights to blend as needed).',
+            categories: ['Artists', 'Style & Meta', 'Rendering'],
+            keywords: ['style', 'artist', 'redrop', 'semi-realistic', 'illustration', 'inspired', '90s anime', 'artstyle', 'digital painting']
+        },
+        {
+            key: 'subject',
+            label: 'Subjects & Traits',
+            description: 'Describe character counts, core traits, hair, eyes and wardrobe details.',
+            categories: ['Characters', 'Subject & Creatures', 'Face', 'Eyes', 'Hair', 'Body Parts', 'Attire', 'Accessories'],
+            keywords: ['1girl', '1boy', 'character', 'girl', 'boy', 'woman', 'man', 'hair', 'eyes', 'uniform', 'dress', 'maid', 'armor']
+        },
+        {
+            key: 'pose',
+            label: 'Pose, Action & Expression',
+            description: 'Add motions, gestures and expressions that define what is happening.',
+            categories: ['Actions & Poses', 'Interaction', 'Emotion & Expression', 'Camera & Perspective'],
+            keywords: ['pose', 'standing', 'sitting', 'running', 'jumping', 'holding', 'gesture', 'smile', 'angry', 'expression', 'middle finger', 'peace sign']
+        },
+        {
+            key: 'scene',
+            label: 'Scene & Background',
+            description: 'Outline the setting, time of day and environmental context.',
+            categories: ['Setting & Environment', 'Background Elements', 'Weather & Atmosphere'],
+            keywords: ['background', 'indoors', 'outdoors', 'cafe', 'forest', 'city', 'sunset', 'daytime', 'night', 'sky', 'landscape']
+        },
+        {
+            key: 'effects',
+            label: 'Effects & Aesthetic Detail',
+            description: 'Finish descriptive details with lighting, particles or stylistic flourishes.',
+            categories: ['Lighting & Effects', 'Post-processing', 'Color & Lighting', 'Meta'],
+            keywords: ['dramatic lighting', 'bokeh', 'glow', 'particles', 'effect', 'aesthetic', 'watercolor', 'film grain']
+        },
+        {
+            key: 'quality',
+            label: 'Quality Boosters',
+            description: 'Close with global quality tags to reinforce rendering fidelity.',
+            categories: ['Quality'],
+            keywords: ['masterpiece', 'best quality', 'ultra detailed', 'highres', '8k', '4k', 'hdr']
+        }
+    ];
+
+    const ILLUSTRIOUS_PHASE_PRIORITY_KEYWORDS = {
+        artistStyle: [['style', 4], ['artist', 4], ['redrop', 3], ['semi-realistic', 3], ['illustration', 2], ['90s anime', 2], ['artstyle', 2], ['digital painting', 2]],
+        subject: [['girl', 4], ['boy', 3], ['character', 4], ['hair', 3], ['eyes', 3], ['uniform', 2], ['dress', 2], ['maid', 2], ['armor', 2]],
+        pose: [['pose', 4], ['standing', 3], ['sitting', 3], ['running', 3], ['holding', 2], ['gesture', 2], ['smile', 2], ['angry', 2], ['expression', 3]],
+        scene: [['background', 4], ['cafe', 3], ['forest', 3], ['city', 3], ['indoors', 2], ['outdoors', 2], ['sunset', 3], ['daytime', 2], ['night', 2], ['sky', 2]],
+        effects: [['lighting', 4], ['dramatic', 3], ['bokeh', 3], ['glow', 3], ['particles', 2], ['watercolor', 2], ['effect', 2], ['film grain', 2]],
+        quality: [['masterpiece', 8], ['best quality', 7], ['ultra detailed', 6], ['highres', 5], ['8k', 4], ['4k', 3], ['hdr', 3]]
+    };
+
+    function createPromptFlowConfig(phases, priorityKeywords, fallbackKey) {
+        const processedPhases = phases.map(phase => ({
+            ...phase,
+            keywordMatchers: (phase.keywords || []).map(keyword => keyword.toLowerCase())
+        }));
+        const categoryMap = new Map();
+        processedPhases.forEach(phase => {
+            (phase.categories || []).forEach(categoryName => categoryMap.set(categoryName, phase.key));
+        });
+        return {
+            phases: processedPhases,
+            priorityKeywords,
+            fallbackKey: fallbackKey || (processedPhases[processedPhases.length - 1] || {}).key,
+            categoryMap
+        };
+    }
+
+    const PROMPT_FLOW_CONFIG = createPromptFlowConfig(PROMPT_FLOW_PHASES, FLOW_PHASE_PRIORITY_KEYWORDS, 'extras');
+    const ILLUSTRIOUS_FLOW_CONFIG = createPromptFlowConfig(ILLUSTRIOUS_PROMPT_PHASES, ILLUSTRIOUS_PHASE_PRIORITY_KEYWORDS, 'quality');
 
     const categoryPickerState = { tagId: null };
 
@@ -1396,23 +1464,23 @@
 
     const normalizeTagText = (tag) => tag.toLowerCase().replace(/_/g, ' ').trim();
 
-    function determinePromptFlowPhase(tag) {
+    function determinePromptFlowPhase(tag, config = PROMPT_FLOW_CONFIG) {
         const categoryName = tag.category || 'Uncategorized';
-        if (FLOW_PHASE_BY_CATEGORY.has(categoryName)) {
-            return FLOW_PHASE_BY_CATEGORY.get(categoryName);
+        if (config.categoryMap.has(categoryName)) {
+            return config.categoryMap.get(categoryName);
         }
         const normalized = normalizeTagText(tag.original);
-        for (const phase of PROMPT_FLOW_PHASES) {
+        for (const phase of config.phases) {
             if (phase.keywordMatchers.some(keyword => normalized.includes(keyword))) {
                 return phase.key;
             }
         }
-        return 'extras';
+        return config.fallbackKey;
     }
 
-    function computePromptFlowScore(tag, phaseKey) {
+    function computePromptFlowScore(tag, phaseKey, config = PROMPT_FLOW_CONFIG) {
         const normalized = normalizeTagText(tag.weighted || tag.original);
-        const priorities = FLOW_PHASE_PRIORITY_KEYWORDS[phaseKey] || [];
+        const priorities = config.priorityKeywords[phaseKey] || [];
         let score = 0;
         for (const [keyword, weight] of priorities) {
             if (normalized.includes(keyword)) score += weight;
@@ -1423,17 +1491,18 @@
         return score;
     }
 
-    function sortTagsByPromptFlow(tags) {
-        const groups = PROMPT_FLOW_PHASES.map(phase => ({ phase, tags: [] }));
-        const fallbackGroup = groups.find(group => group.phase.key === 'extras') || groups[groups.length - 1];
+    function sortTagsByPromptFlow(tags, config = PROMPT_FLOW_CONFIG) {
+        const groups = config.phases.map(phase => ({ phase, tags: [] }));
+        const groupMap = new Map(groups.map(group => [group.phase.key, group]));
+        const fallbackGroup = groupMap.get(config.fallbackKey) || groups[groups.length - 1];
         tags.forEach(tag => {
-            const key = determinePromptFlowPhase(tag);
-            const targetGroup = groups.find(group => group.phase.key === key) || fallbackGroup;
+            const key = determinePromptFlowPhase(tag, config);
+            const targetGroup = groupMap.get(key) || fallbackGroup;
             targetGroup.tags.push(tag);
         });
         groups.forEach(group => {
             group.tags.sort((a, b) => {
-                const scoreDiff = computePromptFlowScore(b, group.phase.key) - computePromptFlowScore(a, group.phase.key);
+                const scoreDiff = computePromptFlowScore(b, group.phase.key, config) - computePromptFlowScore(a, group.phase.key, config);
                 if (scoreDiff !== 0) return scoreDiff;
                 const timeDiff = (a.addedAt || 0) - (b.addedAt || 0);
                 if (timeDiff !== 0) return timeDiff;
@@ -1805,8 +1874,9 @@
                 groupDiv.appendChild(container);
                 tagOutput.appendChild(groupDiv);
             });
-        } else if (sortValue === 'flow') {
-            const flowGroups = sortTagsByPromptFlow(visibleTags);
+        } else if (sortValue === 'flow' || sortValue === 'illustrious') {
+            const flowConfig = sortValue === 'illustrious' ? ILLUSTRIOUS_FLOW_CONFIG : PROMPT_FLOW_CONFIG;
+            const flowGroups = sortTagsByPromptFlow(visibleTags, flowConfig);
             flowGroups.forEach(({ phase, tags }) => {
                 if (!tags.length) return;
                 const groupDiv = document.createElement('div');
