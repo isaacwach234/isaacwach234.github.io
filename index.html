@@ -1298,7 +1298,7 @@
         return {
             phases: processedPhases,
             priorityKeywords,
-            fallbackKey: fallbackKey || (processedPhases[processedPhases.length - 1] || {}).key,
+            fallbackKey: fallbackKey ?? processedPhases[processedPhases.length - 1]?.key,
             categoryMap
         };
     }
