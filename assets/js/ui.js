@@ -822,19 +822,22 @@ const FAVORITES_STORAGE_KEY = STORAGE_KEYS.favorites;
             // FIX: Use relative URLs for fetching data from a GitHub Pages site.
             // This works both locally and when deployed.
             const timestamp = `t=${new Date().getTime()}`;
-            const [tagsResponse, mapResponse, metadataResponse] = await Promise.all([
+            const [tagsResponse, mapResponse, metadataResponse, catalogResponse] = await Promise.all([
                 fetch(`tags.json?${timestamp}`),
                 fetch(`tag_map.json?${timestamp}`),
-                fetch(`data/tag_metadata.json?${timestamp}`)
+                fetch(`data/tag_metadata.json?${timestamp}`),
+                fetch(`generated/tag_catalog.json?${timestamp}`).catch(err => ({ ok: false, statusText: err.message }))
             ]);
             if (!tagsResponse.ok) throw new Error(`Failed to fetch tags.json: ${tagsResponse.statusText}`);
             if (!mapResponse.ok) throw new Error(`Failed to fetch tag_map.json: ${mapResponse.statusText}`);
             if (!metadataResponse.ok) throw new Error(`Failed to fetch tag_metadata.json: ${metadataResponse.statusText}`);
+            if (!catalogResponse.ok) console.warn(`Tag catalog unavailable: ${catalogResponse.statusText}`);
             state.TAG_DATABASE = await tagsResponse.json();
             const tagMap = await mapResponse.json();
             const tagMetadata = await metadataResponse.json();
+            const tagCatalog = catalogResponse.ok ? await catalogResponse.json() : {};
             const categoryOrder = ['Artists', 'Quality', 'Composition', 'Characters', 'Subject & Creatures', 'Face', 'Eyes', 'Hair', 'Body Parts', 'Attire', 'Accessories', 'Held Items & Objects', 'Actions & Poses', 'Setting & Environment', 'Style & Meta'];
-            state.tagCategorizer = new EnhancedTagCategorizer(tagMap, state.TAG_DATABASE, categoryOrder, tagMetadata);
+            state.tagCategorizer = new EnhancedTagCategorizer(tagMap, state.TAG_DATABASE, categoryOrder, tagMetadata, tagCatalog);
             state.knownCategories = new Set([...state.tagCategorizer.categories, 'Uncategorized']);
             document.title = 'Danbooru Tag Helper (Ready)';
         } catch (error) {
