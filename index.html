@@ -132,7 +132,7 @@
                         <span class="text-sm">Deduplicate Tags</span>
                     </label>
                     <label class="flex items-center gap-2 cursor-pointer">
-                        <input id="underscoreToggle" type="checkbox" class="rounded" checked>
+                        <input id="underscoreToggle" type="checkbox" class="rounded">
                         <span class="text-sm">Use Underscores</span>
                     </label>
                     <label class="flex items-center gap-2 cursor-pointer">
@@ -194,6 +194,9 @@
                     </button>
                     <button onclick="optimizeOrder()" class="quick-action-btn text-center py-2">
                         <div class="text-xs">Optimize</div>
+                    </button>
+                    <button onclick="removeTagWeights()" class="quick-action-btn text-center py-2">
+                        <div class="text-xs">Clear Weights</div>
                     </button>
                     <button onclick="exportTags('json')" class="quick-action-btn text-center py-2">
                         <div class="text-xs">Export JSON</div>

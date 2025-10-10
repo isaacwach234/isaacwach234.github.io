@@ -73,6 +73,7 @@ const HIDDEN_STORAGE_KEY = STORAGE_KEYS.hiddenCategories;
 const FAVORITES_STORAGE_KEY = STORAGE_KEYS.favorites;
 const TAG_CATALOG_STORAGE_KEY = STORAGE_KEYS.tagCatalog;
 const SMART_SORT_MODES = new Set(['smart', 'flow', 'illustrious']);
+const DEFAULT_CATEGORY_ORDER = ['Artists', 'Quality', 'Composition', 'Characters', 'Subject & Creatures', 'Face', 'Eyes', 'Hair', 'Body Parts', 'Attire', 'Accessories', 'Held Items & Objects', 'Actions & Poses', 'Setting & Environment', 'Style & Meta'];
 
     const PROMPT_FLOW_PHASES = [
         {
@@ -269,6 +270,7 @@ const SMART_SORT_MODES = new Set(['smart', 'flow', 'illustrious']);
         try {
             localStorage.setItem(TAG_CATALOG_STORAGE_KEY, JSON.stringify(payload));
             state.catalogCacheInfo = payload;
+            state.latestCatalogPayload = payload;
         } catch (error) {
             console.warn('Unable to persist catalog cache', error);
             updateCatalogStatus(`Saved catalog in memory but not to storage: ${error.message}`, 'warn');
@@ -296,15 +298,18 @@ const SMART_SORT_MODES = new Set(['smart', 'flow', 'illustrious']);
     function rebuildCategorizerWithCatalog({ reprocess = true } = {}) {
         if (!state.tagMap || !state.TAG_DATABASE.length) return;
         const catalogData = state.tagCatalog || {};
+        const categoryOrder = Array.isArray(state.categoryOrder) && state.categoryOrder.length
+            ? state.categoryOrder
+            : [...DEFAULT_CATEGORY_ORDER];
         state.tagCategorizer = new EnhancedTagCategorizer(
             state.tagMap,
             state.TAG_DATABASE,
-            state.categoryOrder,
+            categoryOrder,
             state.tagMetadata,
             catalogData
         );
+        state.categoryOrder = categoryOrder;
         state.knownCategories = new Set([...state.tagCategorizer.categories, 'Uncategorized']);
-        state.latestCatalogPayload = catalogData;
         if (reprocess) {
             processAll();
         } else {
@@ -343,6 +348,7 @@ const SMART_SORT_MODES = new Set(['smart', 'flow', 'illustrious']);
                 data: catalog,
             };
             state.tagCatalog = catalog;
+            state.latestCatalogPayload = payload;
             persistCatalogCache(payload);
             rebuildCategorizerWithCatalog({ reprocess: true });
             if (catalogDownloadButton) catalogDownloadButton.classList.remove('hidden');
@@ -969,6 +975,11 @@ const SMART_SORT_MODES = new Set(['smart', 'flow', 'illustrious']);
     async function loadExternalData() {
         document.title = 'Danbooru Tag Helper (Loading...)';
         try {
+            state.catalogCacheInfo = loadCachedCatalog();
+            if (state.catalogCacheInfo && state.catalogCacheInfo.data) {
+                state.tagCatalog = state.catalogCacheInfo.data;
+                state.latestCatalogPayload = state.catalogCacheInfo;
+            }
             // FIX: Use relative URLs for fetching data from a GitHub Pages site.
             // This works both locally and when deployed.
             const timestamp = `t=${new Date().getTime()}`;
@@ -985,10 +996,17 @@ const SMART_SORT_MODES = new Set(['smart', 'flow', 'illustrious']);
             state.TAG_DATABASE = await tagsResponse.json();
             const tagMap = await mapResponse.json();
             const tagMetadata = await metadataResponse.json();
-            const tagCatalog = catalogResponse.ok ? await catalogResponse.json() : {};
-            const categoryOrder = ['Artists', 'Quality', 'Composition', 'Characters', 'Subject & Creatures', 'Face', 'Eyes', 'Hair', 'Body Parts', 'Attire', 'Accessories', 'Held Items & Objects', 'Actions & Poses', 'Setting & Environment', 'Style & Meta'];
+            const tagCatalog = catalogResponse.ok ? await catalogResponse.json() : state.tagCatalog || {};
+            const categoryOrder = [...DEFAULT_CATEGORY_ORDER];
+            state.tagMap = tagMap;
+            state.tagMetadata = tagMetadata;
+            state.categoryOrder = categoryOrder;
+            state.tagCatalog = tagCatalog;
             state.tagCategorizer = new EnhancedTagCategorizer(tagMap, state.TAG_DATABASE, categoryOrder, tagMetadata, tagCatalog);
             state.knownCategories = new Set([...state.tagCategorizer.categories, 'Uncategorized']);
+            if (!state.latestCatalogPayload && (state.catalogCacheInfo || Object.keys(tagCatalog || {}).length)) {
+                state.latestCatalogPayload = state.catalogCacheInfo || { data: tagCatalog };
+            }
             document.title = 'Danbooru Tag Helper (Ready)';
         } catch (error) {
             console.error("FATAL ERROR loading data:", error);
@@ -1018,7 +1036,67 @@ const SMART_SORT_MODES = new Set(['smart', 'flow', 'illustrious']);
         });
     }
 
+    const stripWeightsFromTags = (tags) => {
+        let updated = 0;
+        tags.forEach(tag => {
+            if (!tag) return;
+            if (tag.weighted !== tag.original) {
+                tag.weighted = tag.original;
+                updated += 1;
+            }
+        });
+        return updated;
+    };
+
     window.updateTagWeight = (id, action) => { const tag = state.baseTags.find(t => t.id === id); if (!tag) return; let current = tag.weighted, original = tag.original; if (action === 'increase') { if (current.startsWith('((')) current = `(((${original})))`; else if (current.startsWith('(')) current = `((${original}))`; else if (current.startsWith('[')) current = original; else current = `(${original})`; } else { if (current.startsWith('[[')) current = `[[[${original}]]]`; else if (current.startsWith('[')) current = `[[${original}]]`; else if (current.startsWith('(')) current = original; else current = `[${original}]`; } tag.weighted = current; displayTags(); };
+
+    function handleWeightingToggleChange() {
+        if (!enableWeightingToggle.checked) {
+            const removed = stripWeightsFromTags(state.baseTags);
+            if (removed > 0 && copyMessage) {
+                copyMessage.textContent = `Removed weighting from ${removed} tag${removed === 1 ? '' : 's'}.`;
+                setTimeout(() => {
+                    if (copyMessage && copyMessage.textContent.startsWith('Removed weighting')) {
+                        copyMessage.textContent = '';
+                    }
+                }, 3000);
+            }
+        }
+        displayTags();
+    }
+
+    function removeWeightsFromSelection() {
+        if (!state.baseTags.length) {
+            if (copyMessage) {
+                copyMessage.textContent = 'Nothing to clear yet!';
+                setTimeout(() => {
+                    if (copyMessage && copyMessage.textContent === 'Nothing to clear yet!') {
+                        copyMessage.textContent = '';
+                    }
+                }, 2000);
+            }
+            return;
+        }
+        const selected = state.baseTags.filter(tag => state.selectedTagIds.has(tag.id));
+        const targetTags = selected.length ? selected : state.baseTags;
+        const removed = stripWeightsFromTags(targetTags);
+        if (copyMessage) {
+            if (removed === 0) {
+                copyMessage.textContent = 'No weighted tags to clear.';
+            } else {
+                const scopeLabel = selected.length ? 'selected tag' : 'tag';
+                copyMessage.textContent = `Cleared weighting from ${removed} ${scopeLabel}${removed === 1 ? '' : 's'}.`;
+            }
+            setTimeout(() => {
+                if (!copyMessage) return;
+                const message = copyMessage.textContent;
+                if (message === 'No weighted tags to clear.' || message.startsWith('Cleared weighting from')) {
+                    copyMessage.textContent = '';
+                }
+            }, 3000);
+        }
+        displayTags();
+    }
     function destroySortableInstances() {
         if (state.sortableInstances.length) {
             state.sortableInstances.forEach(instance => instance.destroy());
@@ -1260,7 +1338,28 @@ const SMART_SORT_MODES = new Set(['smart', 'flow', 'illustrious']);
     }
     function exportSettings() { const settings = { theme: document.body.className.match(/theme-\w+/)?.[0] || 'theme-indigo', prepend: triggerInput.value, append: appendInput.value, swaps: swapsInput.value, implications: implicationsInput.value, blacklist: blacklistInput.value, maxTags: maxTagsInput.value, sorting: sortSelect.value, deduplicate: deduplicateToggle.checked, underscores: underscoreToggle.checked, weighting: enableWeightingToggle.checked, ratings: { safe: ratingSafe.checked, general: ratingGeneral.checked, questionable: ratingQuestionable.checked } }; const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `danbooru-helper-settings-${new Date().toISOString().split('T')[0]}.json`; a.click(); URL.revokeObjectURL(a.href); }
     function importSettings(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { try { const settings = JSON.parse(e.target.result); if (settings.theme) applyTheme(settings.theme); if (settings.prepend !== undefined) triggerInput.value = settings.prepend; if (settings.append !== undefined) appendInput.value = settings.append; if (settings.swaps !== undefined) swapsInput.value = settings.swaps; if (settings.implications !== undefined) implicationsInput.value = settings.implications; if (settings.blacklist !== undefined) blacklistInput.value = settings.blacklist; if (settings.maxTags !== undefined) maxTagsInput.value = settings.maxTags; if (settings.sorting !== undefined) sortSelect.value = settings.sorting; if (settings.deduplicate !== undefined) deduplicateToggle.checked = settings.deduplicate; if (settings.underscores !== undefined) underscoreToggle.checked = settings.underscores; if (settings.weighting !== undefined) enableWeightingToggle.checked = settings.weighting; if (settings.ratings) { if (settings.ratings.safe !== undefined) ratingSafe.checked = settings.ratings.safe; if (settings.ratings.general !== undefined) ratingGeneral.checked = settings.ratings.general; if (settings.ratings.questionable !== undefined) ratingQuestionable.checked = settings.ratings.questionable; } toggleSettingsPanel(); processAll(); copyMessage.textContent = 'Settings imported!'; setTimeout(() => copyMessage.textContent = '', 3000); } catch (error) { alert('Error importing settings: ' + error.message); } }; reader.readAsText(file); }
-    function resetToDefaults() { if (confirm('Reset all settings to defaults?')) { tagInput.value = ''; triggerInput.value = ''; appendInput.value = ''; swapsInput.value = ''; implicationsInput.value = ''; blacklistInput.value = ''; maxTagsInput.value = '75'; sortSelect.value = 'danbooru'; suggestionCountInput.value = '15'; deduplicateToggle.checked = true; underscoreToggle.checked = true; enableWeightingToggle.checked = false; ratingSafe.checked = true; ratingGeneral.checked = true; ratingQuestionable.checked = false; applyTheme('theme-indigo'); toggleSettingsPanel(); processAll(); } }
+    function resetToDefaults() {
+        if (!confirm('Reset all settings to defaults?')) return;
+        tagInput.value = '';
+        triggerInput.value = '';
+        appendInput.value = '';
+        swapsInput.value = '';
+        implicationsInput.value = '';
+        blacklistInput.value = '';
+        maxTagsInput.value = '75';
+        sortSelect.value = 'danbooru';
+        suggestionCountInput.value = '15';
+        deduplicateToggle.checked = true;
+        underscoreToggle.checked = false;
+        enableWeightingToggle.checked = false;
+        ratingSafe.checked = true;
+        ratingGeneral.checked = true;
+        ratingQuestionable.checked = false;
+        applyTheme('theme-indigo');
+        toggleSettingsPanel();
+        handleWeightingToggleChange();
+        processAll();
+    }
 
     Object.assign(window, {
         showTokenSettings,
@@ -1269,6 +1368,7 @@ const SMART_SORT_MODES = new Set(['smart', 'flow', 'illustrious']);
         clearAll,
         randomizeTags,
         optimizeOrder,
+        removeTagWeights: removeWeightsFromSelection,
         exportTags,
         importTags,
         copyPromptAsJson,
@@ -1352,8 +1452,17 @@ const SMART_SORT_MODES = new Set(['smart', 'flow', 'illustrious']);
             tagInput.addEventListener('input', debouncedTagProcessing);
             tagInput.addEventListener('change', processAll);
         }
-        const inputsForDisplay = [deduplicateToggle, underscoreToggle, enableWeightingToggle];
-        inputsForDisplay.forEach(input => input.addEventListener('change', displayTags));
+        if (deduplicateToggle) {
+            deduplicateToggle.addEventListener('change', processAll);
+        }
+        if (underscoreToggle) {
+            underscoreToggle.addEventListener('change', () => {
+                displayTags();
+            });
+        }
+        if (enableWeightingToggle) {
+            enableWeightingToggle.addEventListener('change', handleWeightingToggleChange);
+        }
         if (sortSelect) {
             sortSelect.addEventListener('change', () => {
                 processAll();

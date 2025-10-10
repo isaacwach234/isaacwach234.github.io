@@ -97,12 +97,26 @@ export class DanbooruCatalogBuilder {
     return `Basic ${btoa(`${this.username}:${this.apiKey}`)}`;
   }
 
-  async fetchJson(url, attempt = 0) {
+  buildFallbackUrls(url) {
+    return [
+      `https://r.jina.ai/${encodeURIComponent(url)}`,
+      `https://r.jina.ai/${url}`,
+    ];
+  }
+
+  async fetchJson(url, attempt = 0, { useFallback = false, fallbackIndex = 0 } = {}) {
     const headers = { Accept: 'application/json' };
-    const authHeader = this.buildAuthHeader();
-    if (authHeader) headers.Authorization = authHeader;
+    if (!useFallback) {
+      const authHeader = this.buildAuthHeader();
+      if (authHeader) headers.Authorization = authHeader;
+    }
+    const fallbackUrls = useFallback ? this.buildFallbackUrls(url) : null;
+    const requestUrl = useFallback ? fallbackUrls[fallbackIndex] : url;
+    if (!requestUrl) {
+      throw new Error('Unable to construct a request URL for the Danbooru catalog.');
+    }
     try {
-      const response = await fetch(url, { headers, mode: 'cors' });
+      const response = await fetch(requestUrl, { headers, mode: 'cors' });
       if (response.status === 429) {
         throw new Error('Danbooru rate limited the request (HTTP 429). Try a lower limit or add an API key.');
       }
@@ -114,9 +128,17 @@ export class DanbooruCatalogBuilder {
       }
       return await response.json();
     } catch (error) {
+      if (useFallback && fallbackIndex < (fallbackUrls.length - 1)) {
+        return this.fetchJson(url, attempt, { useFallback: true, fallbackIndex: fallbackIndex + 1 });
+      }
+      const canUseFallback = !useFallback && !this.username && !this.apiKey;
+      if (canUseFallback) {
+        return this.fetchJson(url, attempt, { useFallback: true, fallbackIndex: 0 });
+      }
       if (attempt >= this.retries) throw error;
       await sleep(this.sleepMs * (attempt + 1));
-      return this.fetchJson(url, attempt + 1);
+      const retryFallbackIndex = useFallback ? 0 : fallbackIndex;
+      return this.fetchJson(url, attempt + 1, { useFallback, fallbackIndex: retryFallbackIndex });
     }
   }
 
@@ -206,9 +228,10 @@ export function downloadCatalogFile(catalog, filenameSuffix = '') {
   if (!catalog || typeof catalog !== 'object') {
     throw new Error('No catalog data available to download.');
   }
+  const payload = catalog && catalog.data ? catalog : { data: catalog };
   const timestamp = new Date().toISOString().split('T')[0];
   const suffix = filenameSuffix ? `-${filenameSuffix}` : '';
-  const blob = new Blob([JSON.stringify(catalog, null, 2)], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
