@@ -34,3 +34,34 @@ This tool allows you to easily process lists of tags by applying various filters
 ## **Live Demo**
 
 You can try the tool live here: [https://https://isaacwach234.github.io/](https://isaacwach234.github.io/)
+
+## Regenerating the Danbooru tag catalog
+
+`EnhancedTagCategorizer` now leans on a generated Danbooru metadata catalog to
+infer sensible defaults for tags that are missing from `tag_map.json`. Rebuild
+the catalog periodically to ingest new tags or refresh post counts:
+
+```
+python scripts/build_tag_catalog.py --limit 50000
+```
+
+Authenticated requests (recommended to avoid rate limiting) require your
+Danbooru username and API key:
+
+```
+python scripts/build_tag_catalog.py --limit 75000 --user YOUR_NAME --api-key YOUR_KEY
+```
+
+The script writes `generated/tag_catalog.json`, which is automatically picked up
+the next time you reload the web UI.
+
+### Manual verification
+
+After rebuilding the catalog, run the lightweight checker to confirm that new
+tags are categorized without updating `tag_map.json` manually:
+
+```
+node scripts/check_tag_categories.mjs new_tag_one another_tag
+```
+
+If you omit explicit tags, the checker samples from the generated catalog.
