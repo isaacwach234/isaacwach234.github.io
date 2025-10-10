@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danbooru Tag Helper</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Link to external stylesheets and scripts -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="p-4 md:p-6 lg:p-8">
+    <!-- Floating theme panel -->
+    <div class="floating-panel">
+        <span class="text-sm font-medium text-gray-300">Theme:</span>
+        <button class="theme-button" style="background: linear-gradient(135deg, #4f46e5, #6366f1);" data-theme="theme-indigo" title="Indigo"></button>
+        <button class="theme-button" style="background: linear-gradient(135deg, #2563eb, #3b82f6);" data-theme="theme-blue" title="Blue"></button>
+        <button class="theme-button" style="background: linear-gradient(135deg, #0d9488, #14b8a6);" data-theme="theme-teal" title="Teal"></button>
+        <button class="theme-button" style="background: linear-gradient(135deg, #dc2626, #ef4444);" data-theme="theme-crimson" title="Crimson"></button>
+        <button class="theme-button" style="background: linear-gradient(135deg, #10b981, #34d399);" data-theme="theme-emerald" title="Emerald"></button>
+        
+        <div class="w-px h-6 bg-gray-600 mx-2"></div>
+        
+        <button class="quick-action-btn" title="GitHub Token Settings" onclick="showTokenSettings()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+        </button>
+        
+        <button class="quick-action-btn" title="Import/Export Settings" onclick="toggleSettingsPanel()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+        </button>
+        
+        <button class="quick-action-btn" title="Remove All Weights" onclick="removeAllWeights()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="15" y1="9" x2="9" y2="15"></line>
+                <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+        </button>
+        
+        <button class="quick-action-btn" title="Clear All" onclick="clearAll()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 6l-12 12"></path>
+                <path d="M6 6l12 12"></path>
+            </svg>
+        </button>
+    </div>
+
+    <div class="glass-panel max-w-7xl mx-auto p-6 md:p-8 fade-in-up">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent mb-4">
+                Danbooru Tag Helper
+            </h1>
+            <p class="text-gray-400 text-lg">Enhanced AI Art Prompt Management with Illustrious Support</p>
+        </div>
+
+        <details id="howToPanel" class="how-to-panel mb-8" open>
+            <summary>
+                <svg class="w-4 h-4 text-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                How to use the helper
+            </summary>
+            <ul>
+                <li><strong>Paste tags</strong> into Main Tags; use Aliases and Implications for auto-corrections.</li>
+                <li><strong>Choose sorting:</strong> Danbooru (category-based), Illustrious (prompt flow), Smart, or Manual.</li>
+                <li><strong>Illustrious mode</strong> orders tags by: Artist/Style → Character → Pose/Action → Scene → Effects → Quality.</li>
+                <li>Use the <strong>Remove Weights</strong> button to strip all (parentheses) and [brackets] from tags.</li>
+                <li>Review the Prompt Preview for stats, then copy or export in your preferred format.</li>
+            </ul>
+        </details>
+
+        <!-- Stats and Controls sections remain the same as in your original file -->
+        <div class="stats-panel">
+            <div class="stat-item">
+                <div class="stat-value" id="tagCount">0</div>
+                <div class="stat-label">Active Tags</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="maxTagCount">75</div>
+                <div class="stat-label">Max Tags</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="categoryCount">0</div>
+                <div class="stat-label">Categories</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="historyCount">0</div>
+                <div class="stat-label">History</div>
+            </div>
+        </div>
+
+        <div class="advanced-controls">
+            <div class="control-group">
+                <div class="control-label">Sorting & Order</div>
+                <select id="sortSelect" class="input-base text-sm w-full mb-3">
+                    <option value="danbooru">Danbooru (By Category)</option>
+                    <option value="illustrious" selected>Illustrious (Prompt Flow)</option>
+                    <option value="smart">Smart (Enhanced)</option>
+                    <option value="manual">Manual (Drag & Drop)</option>
+                    <option value="recent">Recent First</option>
+                    <option value="az">A-Z</option>
+                    <option value="za">Z-A</option>
+                    <option value="none">No Sorting</option>
+                </select>
+                <input type="number" id="maxTagsInput" value="75" min="1" max="500" 
+                       class="input-base text-sm w-full" placeholder="Max Tags">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">Processing Options</div>
+                <div class="space-y-3">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input id="deduplicateToggle" type="checkbox" class="rounded" checked>
+                        <span class="text-sm">Deduplicate Tags</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input id="underscoreToggle" type="checkbox" class="rounded">
+                        <span class="text-sm">Use Underscores</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input id="enableWeightingToggle" type="checkbox" class="rounded">
+                        <span class="text-sm">Enable Weighting</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">AI Suggestions</div>
+                <div class="flex items-center gap-2 mb-3">
+                    <input type="number" id="suggestionCountInput" value="15" min="5" max="50" 
+                           class="input-base text-sm flex-1">
+                    <button id="suggest-btn" class="btn-primary">Generate</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">Quick Actions</div>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="randomizeTags()" class="quick-action-btn text-center py-2">
+                        <div class="text-xs">Randomize</div>
+                    </button>
+                    <button onclick="optimizeOrder()" class="quick-action-btn text-center py-2">
+                        <div class="text-xs">Optimize</div>
+                    </button>
+                    <button onclick="exportTags('json')" class="quick-action-btn text-center py-2">
+                        <div class="text-xs">Export JSON</div>
+                    </button>
+                    <button onclick="exportTags('txt')" class="quick-action-btn text-center py-2">
+                        <div class="text-xs">Export TXT</div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main content grid (inputs, output, history) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Input Section -->
+            <div class="lg:col-span-4 space-y-6">
+                <div>
+                    <label for="tagInput" class="control-label mb-3 block">Main Tags</label>
+                    <textarea id="tagInput" rows="6" class="input-base w-full resize-none" 
+                              placeholder="1girl, solo, masterpiece..."></textarea>
+                    <div id="autocomplete-box" class="w-full hidden"></div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="control-label mb-2 block">Prepend</label>
+                        <input type="text" id="triggerInput" class="input-base w-full">
+                    </div>
+                    <div>
+                        <label class="control-label mb-2 block">Append</label>
+                        <input type="text" id="appendInput" class="input-base w-full">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="swapsInput" class="control-label mb-2 block">Aliases / Swaps</label>
+                    <textarea id="swapsInput" rows="3" class="input-base w-full"></textarea>
+                </div>
+
+                <div>
+                    <label for="implicationsInput" class="control-label mb-2 block">Implications</label>
+                    <textarea id="implicationsInput" rows="3" class="input-base w-full"></textarea>
+                </div>
+
+                <div>
+                    <label for="blacklistInput" class="control-label mb-2 block">Blacklist</label>
+                    <textarea id="blacklistInput" rows="2" class="input-base w-full"></textarea>
+                </div>
+            </div>
+
+            <!-- Main Output Section -->
+            <div class="lg:col-span-5">
+                <div class="mb-6">
+                    <h2 class="text-xl font-semibold text-gray-200 mb-4 flex items-center gap-3">
+                        Processed Tags
+                        <span class="text-sm font-normal px-3 py-1 rounded-full" 
+                              style="background: var(--processed-tag-bg); color: var(--processed-tag-text);">
+                            <span id="processedTagCount">0</span>/<span id="processedMaxTagCount">75</span>
+                        </span>
+                    </h2>
+                    <div class="space-y-3">
+                        <div class="flex flex-wrap gap-2" id="categoryToggleContainer"></div>
+                        <div id="hiddenCategoriesBanner" class="text-xs hidden"></div>
+                    </div>
+                </div>
+
+                <div id="tagOutput" class="glass-panel p-6 min-h-[500px] space-y-6 mb-6">
+                    <div class="text-gray-500 italic text-center py-12">
+                        Start typing or paste tags above to begin...
+                    </div>
+                </div>
+
+                <button id="copyButton" class="btn-primary w-full py-4 text-lg font-semibold">
+                    Copy All Tags
+                </button>
+                <p id="copyMessage" class="text-sm text-green-400 mt-3 h-5 text-center"></p>
+
+                <div class="prompt-preview-area mt-6">
+                    <div class="flex items-center justify-between gap-3">
+                        <h3 class="text-lg font-semibold text-gray-200">Prompt Preview</h3>
+                        <button id="promptPreviewCopy" class="quick-action-btn">Copy Preview</button>
+                    </div>
+                    <textarea id="promptPreview" class="prompt-preview-text" readonly></textarea>
+                    <div id="promptPreviewMeta" class="prompt-preview-meta">
+                        <span>Characters: 0</span>
+                        <span>Words: 0</span>
+                        <span>Approx. tokens: 0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- History Section -->
+            <div class="lg:col-span-3 space-y-8">
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-200">Favorites</h3>
+                        <button id="clearFavoritesButton" class="quick-action-btn text-xs py-1 px-2">Clear</button>
+                    </div>
+                    <div id="favorites-container" class="space-y-2"></div>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-200 mb-4">History</h3>
+                    <div id="history-container" class="space-y-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal panels (Token Settings, Settings Panel, Category Picker) remain the same -->
+    
+    <!-- Load external scripts -->
+    <script src="tagUtils.js"></script>
+    <script src="smartCategorizer.js"></script>
+    <script src="promptFlow.js"></script>
+    <script src="main.js"></script>
+    <script src="ui.js"></script>
+    <script src="processing.js"></script>
+</body>
+</html>
