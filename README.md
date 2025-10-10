@@ -12,8 +12,9 @@ This tool allows you to easily process lists of tags by applying various filters
   * **Uniquify Option:** Apply simple character substitutions (e.g., e-\>3, s-\>5) to trigger words for potential variation.  
 * **Append Tags:** Add custom words or phrases to the end of your tag list.  
 * **Tag Formatting:** Automatically replace spaces with underscores (or vice-versa) for consistency.  
-* **Sorting:** Sort the processed tags alphabetically (A-Z or Z-A) or keep the original order (after filtering).  
-* **Max Tag Limit:** Limit the number of processed tags included in the final output per item.  
+* **Sorting:** Sort the processed tags alphabetically (A-Z or Z-A) or keep the original order (after filtering).
+* **Illustrious Prompt Ordering:** Apply the community Illustrious structure (Artist → Subject → Pose → Scene → Effects → Quality) with a single sort mode.
+* **Max Tag Limit:** Limit the number of processed tags included in the final output per item.
 * **Tag Search:** Highlight or count tags matching a search term within the processed or original input list, aiding in review.  
 * **Clear Display:** Shows initial tag count, processed tag count, prepended triggers, and appended tags separately.  
 * **Copy to Clipboard:** Easily copy the final formatted tag list (including triggers, processed tags, and appended tags) for use in dataset files or prompts.
