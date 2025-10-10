@@ -7,12 +7,6 @@ export const state = {
   TAG_DATABASE: [],
   gitHubPat: null,
   tagCategorizer: null,
-  tagCatalog: {},
-  tagMap: {},
-  tagMetadata: {},
-  categoryOrder: [],
-  catalogCacheInfo: null,
-  latestCatalogPayload: null,
   tagIdCounter: 0,
   baseTags: [],
   copyHistory: [],
@@ -61,12 +55,6 @@ export const elements = {
   ratingSafe: element('rating-safe'),
   ratingGeneral: element('rating-general'),
   ratingQuestionable: element('rating-questionable'),
-  catalogRefreshButton: element('catalogRefreshButton'),
-  catalogLimitInput: element('catalogLimitInput'),
-  catalogStatus: element('catalogStatus'),
-  catalogUsernameInput: element('catalogUsernameInput'),
-  catalogApiKeyInput: element('catalogApiKeyInput'),
-  catalogDownloadButton: element('catalogDownloadButton'),
   categoryPickerModal: element('categoryPickerModal'),
   categoryPickerList: element('categoryPickerList'),
   categoryPickerTitle: element('categoryPickerTitle'),
@@ -95,7 +83,6 @@ export const STORAGE_KEYS = {
   howTo: 'danbooru-howto-open',
   history: 'danbooru-tag-history',
   githubPat: 'github-pat',
-  tagCatalog: 'danbooru-tag-catalog-cache',
 };
 
 export const categoryPickerState = { tagId: null };

@@ -156,33 +156,8 @@
                         <option value="az">Sort: A-Z</option>
                         <option value="za">Sort: Z-A</option>
                     </select>
-                    <input type="number" id="maxTagsInput" value="75" min="1" max="500"
+                    <input type="number" id="maxTagsInput" value="75" min="1" max="500" 
                            class="input-base text-sm w-full" placeholder="Max Tags">
-                </div>
-            </div>
-
-            <div class="control-group">
-                <div class="control-label flex items-center justify-between">
-                    <span>Danbooru Catalog (On-Device)</span>
-                    <span class="text-[0.65rem] uppercase tracking-wider text-gray-400">Beta</span>
-                </div>
-                <div class="space-y-3">
-                    <p class="text-xs text-gray-400 leading-relaxed">
-                        Fetch fresh tag metadata straight from Danbooru without leaving your phone. Keep the limit modest (≤10k) to avoid storage limits.
-                    </p>
-                    <input type="number" id="catalogLimitInput" value="5000" min="100" max="50000" step="100"
-                           class="input-base text-sm w-full" placeholder="Max tags to download">
-                    <input type="text" id="catalogUsernameInput" class="input-base text-sm w-full"
-                           placeholder="Danbooru username (optional)">
-                    <input type="password" id="catalogApiKeyInput" class="input-base text-sm w-full"
-                           placeholder="API key (optional, recommended)">
-                    <button id="catalogRefreshButton" type="button" class="quick-action-btn text-center py-2 w-full" data-original-text="Fetch catalog on this device">
-                        Fetch catalog on this device
-                    </button>
-                    <button id="catalogDownloadButton" type="button" class="quick-action-btn text-center py-2 w-full hidden">
-                        Download current catalog JSON
-                    </button>
-                    <p id="catalogStatus" class="text-xs text-gray-400 leading-relaxed"></p>
                 </div>
             </div>
 
