@@ -1,0 +1,151 @@
+{
+  "blue_eyes": {
+    "tag_type": "general",
+    "category_id": 0,
+    "category_name": "general",
+    "post_count": 0,
+    "is_deprecated": false,
+    "is_locked": false,
+    "category_hints": [
+      "danbooru:general"
+    ],
+    "canonical_categories": [],
+    "related_tags": [
+      {
+        "name": "1girl",
+        "score": 3.2
+      },
+      {
+        "name": "long_hair",
+        "score": 2.8
+      }
+    ],
+    "cooccurrence_hints": []
+  },
+  "genshin_impact": {
+    "tag_type": "copyright",
+    "category_id": 3,
+    "category_name": "copyright",
+    "post_count": 0,
+    "is_deprecated": false,
+    "is_locked": false,
+    "category_hints": [
+      "danbooru:copyright"
+    ],
+    "canonical_categories": [
+      "Subject & Creatures"
+    ],
+    "related_tags": [
+      {
+        "name": "raiden_shogun_(genshin_impact)",
+        "score": 4.5
+      },
+      {
+        "name": "yae_miko_(genshin_impact)",
+        "score": 4.1
+      }
+    ],
+    "cooccurrence_hints": []
+  },
+  "hatsune_miku": {
+    "tag_type": "character",
+    "category_id": 4,
+    "category_name": "character",
+    "post_count": 0,
+    "is_deprecated": false,
+    "is_locked": false,
+    "category_hints": [
+      "danbooru:character"
+    ],
+    "canonical_categories": [
+      "Characters"
+    ],
+    "related_tags": [
+      {
+        "name": "vocaloid",
+        "score": 5.2
+      },
+      {
+        "name": "twintails",
+        "score": 2.3
+      }
+    ],
+    "cooccurrence_hints": []
+  },
+  "long_hair": {
+    "tag_type": "general",
+    "category_id": 0,
+    "category_name": "general",
+    "post_count": 0,
+    "is_deprecated": false,
+    "is_locked": false,
+    "category_hints": [
+      "danbooru:general"
+    ],
+    "canonical_categories": [],
+    "related_tags": [
+      {
+        "name": "blue_eyes",
+        "score": 2.8
+      },
+      {
+        "name": "ponytail",
+        "score": 1.5
+      }
+    ],
+    "cooccurrence_hints": []
+  },
+  "redrop": {
+    "tag_type": "artist",
+    "category_id": 1,
+    "category_name": "artist",
+    "post_count": 0,
+    "is_deprecated": false,
+    "is_locked": false,
+    "category_hints": [
+      "danbooru:artist"
+    ],
+    "canonical_categories": [
+      "Artists"
+    ],
+    "related_tags": [
+      {
+        "name": "official_art",
+        "score": 1.9
+      },
+      {
+        "name": "signed",
+        "score": 1.2
+      }
+    ],
+    "cooccurrence_hints": [
+      {
+        "category": "Style & Meta",
+        "score": 1.2
+      }
+    ]
+  },
+  "solo": {
+    "tag_type": "general",
+    "category_id": 0,
+    "category_name": "general",
+    "post_count": 0,
+    "is_deprecated": false,
+    "is_locked": false,
+    "category_hints": [
+      "danbooru:general"
+    ],
+    "canonical_categories": [],
+    "related_tags": [
+      {
+        "name": "1girl",
+        "score": 5.5
+      },
+      {
+        "name": "smile",
+        "score": 2.1
+      }
+    ],
+    "cooccurrence_hints": []
+  }
+}

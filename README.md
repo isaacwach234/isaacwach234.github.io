@@ -13,7 +13,8 @@ This tool allows you to easily process lists of tags by applying various filters
 * **Append Tags:** Add custom words or phrases to the end of your tag list.  
 * **Tag Formatting:** Automatically replace spaces with underscores (or vice-versa) for consistency.  
 * **Sorting:** Sort the processed tags alphabetically (A-Z or Z-A) or keep the original order (after filtering).
-* **Illustrious Prompt Ordering:** Apply the community Illustrious structure (Artist → Subject → Pose → Scene → Effects → Quality) with a single sort mode.
+* **Illustrious Prompt Ordering:** Apply the community Illustrious structure (Artist → Subject → Pose → Scene → Effects → Quality) with a single sort mode powered by the enhanced categorizer.
+* **On-Device Catalog Refresh:** Pull fresh Danbooru metadata straight from the UI (desktop or mobile) and immediately benefit from smarter categorization.
 * **Max Tag Limit:** Limit the number of processed tags included in the final output per item.
 * **Tag Search:** Highlight or count tags matching a search term within the processed or original input list, aiding in review.  
 * **Clear Display:** Shows initial tag count, processed tag count, prepended triggers, and appended tags separately.  
@@ -34,3 +35,47 @@ This tool allows you to easily process lists of tags by applying various filters
 ## **Live Demo**
 
 You can try the tool live here: [https://https://isaacwach234.github.io/](https://isaacwach234.github.io/)
+
+## Regenerating the Danbooru tag catalog
+
+`EnhancedTagCategorizer` now leans on a generated Danbooru metadata catalog to
+infer sensible defaults for tags that are missing from `tag_map.json`. Rebuild
+the catalog periodically to ingest new tags or refresh post counts:
+
+```
+python scripts/build_tag_catalog.py --limit 50000
+```
+
+Authenticated requests (recommended to avoid rate limiting) require your
+Danbooru username and API key:
+
+```
+python scripts/build_tag_catalog.py --limit 75000 --user YOUR_NAME --api-key YOUR_KEY
+```
+
+The script writes `generated/tag_catalog.json`, which is automatically picked up
+the next time you reload the web UI.
+
+### Refreshing the catalog directly from your phone
+
+If you are away from a laptop, open the helper on your phone and scroll to
+**Danbooru Catalog (On-Device)** in the sidebar. Enter an optional Danbooru
+username/API key (highly recommended to avoid rate limits), pick a download
+limit, and tap **Fetch catalog on this device**. The app will stream the
+metadata into local storage, re-run the enhanced categorizer, and let you export
+the new `tag_catalog.json` without touching the CLI.
+
+To stay within mobile storage limits, keep the limit at or below ~10k tags and
+prefer Wi‑Fi. Once the fetch completes you can tap **Download current catalog
+JSON** to capture the refreshed file and commit it later.
+
+### Manual verification
+
+After rebuilding the catalog, run the lightweight checker to confirm that new
+tags are categorized without updating `tag_map.json` manually:
+
+```
+node scripts/check_tag_categories.mjs new_tag_one another_tag
+```
+
+If you omit explicit tags, the checker samples from the generated catalog.
