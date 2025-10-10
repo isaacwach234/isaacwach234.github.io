@@ -9,7 +9,6 @@ import {
     element
 } from './state.js';
 import { EnhancedTagCategorizer } from './categorizer.js';
-import { DanbooruCatalogBuilder, downloadCatalogFile } from './catalog_fetcher.js';
 
 const {
     body,
@@ -61,18 +60,10 @@ const {
     maxTagCount,
     categoryCount,
     historyCount,
-    catalogRefreshButton,
-    catalogLimitInput,
-    catalogStatus,
-    catalogUsernameInput,
-    catalogApiKeyInput,
-    catalogDownloadButton,
 } = elements;
 
 const HIDDEN_STORAGE_KEY = STORAGE_KEYS.hiddenCategories;
 const FAVORITES_STORAGE_KEY = STORAGE_KEYS.favorites;
-const TAG_CATALOG_STORAGE_KEY = STORAGE_KEYS.tagCatalog;
-const SMART_SORT_MODES = new Set(['smart', 'flow', 'illustrious']);
 
     const PROMPT_FLOW_PHASES = [
         {
@@ -248,147 +239,6 @@ const SMART_SORT_MODES = new Set(['smart', 'flow', 'illustrious']);
         if (!state.knownCategories.has(resolved)) {
             state.knownCategories.add(resolved);
             renderCategoryFilters();
-        }
-    }
-
-    function loadCachedCatalog() {
-        try {
-            const raw = localStorage.getItem(TAG_CATALOG_STORAGE_KEY);
-            if (!raw) return null;
-            const parsed = JSON.parse(raw);
-            if (parsed && typeof parsed === 'object' && parsed.data) {
-                return parsed;
-            }
-        } catch (error) {
-            console.warn('Failed to parse cached Danbooru catalog', error);
-        }
-        return null;
-    }
-
-    function persistCatalogCache(payload) {
-        try {
-            localStorage.setItem(TAG_CATALOG_STORAGE_KEY, JSON.stringify(payload));
-            state.catalogCacheInfo = payload;
-        } catch (error) {
-            console.warn('Unable to persist catalog cache', error);
-            updateCatalogStatus(`Saved catalog in memory but not to storage: ${error.message}`, 'warn');
-        }
-    }
-
-    function updateCatalogStatus(message, tone = 'info') {
-        if (!catalogStatus) return;
-        const toneClass = tone === 'success' ? 'text-emerald-400' : tone === 'error' ? 'text-red-300' : tone === 'warn' ? 'text-amber-300' : 'text-gray-400';
-        catalogStatus.classList.remove('text-gray-400', 'text-emerald-400', 'text-red-300', 'text-amber-300');
-        catalogStatus.classList.add('text-xs', 'leading-relaxed', toneClass);
-        catalogStatus.textContent = message || '';
-    }
-
-    function setCatalogButtonLoading(isLoading) {
-        if (!catalogRefreshButton) return;
-        const original = catalogRefreshButton.dataset.originalText || catalogRefreshButton.textContent;
-        if (!catalogRefreshButton.dataset.originalText) {
-            catalogRefreshButton.dataset.originalText = original;
-        }
-        catalogRefreshButton.disabled = isLoading;
-        catalogRefreshButton.textContent = isLoading ? 'Fetching…' : catalogRefreshButton.dataset.originalText;
-    }
-
-    function rebuildCategorizerWithCatalog({ reprocess = true } = {}) {
-        if (!state.tagMap || !state.TAG_DATABASE.length) return;
-        const catalogData = state.tagCatalog || {};
-        state.tagCategorizer = new EnhancedTagCategorizer(
-            state.tagMap,
-            state.TAG_DATABASE,
-            state.categoryOrder,
-            state.tagMetadata,
-            catalogData
-        );
-        state.knownCategories = new Set([...state.tagCategorizer.categories, 'Uncategorized']);
-        state.latestCatalogPayload = catalogData;
-        if (reprocess) {
-            processAll();
-        } else {
-            renderCategoryFilters();
-        }
-    }
-
-    async function handleCatalogRefresh() {
-        if (!catalogRefreshButton) return;
-        if (!state.TAG_DATABASE.length) {
-            updateCatalogStatus('Core tag data is still loading. Please try again in a moment.', 'warn');
-            return;
-        }
-        const limit = parseInt(catalogLimitInput?.value || '5000', 10) || 5000;
-        if (limit > 20000) {
-            updateCatalogStatus('Consider keeping the limit at or below 20,000 for reliable mobile storage.', 'warn');
-        }
-        const username = catalogUsernameInput?.value?.trim() || null;
-        const apiKey = catalogApiKeyInput?.value?.trim() || null;
-        const builder = new DanbooruCatalogBuilder({
-            limit,
-            username,
-            apiKey,
-            onProgress: message => updateCatalogStatus(message, 'info'),
-        });
-        setCatalogButtonLoading(true);
-        updateCatalogStatus('Starting download…', 'info');
-        try {
-            const { catalog, total } = await builder.build();
-            const payload = {
-                generatedAt: new Date().toISOString(),
-                limit,
-                order: builder.order,
-                baseUrl: builder.baseUrl,
-                minPostCount: builder.minPostCount,
-                data: catalog,
-            };
-            state.tagCatalog = catalog;
-            persistCatalogCache(payload);
-            rebuildCategorizerWithCatalog({ reprocess: true });
-            if (catalogDownloadButton) catalogDownloadButton.classList.remove('hidden');
-            updateCatalogStatus(`Success! Loaded ${total} tag${total === 1 ? '' : 's'} directly from Danbooru.`, 'success');
-        } catch (error) {
-            console.error('Catalog refresh failed', error);
-            updateCatalogStatus(error.message || 'Failed to refresh catalog.', 'error');
-        } finally {
-            setCatalogButtonLoading(false);
-        }
-    }
-
-    function setupCatalogControls() {
-        if (!catalogRefreshButton) return;
-        if (!catalogRefreshButton.dataset.originalText) {
-            catalogRefreshButton.dataset.originalText = catalogRefreshButton.textContent;
-        }
-        catalogRefreshButton.addEventListener('click', handleCatalogRefresh);
-        if (catalogDownloadButton) {
-            catalogDownloadButton.addEventListener('click', () => {
-                if (!state.latestCatalogPayload || !Object.keys(state.latestCatalogPayload).length) {
-                    updateCatalogStatus('No catalog has been loaded yet.', 'warn');
-                    return;
-                }
-                try {
-                    downloadCatalogFile(state.latestCatalogPayload);
-                    updateCatalogStatus('Downloaded the current catalog to your device.', 'success');
-                } catch (error) {
-                    updateCatalogStatus(error.message, 'error');
-                }
-            });
-        }
-        const cached = state.catalogCacheInfo;
-        if (cached && cached.data) {
-            if (catalogLimitInput && cached.limit) {
-                catalogLimitInput.value = cached.limit;
-            }
-            const count = Object.keys(cached.data).length;
-            const generatedDate = cached.generatedAt ? new Date(cached.generatedAt) : null;
-            const formattedDate = generatedDate && !Number.isNaN(generatedDate.valueOf())
-                ? generatedDate.toLocaleString()
-                : 'a previous session';
-            updateCatalogStatus(`Using ${count.toLocaleString()} cached tag${count === 1 ? '' : 's'} from ${formattedDate}.`, 'success');
-            if (catalogDownloadButton) catalogDownloadButton.classList.remove('hidden');
-        } else {
-            updateCatalogStatus('Tip: Run the catalog fetcher on Wi‑Fi. Keep the limit under 10,000 for best results on mobile.', 'info');
         }
     }
 
@@ -729,8 +579,8 @@ const SMART_SORT_MODES = new Set(['smart', 'flow', 'illustrious']);
         const newBaseTags = [];
         const oldTagsMeta = new Map(state.baseTags.map(t => [t.original, { id: t.id, weighted: t.weighted, addedAt: t.addedAt }]));
         for (const tag of filteredTags) {
-            const useSmartCategorizer = SMART_SORT_MODES.has(sortSelect.value);
-            const { category, source } = useSmartCategorizer ? state.tagCategorizer.categorizeSmart(tag) : state.tagCategorizer.categorize(tag);
+            const isSmartSort = sortSelect.value === 'smart';
+            const { category, source } = isSmartSort ? state.tagCategorizer.categorizeSmart(tag) : state.tagCategorizer.categorize(tag);
             const oldMeta = oldTagsMeta.get(tag);
             const assignedCategory = category || 'Uncategorized';
             ensureCategoryRegistered(assignedCategory);
@@ -1322,7 +1172,6 @@ const SMART_SORT_MODES = new Set(['smart', 'flow', 'illustrious']);
     export async function initApp() {
         initializeToken();
         await loadExternalData();
-        setupCatalogControls();
         const savedTheme = localStorage.getItem('danbooru-tag-helper-theme') || 'theme-indigo';
         applyTheme(savedTheme);
         runEntranceAnimations();
@@ -1352,13 +1201,8 @@ const SMART_SORT_MODES = new Set(['smart', 'flow', 'illustrious']);
             tagInput.addEventListener('input', debouncedTagProcessing);
             tagInput.addEventListener('change', processAll);
         }
-        const inputsForDisplay = [deduplicateToggle, underscoreToggle, enableWeightingToggle];
+        const inputsForDisplay = [deduplicateToggle, underscoreToggle, enableWeightingToggle, sortSelect];
         inputsForDisplay.forEach(input => input.addEventListener('change', displayTags));
-        if (sortSelect) {
-            sortSelect.addEventListener('change', () => {
-                processAll();
-            });
-        }
         underscoreToggle.addEventListener('change', renderFavorites);
         if (tagInput) {
             tagInput.addEventListener('input', handleAutocompleteInput);
