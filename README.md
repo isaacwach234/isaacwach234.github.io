@@ -13,7 +13,8 @@ This tool allows you to easily process lists of tags by applying various filters
 * **Append Tags:** Add custom words or phrases to the end of your tag list.  
 * **Tag Formatting:** Automatically replace spaces with underscores (or vice-versa) for consistency.  
 * **Sorting:** Sort the processed tags alphabetically (A-Z or Z-A) or keep the original order (after filtering).
-* **Illustrious Prompt Ordering:** Apply the community Illustrious structure (Artist → Subject → Pose → Scene → Effects → Quality) with a single sort mode.
+* **Illustrious Prompt Ordering:** Apply the community Illustrious structure (Artist → Subject → Pose → Scene → Effects → Quality) with a single sort mode powered by the enhanced categorizer.
+* **On-Device Catalog Refresh:** Pull fresh Danbooru metadata straight from the UI (desktop or mobile) and immediately benefit from smarter categorization.
 * **Max Tag Limit:** Limit the number of processed tags included in the final output per item.
 * **Tag Search:** Highlight or count tags matching a search term within the processed or original input list, aiding in review.  
 * **Clear Display:** Shows initial tag count, processed tag count, prepended triggers, and appended tags separately.  
@@ -54,6 +55,19 @@ python scripts/build_tag_catalog.py --limit 75000 --user YOUR_NAME --api-key YOU
 
 The script writes `generated/tag_catalog.json`, which is automatically picked up
 the next time you reload the web UI.
+
+### Refreshing the catalog directly from your phone
+
+If you are away from a laptop, open the helper on your phone and scroll to
+**Danbooru Catalog (On-Device)** in the sidebar. Enter an optional Danbooru
+username/API key (highly recommended to avoid rate limits), pick a download
+limit, and tap **Fetch catalog on this device**. The app will stream the
+metadata into local storage, re-run the enhanced categorizer, and let you export
+the new `tag_catalog.json` without touching the CLI.
+
+To stay within mobile storage limits, keep the limit at or below ~10k tags and
+prefer Wi‑Fi. Once the fetch completes you can tap **Download current catalog
+JSON** to capture the refreshed file and commit it later.
 
 ### Manual verification
 
