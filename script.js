@@ -213,7 +213,7 @@ function processTags(inputTags) {
   // e621 (now with expanded mappings)
   baseTags = applyE621Mode(baseTags);
 
-  updateOverTagWarning(baseTags.length);
+  updateOverTagWarning(baseTags.length, max);
   return baseTags;
 }
 
@@ -258,13 +258,17 @@ function displayTags() {
 function renderTagContainer(containerId, tags, isProcessed = false) {
   const container = element(containerId);
   container.innerHTML = '';
-  tags.forEach(tag => {
-    const el = document.createElement('div');
-    el.className = 'tag-base';
-    el.textContent = tag.original;
-    if (isProcessed && tag.implied) el.classList.add('opacity-50');
-    container.appendChild(el);
-  });
+  tags
+    .map(tag => (typeof tag === 'string' ? { original: tag } : tag))
+    .map(tag => ({ ...tag, original: tag.original?.trim() }))
+    .filter(tag => Boolean(tag.original))
+    .forEach(tag => {
+      const el = document.createElement('div');
+      el.className = 'tag-base';
+      el.textContent = tag.original;
+      if (isProcessed && tag.implied) el.classList.add('opacity-50');
+      container.appendChild(el);
+    });
 }
 
 // Update prompt preview
@@ -289,9 +293,9 @@ function copyTagsToClipboard() {
 }
 
 // Update over-tag warning
-function updateOverTagWarning(count) {
+function updateOverTagWarning(count, max) {
   const warning = element('overTagWarning');
-  warning.classList.toggle('hidden', count <= 75);
+  warning.classList.toggle('hidden', count <= max);
 }
 
 // Update stats
@@ -350,7 +354,7 @@ function initEventListeners() {
   if (element('suggestBtn')) element('suggestBtn').addEventListener('click', () => { /* Suggest logic placeholder */ alert('Suggest coming soon!'); });
   if (element('exportSettingsBtn')) element('exportSettingsBtn').addEventListener('click', exportSettings);
   if (element('importSettingsBtn')) element('importSettingsBtn').addEventListener('click', () => element('importSettingsInput').click());
-  if (element('resetDefaultsBtn')) element('resetDefaultsBtn').addEventListener('click', resetToDefaults);
+  if (element('resetDefaultsBtn')) element('resetDefaultsBtn').addEventListener('click', () => resetToDefaults());
   if (element('importSettingsInput')) element('importSettingsInput').addEventListener('change', importSettings);
 
   // Settings toggle
@@ -410,8 +414,8 @@ function importSettings(e) {
   reader.readAsText(file);
 }
 
-function resetToDefaults() {
-  if (confirm('Reset all to defaults?')) {
+function resetToDefaults(skipConfirm = false) {
+  if (skipConfirm || confirm('Reset all to defaults?')) {
     if (element('tagInput')) element('tagInput').value = '';
     if (element('triggerInput')) element('triggerInput').value = '';
     if (element('appendInput')) element('appendInput').value = '';
@@ -438,7 +442,7 @@ async function init() {
   const savedTheme = localStorage.getItem('danbooru-tag-helper-theme') || 'theme-indigo';
   applyTheme(savedTheme);
   initEventListeners();
-  resetToDefaults(); // Sets underscore false
+  resetToDefaults(true); // Sets underscore false without prompting
   const savedHistory = localStorage.getItem('danbooru-tag-history');
   if (savedHistory) copyHistory = JSON.parse(savedHistory);
   processAll();
