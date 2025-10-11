@@ -346,12 +346,12 @@ function initEventListeners() {
 
   // Buttons
   element('copyButton').addEventListener('click', copyTagsToClipboard);
-  element('promptPreviewCopy').addEventListener('click', copyTagsToClipboard);
-  element('suggestBtn').addEventListener('click', () => { /* Suggest logic placeholder */ alert('Suggest coming soon!'); });
-  element('exportSettingsBtn').addEventListener('click', exportSettings);
-  element('importSettingsBtn').addEventListener('click', () => element('importSettingsInput').click());
-  element('resetDefaultsBtn').addEventListener('click', resetToDefaults);
-  element('importSettingsInput').addEventListener('change', importSettings);
+  if (element('promptPreviewCopy')) element('promptPreviewCopy').addEventListener('click', copyTagsToClipboard);
+  if (element('suggestBtn')) element('suggestBtn').addEventListener('click', () => { /* Suggest logic placeholder */ alert('Suggest coming soon!'); });
+  if (element('exportSettingsBtn')) element('exportSettingsBtn').addEventListener('click', exportSettings);
+  if (element('importSettingsBtn')) element('importSettingsBtn').addEventListener('click', () => element('importSettingsInput').click());
+  if (element('resetDefaultsBtn')) element('resetDefaultsBtn').addEventListener('click', resetToDefaults);
+  if (element('importSettingsInput')) element('importSettingsInput').addEventListener('change', importSettings);
 
   // Settings toggle
   // Add button for settings if needed
@@ -360,34 +360,68 @@ function initEventListeners() {
 // Settings functions (adapted)
 function exportSettings() {
   const settings = {
-    // ... (as in original)
+    theme: document.body.className.match(/theme-\w+/)?.[0] || 'theme-indigo',
+    prepend: element('triggerInput')?.value || '',
+    append: element('appendInput')?.value || '',
+    blacklist: element('blacklistInput')?.value || '',
+    maxTags: element('maxTagsInput')?.value || '75',
+    sorting: element('sortSelect')?.value || 'danbooru',
+    deduplicate: element('deduplicateToggle')?.checked || true,
+    underscores: element('underscoreToggle')?.checked || false,
+    weighting: false, // Placeholder
+    removeWeights: element('removeWeightsToggle')?.checked || false,
+    e621Mode: element('e621ModeToggle')?.checked || false
   };
   const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `settings.json`;
+  a.download = `settings-${new Date().toISOString().split('T')[0]}.json`;
   a.click();
   URL.revokeObjectURL(url);
 }
 
 function importSettings(e) {
-  // ... (as in original, adapted for new toggles)
-  element('underscoreToggle').checked = false; // Ensure false
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const settings = JSON.parse(ev.target.result);
+      if (settings.theme) applyTheme(settings.theme);
+      if (settings.prepend !== undefined) element('triggerInput').value = settings.prepend;
+      if (settings.append !== undefined) element('appendInput').value = settings.append;
+      if (settings.blacklist !== undefined) element('blacklistInput').value = settings.blacklist;
+      if (settings.maxTags !== undefined) element('maxTagsInput').value = settings.maxTags;
+      if (settings.sorting !== undefined) element('sortSelect').value = settings.sorting;
+      if (settings.deduplicate !== undefined) element('deduplicateToggle').checked = settings.deduplicate;
+      if (settings.underscores !== undefined) element('underscoreToggle').checked = settings.underscores;
+      if (settings.removeWeights !== undefined) element('removeWeightsToggle').checked = settings.removeWeights;
+      if (settings.e621Mode !== undefined) element('e621ModeToggle').checked = settings.e621Mode;
+      processAll();
+      if (element('copyMessage')) {
+        element('copyMessage').textContent = 'Settings imported!';
+        setTimeout(() => element('copyMessage').textContent = '', 3000);
+      }
+    } catch (error) {
+      alert('Error importing settings: ' + error.message);
+    }
+  };
+  reader.readAsText(file);
 }
 
 function resetToDefaults() {
-  if (confirm('Reset?')) {
-    element('tagInput').value = '';
-    element('triggerInput').value = '';
-    element('appendInput').value = '';
-    element('blacklistInput').value = '';
-    element('maxTagsInput').value = '75';
-    element('sortSelect').value = 'danbooru';
-    element('deduplicateToggle').checked = true;
-    element('underscoreToggle').checked = false; // Key change
-    element('removeWeightsToggle').checked = false;
-    element('e621ModeToggle').checked = false;
+  if (confirm('Reset all to defaults?')) {
+    if (element('tagInput')) element('tagInput').value = '';
+    if (element('triggerInput')) element('triggerInput').value = '';
+    if (element('appendInput')) element('appendInput').value = '';
+    if (element('blacklistInput')) element('blacklistInput').value = '';
+    if (element('maxTagsInput')) element('maxTagsInput').value = '75';
+    if (element('sortSelect')) element('sortSelect').value = 'danbooru';
+    if (element('deduplicateToggle')) element('deduplicateToggle').checked = true;
+    if (element('underscoreToggle')) element('underscoreToggle').checked = false;
+    if (element('removeWeightsToggle')) element('removeWeightsToggle').checked = false;
+    if (element('e621ModeToggle')) element('e621ModeToggle').checked = false;
     processAll();
   }
 }
@@ -416,4 +450,4 @@ document.addEventListener('DOMContentLoaded', init);
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 if (!prefersReducedMotion && window.gsap) {
   gsap.from('.glass-panel', { opacity: 0, y: 32, duration: 0.8, stagger: 0.1, ease: 'power3.out' });
-               }
+}
