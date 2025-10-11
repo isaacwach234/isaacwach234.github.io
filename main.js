@@ -13,18 +13,18 @@ const STORAGE_KEYS = {
 };
 
 // Global State
-let TAG_DATABASE = [];
-let gitHubPat = null;
-let tagCategorizer;
-let tagIdCounter = 0;
-let baseTags = [];
-let copyHistory = [];
-let selectedTagIds = new Set();
-let sortableInstances = [];
-let autocomplete = { active: false, index: -1, currentWord: '', suggestions: [] };
-let hiddenCategories = new Set();
-let knownCategories = new Set();
-let favoriteTags = new Map();
+var TAG_DATABASE = [];
+var gitHubPat = null;
+var tagCategorizer;
+var tagIdCounter = 0;
+var baseTags = [];
+var copyHistory = [];
+var selectedTagIds = new Set();
+var sortableInstances = [];
+var autocomplete = { active: false, index: -1, currentWord: '', suggestions: [] };
+var hiddenCategories = new Set();
+var knownCategories = new Set();
+var favoriteTags = new Map();
 
 const reduceMotionQuery = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
 const prefersReducedMotion = reduceMotionQuery ? reduceMotionQuery.matches : false;
