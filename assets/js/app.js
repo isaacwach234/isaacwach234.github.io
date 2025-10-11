@@ -1,7 +1,7 @@
 const GITHUB_USER = 'isaacwach234';
 const GITHUB_REPO = 'isaacwach234.github.io';
 
-let TAG_DATABASES = {}, TAG_DATABASE = [], gitHubPat = null, tagCategorizer, tagIdCounter = 0;
+let TAG_DATABASE = [], gitHubPat = null, tagCategorizer, tagIdCounter = 0;
 let baseTags = [], copyHistory = [], selectedTagIds = new Set(), sortableInstances = [];
 let autocomplete = { active: false, index: -1, currentWord: '', suggestions: [] };
 let hiddenCategories = new Set(), knownCategories = new Set(), favoriteTags = new Map();
@@ -12,7 +12,6 @@ const element = (id) => document.getElementById(id);
 const body = document.body, tagInput = element('tagInput'), swapsInput = element('swapsInput'), implicationsInput = element('implicationsInput'), blacklistInput = element('blacklistInput'), triggerInput = element('triggerInput'), appendInput = element('appendInput');
 const deduplicateToggle = element('deduplicateToggle'), underscoreToggle = element('underscoreToggle'), enableWeightingToggle = element('enableWeightingToggle');
 const sortSelect = element('sortSelect'), maxTagsInput = element('maxTagsInput'), tagOutput = element('tagOutput');
-const tagDialectSelect = element('tagDialectSelect');
 const copyButton = element('copyButton'), copyMessage = element('copyMessage'), historyContainer = element('history-container'), autocompleteBox = element('autocomplete-box');
 const suggestBtn = element('suggest-btn'), themeButtons = document.querySelectorAll('.theme-button'), suggestionCountInput = element('suggestionCountInput');
 const categoryToggleContainer = element('categoryToggleContainer'), hiddenCategoriesBanner = element('hiddenCategoriesBanner');
@@ -152,76 +151,6 @@ const ILLUSTRIOUS_PHASE_PRIORITY_KEYWORDS = {
     quality: [['masterpiece', 8], ['best quality', 7], ['ultra detailed', 6], ['highres', 5], ['8k', 4], ['4k', 3], ['hdr', 3]]
 };
 
-const E621_PROMPT_PHASES = [
-    {
-        key: 'rating',
-        label: 'Rating & Safety',
-        description: 'Declare safety level or ratings before content-specific tags.',
-        categories: ['Rating & Safety'],
-        keywords: ['rating:s', 'rating:q', 'rating:e', 'safe', 'explicit', 'suggestive', 'questionable']
-    },
-    {
-        key: 'species',
-        label: 'Species & Forms',
-        description: 'Outline species, body plans, and anthro versus feral silhouettes.',
-        categories: ['Species & Body', 'Subject & Creatures', 'Anatomy & Detail'],
-        keywords: ['species', 'anthro', 'feral', 'taur', 'hybrid', 'protogen', 'sergal', 'canine', 'feline', 'dragon']
-    },
-    {
-        key: 'identity',
-        label: 'Identity & Cast',
-        description: 'List characters, gender descriptors, canon notes, or artist credits.',
-        categories: ['Characters', 'Gender & Identity', 'Artists', 'Meta & Lore'],
-        keywords: ['character', 'male', 'female', 'futa', 'herm', 'oc', 'original_character', 'artist', 'canon', 'lore']
-    },
-    {
-        key: 'anatomy',
-        label: 'Anatomy & Detail',
-        description: 'Capture anatomy specifics, genital tags, and fluid descriptors.',
-        categories: ['Anatomy & Detail', 'Genitals & Fluids'],
-        keywords: ['muzzle', 'fur', 'paws', 'claws', 'sheath', 'knot', 'slit', 'barbed', 'dripping', 'cum', 'ejaculation']
-    },
-    {
-        key: 'kinks',
-        label: 'Kinks, Gear & Wardrobe',
-        description: 'Add toys, wardrobe elements, and kink modifiers.',
-        categories: ['Kinks & Themes', 'Wardrobe & Accessories', 'Props & Gear'],
-        keywords: ['bondage', 'bdsm', 'harness', 'collar', 'leash', 'restraint', 'toy', 'vibrator', 'latex', 'lingerie']
-    },
-    {
-        key: 'action',
-        label: 'Actions & Interaction',
-        description: 'Describe poses, interactions, and emotional beats.',
-        categories: ['Actions & Interaction', 'Actions & Poses', 'Emotion & Expression'],
-        keywords: ['hug', 'kiss', 'lick', 'snuggle', 'dominant', 'submissive', 'mounting', 'posing', 'smile', 'blush']
-    },
-    {
-        key: 'scene',
-        label: 'Scene & Atmosphere',
-        description: 'Paint the environment, weather, and lighting cues.',
-        categories: ['Scene & Setting', 'Lighting & Effects', 'Style & Meta'],
-        keywords: ['bedroom', 'forest', 'dungeon', 'stage', 'night', 'rain', 'neon', 'lighting', 'background', 'spotlight']
-    },
-    {
-        key: 'quality',
-        label: 'Quality & Output',
-        description: 'Close with render fidelity and resolution boosters.',
-        categories: ['Quality'],
-        keywords: ['masterpiece', 'best quality', 'ultra detailed', 'highres', '4k', '8k', 'hdr', 'rendered', 'cinematic']
-    }
-];
-
-const E621_PHASE_PRIORITY_KEYWORDS = {
-    rating: [['rating:s', 5], ['rating:e', 5], ['rating:q', 4], ['explicit', 4], ['safe', 3], ['questionable', 3]],
-    species: [['anthro', 4], ['feral', 4], ['taur', 3], ['protogen', 3], ['dragon', 3], ['canine', 2]],
-    identity: [['male', 3], ['female', 3], ['futa', 3], ['herm', 3], ['oc', 3], ['artist', 2], ['character', 2]],
-    anatomy: [['sheath', 4], ['knot', 4], ['barbed', 3], ['slit', 3], ['dripping', 2], ['muzzle', 2]],
-    kinks: [['bondage', 4], ['bdsm', 4], ['collar', 3], ['harness', 3], ['leash', 3], ['latex', 3], ['toy', 2], ['vibrator', 2]],
-    action: [['hug', 3], ['kiss', 3], ['lick', 3], ['snuggle', 2], ['mounting', 3], ['dominant', 2], ['submissive', 2]],
-    scene: [['bedroom', 3], ['forest', 3], ['dungeon', 3], ['neon', 2], ['night', 2], ['rain', 2], ['stage', 2]],
-    quality: [['masterpiece', 5], ['best quality', 5], ['ultra detailed', 4], ['highres', 3], ['8k', 3], ['hdr', 3]]
-};
-
 function createPromptFlowConfig(phases, priorityKeywords, fallbackKey) {
     const processedPhases = phases.map(phase => ({
         ...phase,
@@ -241,7 +170,6 @@ function createPromptFlowConfig(phases, priorityKeywords, fallbackKey) {
 
 const PROMPT_FLOW_CONFIG = createPromptFlowConfig(PROMPT_FLOW_PHASES, FLOW_PHASE_PRIORITY_KEYWORDS, 'extras');
 const ILLUSTRIOUS_FLOW_CONFIG = createPromptFlowConfig(ILLUSTRIOUS_PROMPT_PHASES, ILLUSTRIOUS_PHASE_PRIORITY_KEYWORDS, 'quality');
-const E621_FLOW_CONFIG = createPromptFlowConfig(E621_PROMPT_PHASES, E621_PHASE_PRIORITY_KEYWORDS, 'quality');
 
 const categoryPickerState = { tagId: null };
 
@@ -255,34 +183,11 @@ function debounce(fn, wait = 300) {
 }
 
 class EnhancedTagCategorizer {
-    constructor(tagMapsBySource, tagListsBySource, categoryOrderBySource, options = {}) {
-        this.sourceMaps = {};
-        Object.entries(tagMapsBySource || {}).forEach(([source, map]) => {
-            this.sourceMaps[source] = { ...(map || {}) };
-        });
-        this.tagListsBySource = tagListsBySource || {};
-        this.categoryOrderBySource = categoryOrderBySource || {};
-        this.e621TaxonomyData = options.e621Taxonomy || null;
-        this.ontologyData = options.ontology || null;
-        const availableSources = Object.keys(this.sourceMaps);
-        this.activeSource = options.initialSource && availableSources.includes(options.initialSource)
-            ? options.initialSource
-            : (availableSources[0] || 'danbooru');
-        this.categories = [];
-        this.categorySet = new Set();
-        this.categoryOrder = [];
-        this.applySource(this.activeSource);
-    }
-
-    applySource(source) {
-        if (!this.sourceMaps[source]) {
-            console.warn(`Unknown tag source '${source}', falling back to default.`);
-            source = Object.keys(this.sourceMaps)[0] || 'danbooru';
-        }
-        this.activeSource = source;
-        this.primaryIndex = this.sourceMaps[source] || {};
-        this.categoryOrder = [...(this.categoryOrderBySource[source] || this.categoryOrderBySource.default || [])];
-        this.categorySet = new Set([...this.categoryOrder, ...Object.values(this.primaryIndex || {}), 'Uncategorized']);
+    constructor(tagMap, allTags, categoryOrder, options = {}) {
+        this.primaryIndex = { ...(tagMap || {}) };
+        this.categoryOrder = Array.isArray(categoryOrder) ? [...categoryOrder] : [];
+        this.categorySet = new Set([...Object.values(this.primaryIndex), ...this.categoryOrder, 'Uncategorized']);
+        this.refreshCategoryList();
         this.patternIndex = { ends: {}, starts: {} };
         this.keywordIndex = {};
         this.e621CategoryMap = {};
@@ -291,14 +196,14 @@ class EnhancedTagCategorizer {
         this.ontologyKeywordMap = {};
         this.ontologyRegexRules = [];
         this.ontologyComboRules = [];
-        if (source === 'e621' && this.e621TaxonomyData) {
-            this.integrateE621Taxonomy(this.e621TaxonomyData);
+        this.buildHeuristicIndexes(allTags || []);
+        this.buildEnhancedHeuristics();
+        if (options.e621Taxonomy) {
+            this.integrateE621Taxonomy(options.e621Taxonomy);
         }
-        if (this.ontologyData) {
-            this.applyOntology(this.ontologyData);
+        if (options.ontology) {
+            this.applyOntology(options.ontology);
         }
-        this.buildEnhancedHeuristics(source);
-        this.buildHeuristicIndexes(this.tagListsBySource[source] || []);
         this.refreshCategoryList();
     }
 
@@ -315,29 +220,26 @@ class EnhancedTagCategorizer {
     }
 
     integrateE621Taxonomy(taxonomy) {
-        const categoryMap = taxonomy?.category_map || {};
-        const keywordHints = taxonomy?.keyword_hints || {};
-        const suffixHints = taxonomy?.suffix_hints || {};
+        const categoryMap = taxonomy.category_map || {};
+        const keywordHints = taxonomy.keyword_hints || {};
+        const suffixHints = taxonomy.suffix_hints || {};
         this.e621CategoryMap = Object.fromEntries(Object.entries(categoryMap).map(([key, value]) => [key, value || 'Uncategorized']));
         this.e621KeywordHints = Object.fromEntries(Object.entries(keywordHints).map(([key, keywords]) => [key, (keywords || []).map(kw => kw.toLowerCase())]));
         this.e621SuffixHints = Object.fromEntries(Object.entries(suffixHints).map(([suffix, category]) => [suffix.toLowerCase(), category]));
         Object.values(this.e621CategoryMap).forEach(category => this.addCategory(category));
-        if (Array.isArray(taxonomy?.additional_categories)) {
+        if (Array.isArray(taxonomy.additional_categories)) {
             taxonomy.additional_categories.forEach(category => this.addCategory(category));
         }
     }
 
     applyOntology(ontology) {
-        this.ontologyKeywordMap = {};
-        this.ontologyRegexRules = [];
-        this.ontologyComboRules = [];
-        if (ontology?.category_keywords) {
+        if (ontology.category_keywords) {
             Object.entries(ontology.category_keywords).forEach(([category, keywords]) => {
                 this.ontologyKeywordMap[category] = (keywords || []).map(keyword => keyword.toLowerCase());
                 this.addCategory(category);
             });
         }
-        if (Array.isArray(ontology?.pattern_rules)) {
+        if (Array.isArray(ontology.pattern_rules)) {
             this.ontologyRegexRules = ontology.pattern_rules
                 .filter(rule => rule.regex)
                 .map(rule => ({
@@ -360,8 +262,6 @@ class EnhancedTagCategorizer {
     }
 
     buildHeuristicIndexes(allTags) {
-        this.keywordIndex = {};
-        this.patternIndex = { ends: {}, starts: {} };
         const keywordCategoryCounts = {};
         const suffixCategoryCounts = {};
         const prefixCategoryCounts = {};
@@ -369,10 +269,10 @@ class EnhancedTagCategorizer {
         (allTags || []).forEach(tag => {
             const category = this.primaryIndex[tag];
             if (!category) return;
-            const words = tag.split(/[_:]/).filter(Boolean);
+            const words = tag.split('_');
             if (words.length > 1) {
                 words.forEach(word => {
-                    if (word.length < 3 || COPYRIGHT_KEYWORDS.has(word)) return;
+                    if (word.length < 4 || COPYRIGHT_KEYWORDS.has(word)) return;
                     if (!keywordCategoryCounts[word]) keywordCategoryCounts[word] = {};
                     keywordCategoryCounts[word][category] = (keywordCategoryCounts[word][category] || 0) + 1;
                 });
@@ -394,17 +294,17 @@ class EnhancedTagCategorizer {
             const counts = suffixCategoryCounts[suffix];
             const total = Object.values(counts).reduce((sum, value) => sum + value, 0);
             const [mostLikelyCategory, categoryCount] = Object.entries(counts).reduce((a, b) => a[1] > b[1] ? a : b);
-            if (total > 8 && (categoryCount / total) > 0.7) this.patternIndex.ends[`_${suffix}`] = mostLikelyCategory;
+            if (total > 10 && (categoryCount / total) > 0.75) this.patternIndex.ends[`_${suffix}`] = mostLikelyCategory;
         }
         for (const prefix in prefixCategoryCounts) {
             const counts = prefixCategoryCounts[prefix];
             const total = Object.values(counts).reduce((sum, value) => sum + value, 0);
             const [mostLikelyCategory, categoryCount] = Object.entries(counts).reduce((a, b) => a[1] > b[1] ? a : b);
-            if (total > 8 && (categoryCount / total) > 0.7) this.patternIndex.starts[`${prefix}_`] = mostLikelyCategory;
+            if (total > 10 && (categoryCount / total) > 0.75) this.patternIndex.starts[`${prefix}_`] = mostLikelyCategory;
         }
     }
 
-    buildEnhancedHeuristics(source) {
+    buildEnhancedHeuristics() {
         this.characterPatterns = [/\([^)]+\)$/, /_\([^)]+\)$/, /^[a-z]+_[a-z]+_\([^)]+\)$/];
         this.qualityKeywords = new Set(['quality', 'masterpiece', 'best', 'high', 'ultra', 'super', 'extremely', 'detailed', 'resolution', 'res', '4k', '8k', 'hd', 'uhd', 'absurdres']);
         this.compositionKeywords = new Set(['shot', 'view', 'angle', 'perspective', 'focus', 'body', 'portrait', 'landscape', 'close-up', 'wide', 'cowboy', 'full', 'upper', 'lower']);
@@ -413,38 +313,12 @@ class EnhancedTagCategorizer {
         this.actionKeywords = new Set(['sitting', 'standing', 'lying', 'walking', 'running', 'jumping', 'dancing', 'singing', 'eating', 'drinking', 'sleeping', 'smiling', 'looking', 'holding', 'grabbing', 'touching', 'reaching', 'posing', 'gesture']);
         this.settingKeywords = new Set(['background', 'outdoor', 'indoor', 'room', 'bedroom', 'bathroom', 'kitchen', 'school', 'office', 'beach', 'forest', 'city', 'sky', 'night', 'day', 'sunset', 'sunrise', 'moon', 'star', 'cloud', 'rain', 'snow', 'weather']);
         this.speciesKeywords = new Set(['canine', 'feline', 'dragon', 'avian', 'lupine', 'vulpine', 'kitsune', 'bovine', 'equine', 'reptile', 'lizard', 'wolf', 'fox', 'cat', 'dog', 'bird', 'lion', 'tiger', 'bunny', 'rabbit']);
-        this.categoryAliases = {
-            body: source === 'e621' ? 'Anatomy & Detail' : 'Body Parts',
-            species: source === 'e621' ? 'Species & Body' : 'Subject & Creatures',
-            action: source === 'e621' ? 'Actions & Interaction' : 'Actions & Poses',
-            setting: source === 'e621' ? 'Scene & Setting' : 'Setting & Environment',
-            clothing: source === 'e621' ? 'Wardrobe & Accessories' : 'Attire'
-        };
         this.emotionKeywords = new Set(['smile', 'smiling', 'angry', 'anger', 'blush', 'crying', 'tears', 'joy', 'sad', 'determined', 'focused', 'surprised', 'wink', 'laughing']);
-        this.genderKeywords = new Set();
-        this.genitalKeywords = new Set();
-        this.kinkKeywords = new Set();
-        this.ratingKeywords = new Set();
-        this.loreKeywords = new Set();
-        this.fluidKeywords = new Set();
-        this.propKeywords = new Set();
-        if (source === 'e621') {
-            this.genderKeywords = new Set(['male', 'female', 'intersex', 'trans', 'futa', 'herm', 'cuntboy', 'dickgirl', 'gynomorph', 'andromorph', 'mtf', 'ftm']);
-            this.genitalKeywords = new Set(['sheath', 'knot', 'penis', 'cock', 'shaft', 'vulva', 'cloaca', 'labia', 'balls', 'testicles', 'scrotum', 'cum', 'ejaculation', 'semen', 'pussy', 'anus']);
-            this.kinkKeywords = new Set(['bondage', 'bdsm', 'tentacle', 'latex', 'inflation', 'vore', 'transformation', 'lingerie', 'toy', 'vibrator', 'strapon', 'dominant', 'submission', 'petplay', 'watersports', 'hypnosis', 'milking']);
-            this.ratingKeywords = new Set(['rating:s', 'rating:q', 'rating:e', 'safe', 'explicit', 'questionable', 'suggestive']);
-            this.loreKeywords = new Set(['lore', 'worldbuilding', 'canon', 'species:custom', 'setting:original', 'story']);
-            this.fluidKeywords = new Set(['cum', 'ejaculation', 'drool', 'saliva', 'milk', 'sweat', 'wet', 'goo', 'slime', 'lube', 'fluid']);
-            this.propKeywords = new Set(['collar', 'harness', 'gag', 'blindfold', 'rope', 'chain', 'leash', 'strap', 'toy', 'vibrator', 'plug', 'restraint', 'gear', 'armor', 'weapon']);
-            this.speciesKeywords = new Set([...this.speciesKeywords, 'taur', 'sergal', 'protogen', 'hybrid', 'gryphon', 'otter', 'shark', 'mammal', 'fish', 'avian', 'reptilian', 'bug', 'arthropod']);
-        }
     }
 
     updateIndex(tag, newCategory) {
         const normalized = tag.toLowerCase().replace(/ /g, '_');
-        const activeMap = this.sourceMaps[this.activeSource];
-        activeMap[normalized] = newCategory;
-        this.primaryIndex = activeMap;
+        this.primaryIndex[normalized] = newCategory;
         this.addCategory(newCategory);
     }
 
@@ -453,7 +327,7 @@ class EnhancedTagCategorizer {
         if (this.primaryIndex[normalizedTag]) {
             return { category: this.primaryIndex[normalizedTag], source: 'Primary', confidence: 1.0 };
         }
-        const words = normalizedTag.split(/[_:]/).filter(Boolean);
+        const words = normalizedTag.split('_').filter(Boolean);
         const scoreMap = new Map();
         const reasonMap = new Map();
         const addScore = (category, amount, reason) => {
@@ -467,25 +341,16 @@ class EnhancedTagCategorizer {
         for (const pattern of this.characterPatterns) {
             if (pattern.test(normalizedTag)) addScore('Characters', 1.2, 'Character pattern');
         }
-        if (normalizedTag.startsWith('rating:') || this.ratingKeywords.has(normalizedTag)) {
-            addScore('Rating & Safety', 1.4, 'Rating indicator');
-        }
         words.forEach(word => {
             if (this.keywordIndex[word]) addScore(this.keywordIndex[word], 1.1, `Known keyword '${word}'`);
             if (this.qualityKeywords.has(word)) addScore('Quality', 0.9, `Quality keyword '${word}'`);
             if (this.compositionKeywords.has(word)) addScore('Composition', 0.85, `Composition keyword '${word}'`);
-            if (this.bodyPartKeywords.has(word)) addScore(this.categoryAliases.body || 'Body Parts', 1.0, `Anatomy keyword '${word}'`);
-            if (this.clothingKeywords.has(word)) addScore(this.categoryAliases.clothing || 'Attire', 0.95, `Wardrobe keyword '${word}'`);
-            if (this.actionKeywords.has(word)) addScore(this.categoryAliases.action || 'Actions & Poses', 0.9, `Action keyword '${word}'`);
-            if (this.settingKeywords.has(word)) addScore(this.categoryAliases.setting || 'Setting & Environment', 0.9, `Setting keyword '${word}'`);
-            if (this.speciesKeywords.has(word)) addScore(this.categoryAliases.species || 'Subject & Creatures', 1.05, `Species keyword '${word}'`);
+            if (this.bodyPartKeywords.has(word)) addScore('Body Parts', 1.0, `Anatomy keyword '${word}'`);
+            if (this.clothingKeywords.has(word)) addScore('Attire', 0.95, `Wardrobe keyword '${word}'`);
+            if (this.actionKeywords.has(word)) addScore('Actions & Poses', 0.9, `Action keyword '${word}'`);
+            if (this.settingKeywords.has(word)) addScore('Setting & Environment', 0.9, `Setting keyword '${word}'`);
+            if (this.speciesKeywords.has(word)) addScore('Subject & Creatures', 1.05, `Species keyword '${word}'`);
             if (this.emotionKeywords.has(word)) addScore('Emotion & Expression', 0.9, `Expression keyword '${word}'`);
-            if (this.genderKeywords.has(word)) addScore('Gender & Identity', 1.05, `Gender keyword '${word}'`);
-            if (this.genitalKeywords.has(word)) addScore('Genitals & Fluids', 1.1, `Anatomy detail '${word}'`);
-            if (this.kinkKeywords.has(word)) addScore('Kinks & Themes', 0.95, `Theme keyword '${word}'`);
-            if (this.propKeywords.has(word)) addScore('Props & Gear', 0.9, `Gear keyword '${word}'`);
-            if (this.loreKeywords.has(word)) addScore('Meta & Lore', 0.8, `Lore keyword '${word}'`);
-            if (this.fluidKeywords.has(word)) addScore('Genitals & Fluids', 0.85, `Fluid keyword '${word}'`);
         });
         Object.entries(this.e621KeywordHints).forEach(([e621Category, keywords]) => {
             const mappedCategory = this.e621CategoryMap[e621Category];
@@ -534,7 +399,7 @@ class EnhancedTagCategorizer {
         }
         for (const prefix in this.patternIndex.starts) if (tag.startsWith(prefix)) return { category: this.patternIndex.starts[prefix], source: 'Pattern (Prefix)' };
         for (const suffix in this.patternIndex.ends) if (tag.endsWith(suffix)) return { category: this.patternIndex.ends[suffix], source: 'Pattern (Suffix)' };
-        const words = tag.split(/[_:]/).filter(Boolean);
+        const words = tag.split('_');
         const categoryScores = {};
         words.forEach(word => {
             if (this.keywordIndex[word]) categoryScores[this.keywordIndex[word]] = (categoryScores[this.keywordIndex[word]] || 0) + 1;
@@ -1016,8 +881,8 @@ function displayTags() {
             groupDiv.appendChild(container);
             tagOutput.appendChild(groupDiv);
         });
-    } else if (['flow', 'illustrious', 'e621'].includes(sortValue)) {
-        const flowConfig = sortValue === 'illustrious' ? ILLUSTRIOUS_FLOW_CONFIG : (sortValue === 'e621' ? E621_FLOW_CONFIG : PROMPT_FLOW_CONFIG);
+    } else if (sortValue === 'flow' || sortValue === 'illustrious') {
+        const flowConfig = sortValue === 'illustrious' ? ILLUSTRIOUS_FLOW_CONFIG : PROMPT_FLOW_CONFIG;
         const flowGroups = sortTagsByPromptFlow(visibleTags, flowConfig);
         flowGroups.forEach(({ phase, tags }) => {
             if (!tags.length) return;
@@ -1182,20 +1047,16 @@ async function loadExternalData() {
     document.title = 'Danbooru Tag Helper (Loading...)';
     try {
         const timestamp = `t=${Date.now()}`;
-        const [tagsResponse, mapResponse, e621Response, ontologyResponse, e621MapResponse, e621TagsResponse] = await Promise.all([
+        const [tagsResponse, mapResponse, e621Response, ontologyResponse] = await Promise.all([
             fetch(`data/tags.json?${timestamp}`),
             fetch(`data/tag_map.json?${timestamp}`),
             fetch(`data/e621_taxonomy.json?${timestamp}`).catch(() => null),
-            fetch(`data/tag_ontology.json?${timestamp}`).catch(() => null),
-            fetch(`data/e621_tag_map.json?${timestamp}`).catch(() => null),
-            fetch(`data/e621_tags.json?${timestamp}`).catch(() => null)
+            fetch(`data/tag_ontology.json?${timestamp}`).catch(() => null)
         ]);
         if (!tagsResponse.ok) throw new Error(`Failed to fetch data/tags.json: ${tagsResponse.statusText}`);
         if (!mapResponse.ok) throw new Error(`Failed to fetch data/tag_map.json: ${mapResponse.statusText}`);
-        const danbooruTags = await tagsResponse.json();
+        TAG_DATABASE = await tagsResponse.json();
         const tagMap = await mapResponse.json();
-        TAG_DATABASES = { danbooru: danbooruTags };
-        TAG_DATABASE = danbooruTags;
         let e621Taxonomy = null;
         if (e621Response && e621Response.ok) {
             e621Taxonomy = await e621Response.json();
@@ -1204,84 +1065,30 @@ async function loadExternalData() {
         if (ontologyResponse && ontologyResponse.ok) {
             ontology = await ontologyResponse.json();
         }
-        let e621TagMap = {};
-        if (e621MapResponse && e621MapResponse.ok) {
-            e621TagMap = await e621MapResponse.json();
-        }
-        let e621Tags = [];
-        if (e621TagsResponse && e621TagsResponse.ok) {
-            e621Tags = await e621TagsResponse.json();
-        }
-        TAG_DATABASES.e621 = e621Tags;
-        const categoryOrderBySource = {
-            default: [
-                'Quality',
-                'Artists',
-                'Composition',
-                'Characters',
-                'Subject & Creatures',
-                'Emotion & Expression',
-                'Face',
-                'Eyes',
-                'Hair',
-                'Body Parts',
-                'Attire',
-                'Accessories',
-                'Held Items & Objects',
-                'Actions & Poses',
-                'Setting & Environment',
-                'Lighting & Effects',
-                'Style & Meta'
-            ],
-            danbooru: [
-                'Quality',
-                'Artists',
-                'Composition',
-                'Characters',
-                'Subject & Creatures',
-                'Emotion & Expression',
-                'Face',
-                'Eyes',
-                'Hair',
-                'Body Parts',
-                'Attire',
-                'Accessories',
-                'Held Items & Objects',
-                'Actions & Poses',
-                'Setting & Environment',
-                'Lighting & Effects',
-                'Style & Meta'
-            ],
-            e621: [
-                'Rating & Safety',
-                'Gender & Identity',
-                'Artists',
-                'Characters',
-                'Species & Body',
-                'Anatomy & Detail',
-                'Genitals & Fluids',
-                'Kinks & Themes',
-                'Wardrobe & Accessories',
-                'Props & Gear',
-                'Actions & Interaction',
-                'Scene & Setting',
-                'Lighting & Effects',
-                'Meta & Lore',
-                'Quality'
-            ]
-        };
-        tagCategorizer = new EnhancedTagCategorizer({
-            danbooru: tagMap,
-            e621: e621TagMap
-        }, TAG_DATABASES, categoryOrderBySource, {
+        const categoryOrder = [
+            'Quality',
+            'Artists',
+            'Composition',
+            'Characters',
+            'Subject & Creatures',
+            'Emotion & Expression',
+            'Face',
+            'Eyes',
+            'Hair',
+            'Body Parts',
+            'Attire',
+            'Accessories',
+            'Held Items & Objects',
+            'Actions & Poses',
+            'Setting & Environment',
+            'Lighting & Effects',
+            'Style & Meta'
+        ];
+        tagCategorizer = new EnhancedTagCategorizer(tagMap, TAG_DATABASE, categoryOrder, {
             e621Taxonomy,
-            ontology,
-            initialSource: 'danbooru'
+            ontology
         });
         knownCategories = new Set([...tagCategorizer.categories, 'Uncategorized']);
-        if (tagDialectSelect) {
-            tagDialectSelect.value = tagCategorizer.activeSource;
-        }
         document.title = 'Danbooru Tag Helper (Ready)';
     } catch (error) {
         console.error('FATAL ERROR loading data:', error);
@@ -1292,20 +1099,6 @@ async function loadExternalData() {
         const container = document.querySelector('.glass-panel');
         if (container) container.prepend(errorDiv);
     }
-}
-
-function handleTagDialectChange() {
-    if (!tagCategorizer || !tagDialectSelect) return;
-    const selectedSource = tagDialectSelect.value || 'danbooru';
-    tagCategorizer.applySource(selectedSource);
-    knownCategories = new Set([...tagCategorizer.categories, 'Uncategorized']);
-    TAG_DATABASE = TAG_DATABASES[selectedSource] || [];
-    if (selectedSource === 'e621' && sortSelect.value === 'danbooru') {
-        sortSelect.value = 'e621';
-    } else if (selectedSource !== 'e621' && sortSelect.value === 'e621') {
-        sortSelect.value = 'danbooru';
-    }
-    processAll();
 }
 
 function copyTagsToClipboard() {
@@ -1447,77 +1240,7 @@ function renderAutocomplete() { autocompleteBox.innerHTML = autocomplete.suggest
 window.selectAutocompleteItem = (tag) => { const text = tagInput.value, cursorPos = tagInput.selectionStart; const lastComma = text.lastIndexOf(',', cursorPos - 1); const before = text.substring(0, lastComma + 1); tagInput.value = `${before} ${tag.replace(/_/g, ' ')}, ${text.substring(cursorPos)}`; hideAutocomplete(); tagInput.focus(); processAll(); };
 function hideAutocomplete() { autocomplete.active = false; autocompleteBox.style.display = 'none'; }
 function updateCopyHistory(text) { if(text){ copyHistory.unshift(text); if (copyHistory.length > 10) copyHistory.pop(); localStorage.setItem('danbooru-tag-history', JSON.stringify(copyHistory)); } historyContainer.innerHTML = ''; if (copyHistory.length === 0) { historyContainer.innerHTML = `<p class="text-sm text-gray-500 italic">No history yet.</p>`; } else { copyHistory.forEach(item => { const el = document.createElement('div'); el.className = 'history-item p-2 rounded-md flex items-center justify-between gap-2'; el.innerHTML = `<span class="history-item-text text-gray-400 text-xs flex-grow overflow-hidden whitespace-nowrap text-ellipsis">${item}</span><button class="copy-btn-sm p-1 rounded" onclick="navigator.clipboard.writeText(\`${item.replace(/`/g, '\\`')}\`)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-300"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>`; historyContainer.appendChild(el); }); } updateStats(); }
-function suggestCoherentTags() {
-    if (!tagCategorizer) return;
-    const QUESTIONABLE_KEYWORDS = ['bikini', 'swimsuit', 'cleavage', 'breasts', 'ass', 'thighs', 'pantyhose', 'leotard', 'garter_belt', 'panty_shot', 'sideboob', 'topless', 'bra', 'panties', 'lingerie', 'seductive', 'bondage', 'shibari', 'partially_nude', 'armpits', 'bottomless'];
-    const EXPLICIT_KEYWORDS = ['pussy', 'penis', 'sex', 'oral', 'ahegao', 'nude', 'naked', 'cum', 'masturbation', 'fellatio', 'cunnilingus', 'prolapse'];
-    const numToSuggest = parseInt(suggestionCountInput.value, 10);
-    const existingTags = new Set(baseTags.map(t => t.original.toLowerCase().replace(/ /g, '_')));
-    const usingE621 = tagCategorizer.activeSource === 'e621';
-    const isAllowed = (tag) => {
-        if (EXPLICIT_KEYWORDS.some(kw => tag.includes(kw)) && !usingE621) return false;
-        if (!ratingQuestionable.checked && QUESTIONABLE_KEYWORDS.some(kw => tag.includes(kw))) return false;
-        if (!ratingGeneral.checked && !ratingSafe.checked && !ratingQuestionable.checked) return false;
-        return true;
-    };
-    const suggestions = new Set();
-    const categoryPools = {};
-    TAG_DATABASE.forEach(tag => {
-        const { category } = tagCategorizer.categorize(tag);
-        if (!categoryPools[category]) categoryPools[category] = [];
-        if (!existingTags.has(tag) && isAllowed(tag)) categoryPools[category].push(tag);
-    });
-    const defaultPlan = usingE621
-        ? [
-            { name: 'Rating & Safety', count: 1 },
-            { name: 'Species & Body', count: 2 },
-            { name: 'Gender & Identity', count: 1 },
-            { name: 'Anatomy & Detail', count: 2 },
-            { name: 'Kinks & Themes', count: 1 },
-            { name: 'Actions & Interaction', count: 2 },
-            { name: 'Scene & Setting', count: 2 },
-            { name: 'Quality', count: 1 }
-        ]
-        : [
-            { name: 'Quality', count: 1 },
-            { name: 'Composition', count: 2 },
-            { name: 'Characters', count: 1 },
-            { name: 'Face', count: 2 },
-            { name: 'Eyes', count: 1 },
-            { name: 'Hair', count: 2 }
-        ];
-    const plan = (existingTags.size === 0)
-        ? defaultPlan
-        : Object.entries(baseTags.reduce((acc, tag) => {
-            acc[tag.category] = (acc[tag.category] || 0) + 1;
-            return acc;
-        }, {})).map(([name, count]) => ({ name, count }));
-    let suggestionsNeeded = numToSuggest;
-    while (suggestionsNeeded > 0) {
-        let madeSuggestion = false;
-        for (const p of plan) {
-            if (suggestionsNeeded <= 0) break;
-            const pool = categoryPools[p.name] || [];
-            for (let i = 0; i < p.count; ++i) {
-                if (pool.length > 0) {
-                    const [suggestion] = pool.splice(Math.floor(Math.random() * pool.length), 1);
-                    if (suggestion && !suggestions.has(suggestion)) {
-                        suggestions.add(suggestion);
-                        suggestionsNeeded--;
-                        madeSuggestion = true;
-                    }
-                }
-            }
-        }
-        if (!madeSuggestion) break;
-    }
-    const suggestionsToAdd = [...suggestions];
-    if (suggestionsToAdd.length > 0) {
-        const separator = tagInput.value.trim().length > 0 && !tagInput.value.trim().endsWith(',') ? ', ' : '';
-        tagInput.value += separator + suggestionsToAdd.join(', ').replace(/_/g, ' ');
-        processAll();
-    }
-}
+function suggestCoherentTags() { if (!tagCategorizer) return; const QUESTIONABLE_KEYWORDS = ['bikini', 'swimsuit', 'cleavage', 'breasts', 'ass', 'thighs', 'pantyhose', 'leotard', 'garter_belt', 'panty_shot', 'sideboob', 'topless', 'bra', 'panties', 'lingerie', 'seductive', 'bondage', 'shibari', 'partially_nude', 'armpits', 'bottomless']; const EXPLICIT_KEYWORDS = ['pussy', 'penis', 'sex', 'oral', 'ahegao', 'nude', 'naked', 'cum', 'masturbation', 'fellatio', 'cunnilingus', 'prolapse']; const numToSuggest = parseInt(suggestionCountInput.value, 10); const existingTags = new Set(baseTags.map(t => t.original.toLowerCase().replace(/ /g, '_'))); const isAllowed = (tag) => { if (EXPLICIT_KEYWORDS.some(kw => tag.includes(kw))) return false; if (!ratingQuestionable.checked && QUESTIONABLE_KEYWORDS.some(kw => tag.includes(kw))) return false; if (!ratingGeneral.checked && !ratingSafe.checked && !ratingQuestionable.checked) return false; return true; }; const suggestions = new Set(), categoryPools = {}; TAG_DATABASE.forEach(tag => { const { category } = tagCategorizer.categorize(tag); if (!categoryPools[category]) categoryPools[category] = []; if (!existingTags.has(tag) && isAllowed(tag)) categoryPools[category].push(tag); }); const plan = (existingTags.size === 0) ? [ { name: 'Quality', count: 1 }, { name: 'Composition', count: 2 }, { name: 'Characters', count: 1 }, { name: 'Face', count: 2 }, { name: 'Eyes', count: 1 }, { name: 'Hair', count: 2 } ] : Object.entries(baseTags.reduce((acc, tag) => { acc[tag.category] = (acc[tag.category] || 0) + 1; return acc; }, {})).map(([name, count]) => ({name, count})); let suggestionsNeeded = numToSuggest; while(suggestionsNeeded > 0) { let madeSuggestion = false; for(const p of plan) { if(suggestionsNeeded <= 0) break; const pool = categoryPools[p.name] || []; for(let i=0; i < p.count; ++i) { if(pool.length > 0) { const [suggestion] = pool.splice(Math.floor(Math.random() * pool.length), 1); if(suggestion && !suggestions.has(suggestion)) { suggestions.add(suggestion); suggestionsNeeded--; madeSuggestion = true; } } } } if(!madeSuggestion) break; } const suggestionsToAdd = [...suggestions]; if (suggestionsToAdd.length > 0) { const separator = tagInput.value.trim().length > 0 && !tagInput.value.trim().endsWith(',') ? ', ' : ''; tagInput.value += separator + suggestionsToAdd.join(', ').replace(/_/g, ' '); processAll(); } }
 
 function showTokenSettings() { const panel = element('tokenPanel'); const input = element('githubTokenInput'); const checkbox = element('rememberToken'); const savedToken = localStorage.getItem('github-pat'); if (savedToken) { input.value = savedToken; checkbox.checked = true; gitHubPat = savedToken; } updateTokenStatus(); panel.classList.remove('hidden'); }
 function hideTokenSettings() { element('tokenPanel').classList.add('hidden'); }
@@ -1707,9 +1430,9 @@ function importTags() {
     };
     input.click();
 }
-function exportSettings() { const settings = { theme: document.body.className.match(/theme-\w+/)?.[0] || 'theme-indigo', prepend: triggerInput.value, append: appendInput.value, swaps: swapsInput.value, implications: implicationsInput.value, blacklist: blacklistInput.value, maxTags: maxTagsInput.value, sorting: sortSelect.value, source: tagDialectSelect ? tagDialectSelect.value : 'danbooru', deduplicate: deduplicateToggle.checked, underscores: underscoreToggle.checked, weighting: enableWeightingToggle.checked, ratings: { safe: ratingSafe.checked, general: ratingGeneral.checked, questionable: ratingQuestionable.checked } }; const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `danbooru-helper-settings-${new Date().toISOString().split('T')[0]}.json`; a.click(); URL.revokeObjectURL(a.href); }
-function importSettings(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { try { const settings = JSON.parse(e.target.result); if (settings.theme) applyTheme(settings.theme); if (settings.prepend !== undefined) triggerInput.value = settings.prepend; if (settings.append !== undefined) appendInput.value = settings.append; if (settings.swaps !== undefined) swapsInput.value = settings.swaps; if (settings.implications !== undefined) implicationsInput.value = settings.implications; if (settings.blacklist !== undefined) blacklistInput.value = settings.blacklist; if (settings.maxTags !== undefined) maxTagsInput.value = settings.maxTags; if (settings.sorting !== undefined) sortSelect.value = settings.sorting; if (settings.source !== undefined && tagDialectSelect) tagDialectSelect.value = settings.source; if (settings.deduplicate !== undefined) deduplicateToggle.checked = settings.deduplicate; if (settings.underscores !== undefined) underscoreToggle.checked = settings.underscores; if (settings.weighting !== undefined) enableWeightingToggle.checked = settings.weighting; if (settings.ratings) { if (settings.ratings.safe !== undefined) ratingSafe.checked = settings.ratings.safe; if (settings.ratings.general !== undefined) ratingGeneral.checked = settings.ratings.general; if (settings.ratings.questionable !== undefined) ratingQuestionable.checked = settings.ratings.questionable; } toggleSettingsPanel(); handleTagDialectChange(); copyMessage.textContent = 'Settings imported!'; setTimeout(() => copyMessage.textContent = '', 3000); } catch (error) { alert('Error importing settings: ' + error.message); } }; reader.readAsText(file); }
-function resetToDefaults() { if (confirm('Reset all settings to defaults?')) { tagInput.value = ''; triggerInput.value = ''; appendInput.value = ''; swapsInput.value = ''; implicationsInput.value = ''; blacklistInput.value = ''; maxTagsInput.value = '75'; sortSelect.value = 'danbooru'; suggestionCountInput.value = '15'; deduplicateToggle.checked = true; underscoreToggle.checked = false; enableWeightingToggle.checked = false; ratingSafe.checked = true; ratingGeneral.checked = true; ratingQuestionable.checked = false; if (tagDialectSelect) { tagDialectSelect.value = 'danbooru'; } applyTheme('theme-indigo'); toggleSettingsPanel(); handleTagDialectChange(); } }
+function exportSettings() { const settings = { theme: document.body.className.match(/theme-\w+/)?.[0] || 'theme-indigo', prepend: triggerInput.value, append: appendInput.value, swaps: swapsInput.value, implications: implicationsInput.value, blacklist: blacklistInput.value, maxTags: maxTagsInput.value, sorting: sortSelect.value, deduplicate: deduplicateToggle.checked, underscores: underscoreToggle.checked, weighting: enableWeightingToggle.checked, ratings: { safe: ratingSafe.checked, general: ratingGeneral.checked, questionable: ratingQuestionable.checked } }; const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `danbooru-helper-settings-${new Date().toISOString().split('T')[0]}.json`; a.click(); URL.revokeObjectURL(a.href); }
+function importSettings(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { try { const settings = JSON.parse(e.target.result); if (settings.theme) applyTheme(settings.theme); if (settings.prepend !== undefined) triggerInput.value = settings.prepend; if (settings.append !== undefined) appendInput.value = settings.append; if (settings.swaps !== undefined) swapsInput.value = settings.swaps; if (settings.implications !== undefined) implicationsInput.value = settings.implications; if (settings.blacklist !== undefined) blacklistInput.value = settings.blacklist; if (settings.maxTags !== undefined) maxTagsInput.value = settings.maxTags; if (settings.sorting !== undefined) sortSelect.value = settings.sorting; if (settings.deduplicate !== undefined) deduplicateToggle.checked = settings.deduplicate; if (settings.underscores !== undefined) underscoreToggle.checked = settings.underscores; if (settings.weighting !== undefined) enableWeightingToggle.checked = settings.weighting; if (settings.ratings) { if (settings.ratings.safe !== undefined) ratingSafe.checked = settings.ratings.safe; if (settings.ratings.general !== undefined) ratingGeneral.checked = settings.ratings.general; if (settings.ratings.questionable !== undefined) ratingQuestionable.checked = settings.ratings.questionable; } toggleSettingsPanel(); processAll(); copyMessage.textContent = 'Settings imported!'; setTimeout(() => copyMessage.textContent = '', 3000); } catch (error) { alert('Error importing settings: ' + error.message); } }; reader.readAsText(file); }
+function resetToDefaults() { if (confirm('Reset all settings to defaults?')) { tagInput.value = ''; triggerInput.value = ''; appendInput.value = ''; swapsInput.value = ''; implicationsInput.value = ''; blacklistInput.value = ''; maxTagsInput.value = '75'; sortSelect.value = 'danbooru'; suggestionCountInput.value = '15'; deduplicateToggle.checked = true; underscoreToggle.checked = false; enableWeightingToggle.checked = false; ratingSafe.checked = true; ratingGeneral.checked = true; ratingQuestionable.checked = false; applyTheme('theme-indigo'); toggleSettingsPanel(); processAll(); } }
 function applyTheme(theme) {
     const selectedTheme = theme || 'theme-indigo';
     document.documentElement.className = 'dark';
@@ -1785,7 +1508,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     const inputsForDisplay = [deduplicateToggle, underscoreToggle, enableWeightingToggle, sortSelect];
     inputsForDisplay.forEach(input => input.addEventListener('change', displayTags));
-    if (tagDialectSelect) tagDialectSelect.addEventListener('change', handleTagDialectChange);
     underscoreToggle.addEventListener('change', renderFavorites);
     if (tagInput) {
         tagInput.addEventListener('input', handleAutocompleteInput);
