@@ -74,6 +74,7 @@
             <ul>
                 <li>Paste or type prompts into <strong>Main Tags</strong>; use Aliases and Implications to auto-correct or auto-expand tricky tags.</li>
                 <li>Tune <strong>Processing Options</strong> and choose a sorting mode to organize tags; drag or tap categories to mute or re-order as needed.</li>
+                <li>Select a <strong>Tag Source</strong> to toggle between Danbooru and e621 vocabularies, mappings, and prompt flows.</li>
                 <li>Select <strong>Sort: Illustrious Guide</strong> to format prompts as Artist → Subject → Pose → Scene → Effects → Quality per the Illustrious prompt guide.</li>
                 <li>Use <strong>Strip Weights</strong> in Quick Actions to instantly remove parentheses or bracket weighting from tags before exporting.</li>
                 <li>Review the <strong>Prompt Preview</strong> for counts, then copy or export tags in your preferred format.</li>
@@ -144,12 +145,22 @@
             </div>
 
             <div class="control-group">
+                <div class="control-label">Tag Source</div>
+                <select id="tagDialectSelect" class="input-base text-sm w-full">
+                    <option value="danbooru" selected>Danbooru (anime focus)</option>
+                    <option value="e621">e621 (furry focus)</option>
+                </select>
+                <p class="text-xs text-gray-400 mt-2">Switch between Danbooru and e621 datasets, categorization heuristics, and prompt ordering.</p>
+            </div>
+
+            <div class="control-group">
                 <div class="control-label">Sorting & Limits</div>
                 <div class="space-y-3">
                     <select id="sortSelect" class="input-base text-sm w-full">
                         <option value="danbooru" selected>Sort: Danbooru</option>
                         <option value="flow">Sort: Prompt Flow</option>
                         <option value="illustrious">Sort: Illustrious Guide</option>
+                        <option value="e621">Sort: e621 Flow</option>
                         <option value="manual">Sort: Manual</option>
                         <option value="recent">Sort: Recent</option>
                         <option value="none">Sort: None</option>
