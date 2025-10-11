@@ -171,86 +171,6 @@ function createPromptFlowConfig(phases, priorityKeywords, fallbackKey) {
 const PROMPT_FLOW_CONFIG = createPromptFlowConfig(PROMPT_FLOW_PHASES, FLOW_PHASE_PRIORITY_KEYWORDS, 'extras');
 const ILLUSTRIOUS_FLOW_CONFIG = createPromptFlowConfig(ILLUSTRIOUS_PROMPT_PHASES, ILLUSTRIOUS_PHASE_PRIORITY_KEYWORDS, 'quality');
 
-const DEFAULT_E621_PROMPT_PHASES = [
-    {
-        key: 'safety',
-        label: 'Ratings & Content Flags',
-        description: 'Start by declaring the safety level or moderation target for the render.',
-        categories: ['E621 · Safety & Ratings'],
-        keywords: ['safe', 'suggestive', 'questionable', 'explicit', 'rating']
-    },
-    {
-        key: 'identity',
-        label: 'Characters & Counts',
-        description: 'Summarize how many characters appear and any identifying qualifiers.',
-        categories: ['E621 · Identity & Counts', 'E621 · Creator Credit'],
-        keywords: ['solo', 'duo', 'group', 'male', 'female', 'herm', 'artist']
-    },
-    {
-        key: 'species',
-        label: 'Species & Body Plan',
-        description: 'Describe the species, hybrid forms, and silhouette-level body plan.',
-        categories: ['E621 · Species & Body'],
-        keywords: ['anthro', 'feral', 'dragon', 'taur', 'alien', 'robotic']
-    },
-    {
-        key: 'traits',
-        label: 'Anatomy & Visual Traits',
-        description: 'Call out anatomy, markings, fashion, and other visual traits.',
-        categories: ['E621 · Anatomy & Traits', 'E621 · Descriptors & Style'],
-        keywords: ['tail', 'ears', 'markings', 'horn', 'wing', 'fur', 'scales', 'style']
-    },
-    {
-        key: 'action',
-        label: 'Poses & Interactions',
-        description: 'Outline the pose, activity, or interpersonal interactions.',
-        categories: ['E621 · Actions & Interaction'],
-        keywords: ['standing', 'flying', 'hugging', 'combat', 'posing', 'gesture']
-    },
-    {
-        key: 'props',
-        label: 'Gear & Accessories',
-        description: 'List equipment, outfits, or notable props.',
-        categories: ['E621 · Props & Gear'],
-        keywords: ['armor', 'weapon', 'collar', 'instrument', 'uniform']
-    },
-    {
-        key: 'setting',
-        label: 'Setting & Atmosphere',
-        description: 'Frame the location, weather, and time of day.',
-        categories: ['E621 · Setting & Atmosphere', 'E621 · Franchise & Lore'],
-        keywords: ['forest', 'city', 'space', 'indoors', 'outdoors', 'castle', 'canon']
-    },
-    {
-        key: 'effects',
-        label: 'Effects & Energy',
-        description: 'Describe magical, elemental, or cinematic effects.',
-        categories: ['E621 · Effects & Lighting'],
-        keywords: ['magic', 'glow', 'spark', 'energy', 'aura', 'particles']
-    },
-    {
-        key: 'quality',
-        label: 'Quality & Output',
-        description: 'Close with render fidelity, post-processing, or metadata cues.',
-        categories: ['E621 · Quality & Output', 'E621 · Technical & Meta'],
-        keywords: ['highres', 'dynamic', 'detail', 'render', 'signature', 'watermark']
-    }
-];
-
-const DEFAULT_E621_PRIORITY_KEYWORDS = {
-    safety: [['explicit', 5], ['questionable', 4], ['suggestive', 3], ['safe', 2]],
-    identity: [['solo', 5], ['duo', 4], ['group', 3], ['male', 2], ['female', 2], ['artist', 2]],
-    species: [['anthro', 4], ['feral', 4], ['dragon', 4], ['taur', 3], ['alien', 3], ['robotic', 3]],
-    traits: [['markings', 3], ['tail', 3], ['horn', 2], ['wing', 2], ['fur', 2], ['scales', 2], ['style', 2]],
-    action: [['flying', 4], ['combat', 4], ['hugging', 3], ['posing', 3], ['gesture', 2]],
-    props: [['weapon', 4], ['armor', 4], ['collar', 2], ['instrument', 2], ['uniform', 2]],
-    setting: [['forest', 3], ['city', 3], ['space', 3], ['indoors', 2], ['outdoors', 2], ['canon', 2]],
-    effects: [['magic', 4], ['glow', 4], ['spark', 3], ['energy', 3], ['particles', 2]],
-    quality: [['highres', 4], ['dynamic', 3], ['detail', 3], ['render', 3], ['signature', -2], ['watermark', -3]]
-};
-
-let E621_FLOW_CONFIG = createPromptFlowConfig(DEFAULT_E621_PROMPT_PHASES, DEFAULT_E621_PRIORITY_KEYWORDS, 'quality');
-
 const categoryPickerState = { tagId: null };
 
 function debounce(fn, wait = 300) {
@@ -260,32 +180,6 @@ function debounce(fn, wait = 300) {
         clearTimeout(timeout);
         timeout = setTimeout(() => fn.apply(context, args), wait);
     };
-}
-
-function getActiveProfile() {
-    const value = sortSelect?.value || 'danbooru';
-    return value === 'e621' ? 'e621' : 'danbooru';
-}
-
-function getTagProfileEntry(tag, profile = 'danbooru') {
-    if (!tag) return null;
-    if (!profile || profile === 'danbooru') {
-        return { category: tag.category || 'Uncategorized', source: tag.categorySource || 'Hybrid', confidence: tag.confidence };
-    }
-    if (tag.profileCategories && tag.profileCategories[profile]) {
-        return tag.profileCategories[profile];
-    }
-    return null;
-}
-
-function getTagCategoryForProfile(tag, profile = 'danbooru') {
-    const entry = getTagProfileEntry(tag, profile);
-    return (entry && entry.category) || 'Uncategorized';
-}
-
-function getTagSourceForProfile(tag, profile = 'danbooru') {
-    const entry = getTagProfileEntry(tag, profile);
-    return (entry && entry.source) || tag.categorySource || 'Hybrid';
 }
 
 class EnhancedTagCategorizer {
@@ -299,60 +193,9 @@ class EnhancedTagCategorizer {
         this.e621CategoryMap = {};
         this.e621KeywordHints = {};
         this.e621SuffixHints = {};
-        this.e621PrefixHints = {};
-        this.e621CompositeHints = [];
-        this.e621DirectMap = {};
-        this.e621CategoryOrder = [];
-        this.e621FallbackCategory = 'E621 · Uncategorized';
         this.ontologyKeywordMap = {};
         this.ontologyRegexRules = [];
         this.ontologyComboRules = [];
-        this.comboKeywordIndex = {};
-        this.profileCategoryOrder = { danbooru: [...this.categoryOrder], e621: [] };
-        if (!this.profileCategoryOrder.danbooru.includes('Uncategorized')) {
-            this.profileCategoryOrder.danbooru.push('Uncategorized');
-        }
-        this.profileCategorySet = { danbooru: new Set(this.categoryOrder), e621: new Set() };
-        this.profileCategorySet.danbooru.add('Uncategorized');
-        this.registerProfileCategory('e621', this.e621FallbackCategory);
-        this.danbooruToE621Map = {
-            'Quality': 'E621 · Quality & Output',
-            'Artists': 'E621 · Creator Credit',
-            'Composition': 'E621 · Descriptors & Style',
-            'Characters': 'E621 · Identity & Counts',
-            'Subject & Creatures': 'E621 · Species & Body',
-            'Emotion & Expression': 'E621 · Descriptors & Style',
-            'Face': 'E621 · Anatomy & Traits',
-            'Eyes': 'E621 · Anatomy & Traits',
-            'Hair': 'E621 · Anatomy & Traits',
-            'Body Parts': 'E621 · Anatomy & Traits',
-            'Attire': 'E621 · Props & Gear',
-            'Accessories': 'E621 · Props & Gear',
-            'Held Items & Objects': 'E621 · Props & Gear',
-            'Actions & Poses': 'E621 · Actions & Interaction',
-            'Interaction': 'E621 · Actions & Interaction',
-            'Setting & Environment': 'E621 · Setting & Atmosphere',
-            'Lighting & Effects': 'E621 · Effects & Lighting',
-            'Rendering': 'E621 · Quality & Output',
-            'Style & Meta': 'E621 · Descriptors & Style',
-            'Meta': 'E621 · Technical & Meta'
-        };
-        this.e621ToDanbooruMap = {
-            'E621 · Species & Body': 'Subject & Creatures',
-            'E621 · Identity & Counts': 'Characters',
-            'E621 · Anatomy & Traits': 'Body Parts',
-            'E621 · Props & Gear': 'Held Items & Objects',
-            'E621 · Actions & Interaction': 'Actions & Poses',
-            'E621 · Setting & Atmosphere': 'Setting & Environment',
-            'E621 · Effects & Lighting': 'Lighting & Effects',
-            'E621 · Quality & Output': 'Quality',
-            'E621 · Descriptors & Style': 'Style & Meta',
-            'E621 · Technical & Meta': 'Style & Meta',
-            'E621 · Franchise & Lore': 'Style & Meta',
-            'E621 · Creator Credit': 'Artists',
-            'E621 · Safety & Ratings': 'Quality',
-            'E621 · Uncategorized': 'Uncategorized'
-        };
         this.buildHeuristicIndexes(allTags || []);
         this.buildEnhancedHeuristics();
         if (options.e621Taxonomy) {
@@ -376,76 +219,16 @@ class EnhancedTagCategorizer {
         }
     }
 
-    registerProfileCategory(profile, category) {
-        if (!profile || !category) return;
-        this.addCategory(category);
-        if (!this.profileCategorySet[profile]) {
-            this.profileCategorySet[profile] = new Set();
-        }
-        this.profileCategorySet[profile].add(category);
-    }
-
-    getProfileCategoryOrder(profile = 'danbooru') {
-        if (profile === 'danbooru') return this.profileCategoryOrder.danbooru || this.categoryOrder;
-        if (!this.profileCategoryOrder[profile] || this.profileCategoryOrder[profile].length === 0) {
-            const categories = Array.from(this.profileCategorySet[profile] || []);
-            categories.sort((a, b) => a.localeCompare(b));
-            this.profileCategoryOrder[profile] = categories;
-        }
-        return this.profileCategoryOrder[profile];
-    }
-
     integrateE621Taxonomy(taxonomy) {
         const categoryMap = taxonomy.category_map || {};
         const keywordHints = taxonomy.keyword_hints || {};
         const suffixHints = taxonomy.suffix_hints || {};
-        const prefixHints = taxonomy.prefix_hints || {};
-        const compositeHints = Array.isArray(taxonomy.composite_hints) ? taxonomy.composite_hints : [];
-        const tagMap = taxonomy.tag_map || {};
-        this.e621CategoryMap = {};
-        Object.entries(categoryMap).forEach(([key, value]) => {
-            const mapped = value || this.e621FallbackCategory;
-            this.e621CategoryMap[key] = mapped;
-            this.registerProfileCategory('e621', mapped);
-        });
-        this.e621KeywordHints = {};
-        Object.entries(keywordHints).forEach(([key, keywords]) => {
-            const mappedCategory = this.e621CategoryMap[key] || key;
-            this.registerProfileCategory('e621', mappedCategory);
-            const normalizedKeywords = new Set((keywords || []).map(kw => kw.toLowerCase()));
-            this.e621KeywordHints[mappedCategory] = Array.from(new Set([...(this.e621KeywordHints[mappedCategory] || []), ...normalizedKeywords]));
-        });
-        this.e621SuffixHints = Object.fromEntries(Object.entries(suffixHints).map(([suffix, category]) => {
-            const mappedCategory = this.e621CategoryMap[category] || category;
-            this.registerProfileCategory('e621', mappedCategory);
-            return [suffix.toLowerCase(), mappedCategory];
-        }));
-        this.e621PrefixHints = Object.fromEntries(Object.entries(prefixHints).map(([prefix, category]) => {
-            const mappedCategory = this.e621CategoryMap[category] || category;
-            this.registerProfileCategory('e621', mappedCategory);
-            return [prefix.toLowerCase(), mappedCategory];
-        }));
-        this.e621CompositeHints = compositeHints.map(rule => ({
-            contains: (rule.contains || []).map(token => token.toLowerCase()),
-            category: this.e621CategoryMap[rule.category] || rule.category || this.e621FallbackCategory,
-            weight: rule.weight || 1,
-            reason: rule.reason || 'Composite'
-        }));
-        this.e621DirectMap = Object.fromEntries(Object.entries(tagMap).map(([tag, category]) => {
-            const mappedCategory = this.e621CategoryMap[category] || category;
-            this.registerProfileCategory('e621', mappedCategory);
-            return [tag.toLowerCase(), mappedCategory];
-        }));
+        this.e621CategoryMap = Object.fromEntries(Object.entries(categoryMap).map(([key, value]) => [key, value || 'Uncategorized']));
+        this.e621KeywordHints = Object.fromEntries(Object.entries(keywordHints).map(([key, keywords]) => [key, (keywords || []).map(kw => kw.toLowerCase())]));
+        this.e621SuffixHints = Object.fromEntries(Object.entries(suffixHints).map(([suffix, category]) => [suffix.toLowerCase(), category]));
+        Object.values(this.e621CategoryMap).forEach(category => this.addCategory(category));
         if (Array.isArray(taxonomy.additional_categories)) {
-            taxonomy.additional_categories.forEach(category => this.registerProfileCategory('e621', category));
-        }
-        if (Array.isArray(taxonomy.category_order) && taxonomy.category_order.length) {
-            this.e621CategoryOrder = taxonomy.category_order;
-            this.profileCategoryOrder.e621 = [...taxonomy.category_order];
-            this.profileCategoryOrder.e621.forEach(category => this.registerProfileCategory('e621', category));
-        }
-        if (taxonomy.fallback_category) {
-            this.e621FallbackCategory = taxonomy.fallback_category;
+            taxonomy.additional_categories.forEach(category => this.addCategory(category));
         }
     }
 
@@ -482,7 +265,6 @@ class EnhancedTagCategorizer {
         const keywordCategoryCounts = {};
         const suffixCategoryCounts = {};
         const prefixCategoryCounts = {};
-        const comboCategoryCounts = {};
         const COPYRIGHT_KEYWORDS = new Set(['(genshin_impact)', '(azur_lane)', '(touhou)', '(hololive)', '(fate/grand_order)']);
         (allTags || []).forEach(tag => {
             const category = this.primaryIndex[tag];
@@ -494,11 +276,6 @@ class EnhancedTagCategorizer {
                     if (!keywordCategoryCounts[word]) keywordCategoryCounts[word] = {};
                     keywordCategoryCounts[word][category] = (keywordCategoryCounts[word][category] || 0) + 1;
                 });
-                for (let i = 0; i < words.length - 1; i += 1) {
-                    const combo = `${words[i]}_${words[i + 1]}`;
-                    if (!comboCategoryCounts[combo]) comboCategoryCounts[combo] = {};
-                    comboCategoryCounts[combo][category] = (comboCategoryCounts[combo][category] || 0) + 1;
-                }
                 const suffix = words[words.length - 1];
                 if (!suffixCategoryCounts[suffix]) suffixCategoryCounts[suffix] = {};
                 suffixCategoryCounts[suffix][category] = (suffixCategoryCounts[suffix][category] || 0) + 1;
@@ -525,12 +302,6 @@ class EnhancedTagCategorizer {
             const [mostLikelyCategory, categoryCount] = Object.entries(counts).reduce((a, b) => a[1] > b[1] ? a : b);
             if (total > 10 && (categoryCount / total) > 0.75) this.patternIndex.starts[`${prefix}_`] = mostLikelyCategory;
         }
-        for (const combo in comboCategoryCounts) {
-            const counts = comboCategoryCounts[combo];
-            const total = Object.values(counts).reduce((sum, value) => sum + value, 0);
-            const [mostLikelyCategory, categoryCount] = Object.entries(counts).reduce((a, b) => a[1] > b[1] ? a : b);
-            if (total > 4 && (categoryCount / total) > 0.8) this.comboKeywordIndex[combo] = mostLikelyCategory;
-        }
     }
 
     buildEnhancedHeuristics() {
@@ -543,11 +314,6 @@ class EnhancedTagCategorizer {
         this.settingKeywords = new Set(['background', 'outdoor', 'indoor', 'room', 'bedroom', 'bathroom', 'kitchen', 'school', 'office', 'beach', 'forest', 'city', 'sky', 'night', 'day', 'sunset', 'sunrise', 'moon', 'star', 'cloud', 'rain', 'snow', 'weather']);
         this.speciesKeywords = new Set(['canine', 'feline', 'dragon', 'avian', 'lupine', 'vulpine', 'kitsune', 'bovine', 'equine', 'reptile', 'lizard', 'wolf', 'fox', 'cat', 'dog', 'bird', 'lion', 'tiger', 'bunny', 'rabbit']);
         this.emotionKeywords = new Set(['smile', 'smiling', 'angry', 'anger', 'blush', 'crying', 'tears', 'joy', 'sad', 'determined', 'focused', 'surprised', 'wink', 'laughing']);
-        this.descriptorKeywords = new Set(['stylized', 'cartoon', 'monochrome', 'painterly', 'cel', 'futuristic', 'retro', 'cute', 'gritty', 'noir', 'dramatic']);
-        this.metaKeywords = new Set(['signature', 'watermark', 'translated', 'ui', 'interface', 'caption', 'text', 'panel', 'scan', 'sketch', 'rough']);
-        this.ratingKeywords = new Set(['sfw', 'nsfw', 'safe', 'suggestive', 'questionable', 'explicit', 'rating']);
-        this.loreKeywords = new Set(['canon', 'official', 'lore', 'timeline', 'universe', 'series', 'franchise', 'crossover']);
-        this.creatorKeywords = new Set(['artist', 'commission', 'credited', 'by', 'source']);
     }
 
     updateIndex(tag, newCategory) {
@@ -585,30 +351,16 @@ class EnhancedTagCategorizer {
             if (this.settingKeywords.has(word)) addScore('Setting & Environment', 0.9, `Setting keyword '${word}'`);
             if (this.speciesKeywords.has(word)) addScore('Subject & Creatures', 1.05, `Species keyword '${word}'`);
             if (this.emotionKeywords.has(word)) addScore('Emotion & Expression', 0.9, `Expression keyword '${word}'`);
-            if (this.descriptorKeywords.has(word)) addScore('Style & Meta', 0.85, `Descriptor keyword '${word}'`);
-            if (this.metaKeywords.has(word)) addScore('Style & Meta', 0.9, `Meta keyword '${word}'`);
-            if (this.ratingKeywords.has(word)) addScore('Quality', 0.8, `Rating keyword '${word}'`);
-            if (this.loreKeywords.has(word)) addScore('Style & Meta', 0.9, `Lore keyword '${word}'`);
-            if (this.creatorKeywords.has(word)) addScore('Artists', 1.0, `Creator keyword '${word}'`);
         });
-        for (let i = 0; i < words.length - 1; i += 1) {
-            const combo = `${words[i]}_${words[i + 1]}`;
-            if (this.comboKeywordIndex[combo]) addScore(this.comboKeywordIndex[combo], 1.15, `Combo '${combo}'`);
-        }
-        Object.entries(this.e621KeywordHints).forEach(([mappedCategory, keywords]) => {
-            const bridged = this.e621ToDanbooruMap[mappedCategory];
-            if (!bridged) return;
+        Object.entries(this.e621KeywordHints).forEach(([e621Category, keywords]) => {
+            const mappedCategory = this.e621CategoryMap[e621Category];
+            if (!mappedCategory) return;
             keywords.forEach(keyword => {
-                if (normalizedTag.includes(keyword)) addScore(bridged, 0.75, `E621 hint '${keyword}'`);
+                if (normalizedTag.includes(keyword)) addScore(mappedCategory, 0.85, `E621 hint '${keyword}'`);
             });
         });
         Object.entries(this.e621SuffixHints).forEach(([suffix, mappedCategory]) => {
-            const bridged = this.e621ToDanbooruMap[mappedCategory];
-            if (bridged && normalizedTag.endsWith(suffix)) addScore(bridged, 0.7, `E621 suffix '${suffix}'`);
-        });
-        Object.entries(this.e621PrefixHints).forEach(([prefix, mappedCategory]) => {
-            const bridged = this.e621ToDanbooruMap[mappedCategory];
-            if (bridged && normalizedTag.startsWith(prefix)) addScore(bridged, 0.7, `E621 prefix '${prefix}'`);
+            if (normalizedTag.endsWith(suffix)) addScore(mappedCategory, 0.8, `E621 suffix '${suffix}'`);
         });
         Object.entries(this.ontologyKeywordMap).forEach(([category, keywords]) => {
             keywords.forEach(keyword => {
@@ -659,104 +411,19 @@ class EnhancedTagCategorizer {
         return { category: 'Uncategorized', source: 'Fallback' };
     }
 
-    categorizeE621(tagString, baseResult = null) {
-        const normalizedTag = tagString.toLowerCase().replace(/ /g, '_');
-        if (!normalizedTag) return { category: this.e621FallbackCategory, source: 'E621 Fallback', confidence: 0.3 };
-        if (this.e621DirectMap[normalizedTag]) {
-            const directCategory = this.e621DirectMap[normalizedTag];
-            this.registerProfileCategory('e621', directCategory);
-            return { category: directCategory, source: 'E621 Map', confidence: 0.99 };
-        }
-        const words = normalizedTag.split('_').filter(Boolean);
-        const scoreMap = new Map();
-        const reasonMap = new Map();
-        const addScore = (category, amount, reason) => {
-            if (!category || !amount) return;
-            this.registerProfileCategory('e621', category);
-            const current = scoreMap.get(category) || 0;
-            scoreMap.set(category, current + amount);
-            if (!reasonMap.has(category)) reasonMap.set(category, new Set());
-            if (reason) reasonMap.get(category).add(reason);
-        };
-        Object.entries(this.e621PrefixHints).forEach(([prefix, category]) => {
-            if (normalizedTag.startsWith(prefix)) addScore(category, 1.0, `Prefix '${prefix}'`);
-        });
-        Object.entries(this.e621SuffixHints).forEach(([suffix, category]) => {
-            if (normalizedTag.endsWith(suffix)) addScore(category, 0.95, `Suffix '${suffix}'`);
-        });
-        Object.entries(this.e621KeywordHints).forEach(([category, keywords]) => {
-            keywords.forEach(keyword => {
-                if (normalizedTag.includes(keyword)) addScore(category, 0.9, `Keyword '${keyword}'`);
-            });
-        });
-        this.e621CompositeHints.forEach(rule => {
-            if (rule.contains.every(token => normalizedTag.includes(token))) addScore(rule.category, rule.weight, rule.reason);
-        });
-        words.forEach(word => {
-            if (this.speciesKeywords.has(word)) addScore('E621 · Species & Body', 1.25, `Species keyword '${word}'`);
-            if (this.bodyPartKeywords.has(word)) addScore('E621 · Anatomy & Traits', 1.1, `Anatomy keyword '${word}'`);
-            if (this.clothingKeywords.has(word)) addScore('E621 · Props & Gear', 1.05, `Wardrobe keyword '${word}'`);
-            if (this.actionKeywords.has(word)) addScore('E621 · Actions & Interaction', 1.0, `Action keyword '${word}'`);
-            if (this.settingKeywords.has(word)) addScore('E621 · Setting & Atmosphere', 1.0, `Setting keyword '${word}'`);
-            if (this.qualityKeywords.has(word)) addScore('E621 · Quality & Output', 0.95, `Quality keyword '${word}'`);
-            if (this.descriptorKeywords.has(word) || this.emotionKeywords.has(word)) addScore('E621 · Descriptors & Style', 0.95, `Descriptor keyword '${word}'`);
-            if (this.metaKeywords.has(word)) addScore('E621 · Technical & Meta', 0.9, `Meta keyword '${word}'`);
-            if (this.ratingKeywords.has(word)) addScore('E621 · Safety & Ratings', 0.95, `Rating keyword '${word}'`);
-            if (this.loreKeywords.has(word)) addScore('E621 · Franchise & Lore', 0.9, `Lore keyword '${word}'`);
-            if (this.creatorKeywords.has(word)) addScore('E621 · Creator Credit', 1.0, `Creator keyword '${word}'`);
-            if (this.keywordIndex[word]) {
-                const mapped = this.danbooruToE621Map[this.keywordIndex[word]];
-                if (mapped) addScore(mapped, 0.85, `Bridge keyword '${word}'`);
-            }
-        });
-        for (let i = 0; i < words.length - 1; i += 1) {
-            const combo = `${words[i]}_${words[i + 1]}`;
-            if (this.comboKeywordIndex[combo]) {
-                const mapped = this.danbooruToE621Map[this.comboKeywordIndex[combo]];
-                if (mapped) addScore(mapped, 1.05, `Combo '${combo}'`);
-            }
-        }
-        if (baseResult && baseResult.category) {
-            const mapped = this.danbooruToE621Map[baseResult.category];
-            if (mapped) addScore(mapped, 1.1, `Mapped from ${baseResult.category}`);
-        }
-        if (scoreMap.size === 0) {
-            return { category: this.e621FallbackCategory, source: 'E621 Fallback', confidence: 0.35 };
-        }
-        const sorted = [...scoreMap.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-        const [category, score] = sorted[0];
-        const reasons = reasonMap.get(category) ? Array.from(reasonMap.get(category)).join(', ') : 'Hybrid';
-        const confidence = Math.max(0.4, Math.min(0.98, score / (2 + words.length * 0.1)));
-        return { category, source: `E621 Hybrid: ${reasons}`, confidence };
-    }
-
     categorize(tagString, options = {}) {
         const hybrid = this.categorizeEnhanced(tagString);
-        let resolved = { ...hybrid };
-        if ((!resolved.category || resolved.category === 'Uncategorized') && options.allowFallback !== false) {
-            const fallback = this.categorizeOriginal(tagString);
-            if (fallback.category && fallback.category !== 'Uncategorized' && fallback.category !== hybrid.category) {
-                resolved = { ...fallback, confidence: fallback.confidence ?? hybrid.confidence, source: `${hybrid.source || 'Hybrid'} → ${fallback.source}` };
-            }
+        if (hybrid.category && hybrid.category !== 'Uncategorized') {
+            return hybrid;
         }
-        if (!resolved.category) {
-            resolved.category = 'Uncategorized';
+        if (options.allowFallback === false) {
+            return hybrid;
         }
-        if (resolved.confidence === undefined) {
-            resolved.confidence = hybrid.confidence ?? 0.6;
+        const fallback = this.categorizeOriginal(tagString);
+        if (fallback.category && fallback.category !== hybrid.category && fallback.category !== 'Uncategorized') {
+            return { ...fallback, source: `${hybrid.source || 'Hybrid'} → ${fallback.source}` };
         }
-        const e621Result = this.categorizeE621(tagString, resolved);
-        const profileCategories = {
-            danbooru: {
-                category: resolved.category,
-                source: resolved.source || 'Hybrid',
-                confidence: resolved.confidence
-            }
-        };
-        if (e621Result && e621Result.category) {
-            profileCategories.e621 = e621Result;
-        }
-        return { ...resolved, profileCategories };
+        return hybrid;
     }
 }
 
@@ -805,9 +472,8 @@ function stripWeightSyntax(token) {
     return cleaned;
 }
 
-function determinePromptFlowPhase(tag, config = PROMPT_FLOW_CONFIG, options = {}) {
-    const profile = options.profile || 'danbooru';
-    const categoryName = getTagCategoryForProfile(tag, profile) || 'Uncategorized';
+function determinePromptFlowPhase(tag, config = PROMPT_FLOW_CONFIG) {
+    const categoryName = tag.category || 'Uncategorized';
     if (config.categoryMap.has(categoryName)) {
         return config.categoryMap.get(categoryName);
     }
@@ -820,33 +486,31 @@ function determinePromptFlowPhase(tag, config = PROMPT_FLOW_CONFIG, options = {}
     return config.fallbackKey;
 }
 
-function computePromptFlowScore(tag, phaseKey, config = PROMPT_FLOW_CONFIG, options = {}) {
-    const profile = options.profile || 'danbooru';
+function computePromptFlowScore(tag, phaseKey, config = PROMPT_FLOW_CONFIG) {
     const normalized = normalizeTagText(tag.weighted || tag.original);
     const priorities = config.priorityKeywords[phaseKey] || [];
     let score = 0;
     for (const [keyword, weight] of priorities) {
         if (normalized.includes(keyword)) score += weight;
     }
-    const source = getTagSourceForProfile(tag, profile);
-    if (source === 'Primary') score += 0.5;
+    if (tag.categorySource === 'Primary') score += 0.5;
     const weightMatch = tag.weighted && tag.weighted.match(/:(\d+(?:\.\d+)?)/);
     if (weightMatch) score += parseFloat(weightMatch[1]) / 10;
     return score;
 }
 
-function sortTagsByPromptFlow(tags, config = PROMPT_FLOW_CONFIG, options = {}) {
+function sortTagsByPromptFlow(tags, config = PROMPT_FLOW_CONFIG) {
     const groups = config.phases.map(phase => ({ phase, tags: [] }));
     const groupMap = new Map(groups.map(group => [group.phase.key, group]));
     const fallbackGroup = groupMap.get(config.fallbackKey) || groups[groups.length - 1];
     tags.forEach(tag => {
-        const key = determinePromptFlowPhase(tag, config, options);
+        const key = determinePromptFlowPhase(tag, config);
         const targetGroup = groupMap.get(key) || fallbackGroup;
         targetGroup.tags.push(tag);
     });
     groups.forEach(group => {
         group.tags.sort((a, b) => {
-            const scoreDiff = computePromptFlowScore(b, group.phase.key, config, options) - computePromptFlowScore(a, group.phase.key, config, options);
+            const scoreDiff = computePromptFlowScore(b, group.phase.key, config) - computePromptFlowScore(a, group.phase.key, config);
             if (scoreDiff !== 0) return scoreDiff;
             const timeDiff = (a.addedAt || 0) - (b.addedAt || 0);
             if (timeDiff !== 0) return timeDiff;
@@ -914,9 +578,6 @@ function assignCategoryToTag(category) {
     if (!tag) return;
     tag.category = category;
     tag.categorySource = 'Manual';
-    tag.confidence = 0.99;
-    tag.profileCategories = tag.profileCategories || {};
-    tag.profileCategories.danbooru = { category, source: 'Manual', confidence: tag.confidence };
     ensureCategoryRegistered(category);
     if (tagCategorizer) {
         tagCategorizer.updateIndex(tag.original, category);
@@ -931,19 +592,8 @@ function assignCategoryToTag(category) {
 
 function renderCategoryFilters() {
     if (!categoryToggleContainer) return;
-    const activeProfile = getActiveProfile();
-    let categories;
-    if (activeProfile === 'danbooru') {
-        const ordered = tagCategorizer?.getProfileCategoryOrder ? tagCategorizer.getProfileCategoryOrder('danbooru') : null;
-        categories = Array.from(ordered || knownCategories);
-        if (!categories.includes('Uncategorized')) categories.push('Uncategorized');
-    } else {
-        const ordered = tagCategorizer?.getProfileCategoryOrder ? tagCategorizer.getProfileCategoryOrder('e621') : [];
-        const categorySet = new Set(ordered);
-        baseTags.forEach(tag => categorySet.add(getTagCategoryForProfile(tag, activeProfile)));
-        categories = Array.from(categorySet).filter(Boolean);
-        if (!categories.includes('Uncategorized')) categories.push('Uncategorized');
-    }
+    const categories = Array.from(knownCategories);
+    if (!categories.includes('Uncategorized')) categories.push('Uncategorized');
     categories.sort((a, b) => a.localeCompare(b));
     categoryToggleContainer.innerHTML = '';
     if (categories.length === 0) {
@@ -965,7 +615,7 @@ function renderCategoryFilters() {
     });
     categoryToggleContainer.appendChild(resetButton);
     categories.forEach(category => {
-        const count = baseTags.filter(tag => getTagCategoryForProfile(tag, activeProfile) === category).length;
+        const count = baseTags.filter(tag => (tag.category || 'Uncategorized') === category).length;
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = `category-toggle-btn${hiddenCategories.has(category) ? ' muted' : ''}`;
@@ -1084,8 +734,7 @@ function getProcessedTagElements() {
 }
 
 function getActiveTags() {
-    const profile = getActiveProfile();
-    return baseTags.filter(tag => !hiddenCategories.has(getTagCategoryForProfile(tag, profile)));
+    return baseTags.filter(tag => !hiddenCategories.has(tag.category || 'Uncategorized'));
 }
 
 function getProcessedTagsForOutput() {
@@ -1158,27 +807,16 @@ function processAll() {
     const newBaseTags = [];
     const oldTagsMeta = new Map(baseTags.map(t => [t.original, { id: t.id, weighted: t.weighted, addedAt: t.addedAt }]));
     for (const tag of filteredTags) {
-        const categorization = tagCategorizer.categorize(tag, { allowFallback: true });
-        const profileCategories = categorization.profileCategories || {};
-        const danbooruProfile = profileCategories.danbooru || {
-            category: categorization.category,
-            source: categorization.source,
-            confidence: categorization.confidence
-        };
-        const { category, source, confidence } = danbooruProfile;
+        const { category, source } = tagCategorizer.categorize(tag, { allowFallback: true });
         const oldMeta = oldTagsMeta.get(tag);
-        const assignedCategory = category || categorization.category || 'Uncategorized';
-        const assignedSource = source || categorization.source || 'Hybrid';
-        const assignedConfidence = confidence ?? categorization.confidence ?? 0.6;
+        const assignedCategory = category || 'Uncategorized';
         ensureCategoryRegistered(assignedCategory);
         newBaseTags.push({
             original: tag,
             weighted: oldMeta ? oldMeta.weighted : tag,
             id: oldMeta ? oldMeta.id : `tag-${tagIdCounter++}`,
             category: assignedCategory,
-            categorySource: assignedSource,
-            confidence: assignedConfidence,
-            profileCategories,
+            categorySource: source,
             addedAt: oldMeta && oldMeta.addedAt ? oldMeta.addedAt : Date.now()
         });
     }
@@ -1222,16 +860,14 @@ function displayTags() {
     }
 
     const sortValue = sortSelect.value;
-    const activeProfile = getActiveProfile();
     if (sortValue === 'danbooru') {
         const groups = visibleTags.reduce((acc, tag) => {
-            const c = getTagCategoryForProfile(tag, 'danbooru');
+            const c = tag.category || 'Uncategorized';
             if (!acc[c]) acc[c] = [];
             acc[c].push(tag);
             return acc;
         }, {});
-        const baseOrder = tagCategorizer?.getProfileCategoryOrder ? tagCategorizer.getProfileCategoryOrder('danbooru') : tagCategorizer.categoryOrder;
-        const sortedCategoryOrder = [...new Set([...(baseOrder || []), ...knownCategories, 'Uncategorized'])];
+        const sortedCategoryOrder = [...new Set([...tagCategorizer.categoryOrder, ...knownCategories, 'Uncategorized'])];
         sortedCategoryOrder.forEach(categoryName => {
             const tagsForCategory = groups[categoryName];
             if (!tagsForCategory || tagsForCategory.length === 0) return;
@@ -1241,37 +877,13 @@ function displayTags() {
             const container = document.createElement('div');
             container.className = 'tag-group-container';
             container.dataset.groupName = categoryName;
-            tagsForCategory.forEach(tag => container.appendChild(createTagElement(tag, 'danbooru')));
-            groupDiv.appendChild(container);
-            tagOutput.appendChild(groupDiv);
-        });
-    } else if (sortValue === 'e621') {
-        const flowConfig = E621_FLOW_CONFIG;
-        const flowGroups = sortTagsByPromptFlow(visibleTags, flowConfig, { profile: 'e621' });
-        flowGroups.forEach(({ phase, tags }) => {
-            if (!tags.length) return;
-            const groupDiv = document.createElement('div');
-            groupDiv.className = 'tag-group fade-in-up';
-            const title = document.createElement('h3');
-            title.className = 'tag-group-title';
-            title.textContent = phase.label;
-            groupDiv.appendChild(title);
-            if (phase.description) {
-                const description = document.createElement('p');
-                description.className = 'text-xs text-gray-400 mb-3';
-                description.textContent = phase.description;
-                groupDiv.appendChild(description);
-            }
-            const container = document.createElement('div');
-            container.className = 'tag-group-container';
-            container.dataset.groupName = phase.label;
-            tags.forEach(tag => container.appendChild(createTagElement(tag, 'e621')));
+            tagsForCategory.forEach(tag => container.appendChild(createTagElement(tag)));
             groupDiv.appendChild(container);
             tagOutput.appendChild(groupDiv);
         });
     } else if (sortValue === 'flow' || sortValue === 'illustrious') {
         const flowConfig = sortValue === 'illustrious' ? ILLUSTRIOUS_FLOW_CONFIG : PROMPT_FLOW_CONFIG;
-        const flowGroups = sortTagsByPromptFlow(visibleTags, flowConfig, { profile: 'danbooru' });
+        const flowGroups = sortTagsByPromptFlow(visibleTags, flowConfig);
         flowGroups.forEach(({ phase, tags }) => {
             if (!tags.length) return;
             const groupDiv = document.createElement('div');
@@ -1289,7 +901,7 @@ function displayTags() {
             const container = document.createElement('div');
             container.className = 'tag-group-container';
             container.dataset.groupName = phase.label;
-            tags.forEach(tag => container.appendChild(createTagElement(tag, 'danbooru')));
+            tags.forEach(tag => container.appendChild(createTagElement(tag)));
             groupDiv.appendChild(container);
             tagOutput.appendChild(groupDiv);
         });
@@ -1301,7 +913,7 @@ function displayTags() {
         const container = document.createElement('div');
         container.className = 'tag-group-container';
         container.dataset.groupName = 'all';
-        tagsToDisplay.forEach(tag => container.appendChild(createTagElement(tag, activeProfile)));
+        tagsToDisplay.forEach(tag => container.appendChild(createTagElement(tag)));
         tagOutput.appendChild(container);
     }
 
@@ -1318,19 +930,16 @@ function displayTags() {
     animateTagGroups();
 }
 
-function createTagElement(tag, profile = 'danbooru') {
+function createTagElement(tag) {
     const el = document.createElement('div');
     el.className = 'tag-base processed-tag';
     el.dataset.id = tag.id;
     el.dataset.weightedTag = tag.weighted;
     el.dataset.tagOriginal = tag.original;
-    const displayCategory = getTagCategoryForProfile(tag, profile);
-    const displaySource = getTagSourceForProfile(tag, profile);
-    el.dataset.category = displayCategory;
-    el.dataset.profile = profile;
+    el.dataset.category = tag.category || 'Uncategorized';
     if (selectedTagIds.has(tag.id)) el.classList.add('selected');
-    el.style.borderStyle = displaySource !== 'Primary' ? 'dashed' : 'solid';
-    el.title = `(${displaySource}) ${tag.original}\nCategory: ${displayCategory}${profile !== 'danbooru' ? ` [${profile}]` : ''}\n\nCtrl+Click to multi-select.\nRight-click for options.`;
+    el.style.borderStyle = tag.categorySource !== 'Primary' ? 'dashed' : 'solid';
+    el.title = `(${tag.categorySource}) ${tag.original}\nCategory: ${tag.category}\n\nCtrl+Click to multi-select.\nRight-click for options.`;
 
     const content = document.createElement('div');
     content.className = 'flex items-center gap-2';
@@ -1427,14 +1036,7 @@ async function submitCategoryUpdate(event, newCategory) {
         const updateResponse = await fetch(apiUrl, { method: 'PUT', headers, body: JSON.stringify({ message: `Update ${changesCount} tag(s) to '${newCategory}'`, content: btoa(newContent), sha: currentSha }) });
         if (!updateResponse.ok) { const errorData = await updateResponse.json(); throw new Error(`GitHub API Error: ${errorData.message}`); }
         copyMessage.textContent = `Success! Updated ${changesCount} tag(s).`;
-        tagsToUpdate.forEach(tag => {
-            tagCategorizer.updateIndex(tag.original, newCategory);
-            tag.category = newCategory;
-            tag.categorySource = 'Primary';
-            tag.confidence = 0.99;
-            tag.profileCategories = tag.profileCategories || {};
-            tag.profileCategories.danbooru = { category: newCategory, source: 'Primary', confidence: tag.confidence };
-        });
+        tagsToUpdate.forEach(tag => { tagCategorizer.updateIndex(tag.original, newCategory); tag.category = newCategory; tag.categorySource = 'Primary'; });
         ensureCategoryRegistered(newCategory);
         selectedTagIds.clear(); displayTags();
     } catch (error) { console.error("Update failed:", error); copyMessage.textContent = `Error: ${error.message}`; if (error.message.includes("401")) gitHubPat = null;  } 
@@ -1462,20 +1064,6 @@ async function loadExternalData() {
         let ontology = null;
         if (ontologyResponse && ontologyResponse.ok) {
             ontology = await ontologyResponse.json();
-        }
-        if (e621Taxonomy && e621Taxonomy.prompt_phases) {
-            try {
-                E621_FLOW_CONFIG = createPromptFlowConfig(
-                    e621Taxonomy.prompt_phases,
-                    e621Taxonomy.prompt_priority || DEFAULT_E621_PRIORITY_KEYWORDS,
-                    e621Taxonomy.fallback_phase || 'quality'
-                );
-            } catch (error) {
-                console.warn('Failed to apply e621 prompt flow config, falling back to defaults', error);
-                E621_FLOW_CONFIG = createPromptFlowConfig(DEFAULT_E621_PROMPT_PHASES, DEFAULT_E621_PRIORITY_KEYWORDS, 'quality');
-            }
-        } else {
-            E621_FLOW_CONFIG = createPromptFlowConfig(DEFAULT_E621_PROMPT_PHASES, DEFAULT_E621_PRIORITY_KEYWORDS, 'quality');
         }
         const categoryOrder = [
             'Quality',
@@ -1562,9 +1150,6 @@ function initSortable() {
                 if (movedTag && newCategory) {
                     movedTag.category = newCategory;
                     movedTag.categorySource = 'Manual';
-                    movedTag.confidence = 0.99;
-                    movedTag.profileCategories = movedTag.profileCategories || {};
-                    movedTag.profileCategories.danbooru = { category: newCategory, source: 'Manual', confidence: movedTag.confidence };
                     ensureCategoryRegistered(newCategory);
                     if (tagCategorizer) {
                         tagCategorizer.updateIndex(movedTag.original, newCategory);
@@ -1864,8 +1449,7 @@ function updateStats() {
     const activeTags = getActiveTags();
     const tagCount = activeTags.length;
     const maxTags = parseInt(maxTagsInput.value, 10) || 75;
-    const profile = getActiveProfile();
-    const categoryCount = new Set(activeTags.map(t => getTagCategoryForProfile(t, profile))).size;
+    const categoryCount = new Set(activeTags.map(t => t.category)).size;
     const historyCount = copyHistory.length;
     element('tagCount').textContent = tagCount;
     element('maxTagCount').textContent = maxTags;
