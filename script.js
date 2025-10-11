@@ -8,17 +8,64 @@ let gitHubPat = '';
 const GITHUB_USER = 'isaacwach234';
 const GITHUB_REPO = 'danbooru-tag-helper';
 
-// e621 mappings (small hardcoded from research; expand to JSON)
+// Expanded e621 mappings (e621 tag -> Danbooru equivalent/alias)
 const e621Mappings = {
   'feral': 'animal',
-  'anthro': 'humanoid',
-  // Add more as needed
+  'anthro': 'anthro',
+  'intersex': 'futanari',
+  'solo': 'solo',
+  'solo_female': '1girl',
+  'solo_male': '1boy',
+  'herm': 'futanari',
+  'scalie': 'reptile',
+  'mammal': 'mammal',
+  'avian': 'bird',
+  'canine': 'dog',
+  'feline': 'cat',
+  'equine': 'horse',
+  'lagomorph': 'rabbit',
+  'mustelid': 'weasel',
+  'taur': 'centaur',
+  'multi_breast': 'multiple_breasts',
+  'knot': 'knotted_penis',
+  'sheath': 'penis_sheath',
+  'barb': 'penis_barb',
+  'oviposition': 'eggs',
+  'hyper': 'hyper',
+  'macro': 'giantess',
+  'micro': 'minigirl',
+  'inflation': 'inflation',
+  'vore': 'vore',
+  'watersports': 'urination',
+  'incest': 'incest',
+  'diaper': 'diaper',
+  'messing': 'scat',
+  'absortion_vore': 'absorption_vore',
+  'anal_vore': 'anal_vore',
+  'cock_vore': 'cock_vore',
+  'oral_vore': 'oral_vore',
+  'pred_digestion': 'digestion',
+  'unbirth': 'unbirth',
+  'wolf': 'wolf_girl',
+  'fox': 'fox_girl',
+  'dragon': 'dragon_girl',
+  'hyena': 'hyena_girl',
+  'shark': 'shark_girl',
+  'plantigrade': 'humanoid_legs',
+  'digitigrade': 'digitigrade_legs',
+  'unguligrade': 'unguligrade_legs'
+  // Add more as needed—e.g., from e621 db_export or community lists
 };
 
-// Implications (basic from Danbooru wiki)
+// Implications (basic from Danbooru wiki, expanded slightly for e621 compat)
 const implications = {
   '1girl': ['solo'],
-  'blonde_hair': ['hair'], // Example
+  'blonde_hair': ['hair'],
+  'feral': ['animal'],
+  'anthro': ['furry'],
+  'futanari': ['intersex'],
+  'solo_female': ['1girl'],
+  'solo_male': ['1boy']
   // Add more
 };
 
@@ -107,12 +154,13 @@ function categorizeTag(tag) {
   return { booru_type: 'general', subcategory: 'Uncategorized' };
 }
 
-// e621 mode adjustments
+// e621 mode adjustments (now uses expanded mappings)
 function applyE621Mode(tags) {
   if (!element('e621ModeToggle').checked) return tags;
-  return tags.map(tag => {
-    const alias = e621Mappings[tag];
-    return alias || `species:${tag}`;
+  return tags.map(tagObj => {
+    const e621Tag = tagObj.original;
+    const danbooruAlias = e621Mappings[e621Tag];
+    return danbooruAlias ? { ...tagObj, original: danbooruAlias } : { ...tagObj, original: `species:${e621Tag}` };
   });
 }
 
@@ -142,24 +190,28 @@ function processTags(inputTags) {
   // Categorize
   baseTags = tags.map(tag => ({ original: tag, ...categorizeTag(tag) }));
 
-  // Implications (basic)
+  // Implications (avoid loops)
+  const processedImplied = new Set();
   baseTags.forEach(t => {
+    if (processedImplied.has(t.original)) return;
     const implied = implications[t.original];
     if (implied) {
       implied.forEach(i => {
-        if (!baseTags.some(bt => bt.original === i)) {
+        if (!baseTags.some(bt => bt.original === i) && !processedImplied.has(i)) {
           baseTags.push({ original: i, ...categorizeTag(i), implied: true });
+          processedImplied.add(i);
         }
       });
     }
+    processedImplied.add(t.original);
   });
 
   // Limit
   const max = parseInt(element('maxTagsInput').value) || 75;
   baseTags = baseTags.slice(0, max);
 
-  // e621
-  baseTags = applyE621Mode(baseTags.map(t => t.original)).map((t, i) => ({ ...baseTags[i], original: t }));
+  // e621 (now with expanded mappings)
+  baseTags = applyE621Mode(baseTags);
 
   updateOverTagWarning(baseTags.length);
   return baseTags;
@@ -364,4 +416,4 @@ document.addEventListener('DOMContentLoaded', init);
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 if (!prefersReducedMotion && window.gsap) {
   gsap.from('.glass-panel', { opacity: 0, y: 32, duration: 0.8, stagger: 0.1, ease: 'power3.out' });
-    }
+               }
