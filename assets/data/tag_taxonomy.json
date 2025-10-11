@@ -1,0 +1,128 @@
+{
+  "categoryOrder": [
+    "Artists",
+    "Quality",
+    "Composition",
+    "Characters",
+    "Subject & Creatures",
+    "Species & Race",
+    "Copyright & Franchise",
+    "Emotion & Expression",
+    "Interaction",
+    "Face",
+    "Eyes",
+    "Hair",
+    "Body Parts",
+    "Attire",
+    "Accessories",
+    "Held Items & Objects",
+    "Actions & Poses",
+    "Camera & Perspective",
+    "Setting & Environment",
+    "Background Elements",
+    "Weather & Atmosphere",
+    "Lighting & Effects",
+    "Post-processing",
+    "Style & Meta",
+    "Meta",
+    "Uncategorized"
+  ],
+  "semanticRules": [
+    {
+      "category": "Artists",
+      "priority": 6,
+      "keywords": ["style", "artstyle", "illustration", "digital_painting", "painterly", "studio", "portfolio"],
+      "prefixes": ["artist:", "style_of_", "art_of_", "by_", "inspired_by_"],
+      "suffixes": ["_style", "_art", "_inspired"]
+    },
+    {
+      "category": "Quality",
+      "priority": 5,
+      "keywords": ["masterpiece", "best_quality", "ultra_detailed", "incredibly_detailed", "8k", "4k", "absurdres", "hdr", "cinematic_lighting"],
+      "suffixes": ["_quality", "_render"]
+    },
+    {
+      "category": "Emotion & Expression",
+      "priority": 4,
+      "keywords": ["smile", "laugh", "cry", "blush", "angry", "frown", "wink", "tears", "grin", "surprised"],
+      "suffixes": ["_smile", "_expression"],
+      "patterns": ["(?<!no_)expression$"]
+    },
+    {
+      "category": "Interaction",
+      "priority": 3,
+      "keywords": ["hug", "kissing", "kiss", "holding_hands", "handholding", "duo", "group", "leaning", "embrace", "sparring"],
+      "suffixes": ["_together", "_pair"],
+      "patterns": ["\\bwith_", "\\band_"]
+    },
+    {
+      "category": "Species & Race",
+      "priority": 4,
+      "keywords": ["wolf", "fox", "dragon", "cat", "dog", "bunny", "rabbit", "lion", "tiger", "horse", "bird", "avian", "shark", "otter", "bear", "kobold", "lizard", "reptile", "monster", "demon", "angel", "elf", "orc", "succubus", "mermaid"],
+      "suffixes": ["_folk", "_people", "_tribe"],
+      "patterns": ["(?<!human)_ears$", "(?<!human)_tail$"]
+    },
+    {
+      "category": "Copyright & Franchise",
+      "priority": 3,
+      "keywords": ["series", "franchise", "copyright"],
+      "patterns": ["\\(.+\\)$"],
+      "suffixes": ["_series", "_franchise"]
+    },
+    {
+      "category": "Lighting & Effects",
+      "priority": 3,
+      "keywords": ["lighting", "rim_light", "backlight", "glow", "bokeh", "sparkle", "particles", "ray", "volumetric"],
+      "suffixes": ["_lighting", "_glow", "_effect"],
+      "patterns": ["light_beams?", "god_rays"]
+    },
+    {
+      "category": "Setting & Environment",
+      "priority": 3,
+      "keywords": ["background", "indoors", "outdoors", "cafe", "forest", "city", "skyline", "mountain", "beach", "garden"],
+      "suffixes": ["_background", "_scenery"],
+      "patterns": ["\\broom$", "\\bstreet$", "\\bshop$"]
+    },
+    {
+      "category": "Attire",
+      "priority": 3,
+      "keywords": ["dress", "uniform", "armor", "outfit", "jacket", "coat", "kimono", "suit", "robe", "hoodie", "bikini", "swimsuit", "lingerie"],
+      "suffixes": ["_uniform", "_wear", "_outfit", "_armor"],
+      "patterns": ["\\bskirt$", "\\bclothing$"]
+    },
+    {
+      "category": "Accessories",
+      "priority": 2,
+      "keywords": ["hat", "glasses", "earrings", "necklace", "bracelet", "ribbon", "bow", "scarf", "brooch"],
+      "suffixes": ["_hat", "_bow", "_scarf", "_accessory"],
+      "patterns": ["\\bring$", "hair_\\w+"]
+    }
+  ],
+  "e621Categories": {
+    "artist": "Artists",
+    "character": "Characters",
+    "copyright": "Copyright & Franchise",
+    "species": "Species & Race",
+    "meta": "Meta",
+    "lore": "Meta",
+    "general": null
+  },
+  "e621KeywordMapping": {
+    "solo": "Subject & Creatures",
+    "duo": "Subject & Creatures",
+    "group": "Subject & Creatures",
+    "feral": "Species & Race",
+    "anthro": "Species & Race",
+    "humanoid": "Subject & Creatures",
+    "taur": "Species & Race",
+    "digital_media_(artwork)": "Style & Meta"
+  },
+  "speciesKeywords": ["wolf", "fox", "dragon", "cat", "dog", "bunny", "rabbit", "lion", "tiger", "horse", "bird", "avian", "shark", "otter", "bear", "kobold", "lizard", "reptile", "monster", "demon", "angel", "elf", "orc", "succubus", "mermaid"],
+  "emotionKeywords": ["happy", "smile", "smiling", "angry", "frown", "cry", "crying", "blush", "blushing", "shy", "confident", "serious", "surprised", "embarrassed", "wink", "winking", "sad", "tear", "teary", "grin"],
+  "interactionKeywords": ["hug", "kissing", "kiss", "holding_hands", "handholding", "leaning", "back-to-back", "fighting", "touching", "high_five", "handshake", "embrace"],
+  "backgroundKeywords": ["background", "indoors", "outdoors", "cafe", "restaurant", "forest", "city", "skyline", "sunset", "sunrise", "night", "daytime", "rain", "snow", "cloudy", "storm", "mountain", "beach", "garden", "room"],
+  "effectKeywords": ["lighting", "bokeh", "glow", "particles", "sparkles", "dramatic", "cinematic", "film_grain", "lens_flare", "volumetric", "ray", "shimmer"],
+  "metaKeywords": ["signature", "watermark", "text", "caption", "translated", "ui", "user_interface", "logo", "border", "frame", "copyright"],
+  "qualityKeywords": ["masterpiece", "best_quality", "ultra_detailed", "incredibly_detailed", "highres", "absurdres", "8k", "4k", "hdr", "high_quality"],
+  "styleKeywords": ["digital_painting", "illustration", "semi-realistic", "anime", "manga", "sketch", "watercolor", "oil_painting", "pixel_art", "cel_shading", "cartoon"]
+}
