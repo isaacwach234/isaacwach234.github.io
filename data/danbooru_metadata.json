@@ -1,0 +1,966 @@
+{
+  "aliases": {
+    "best_quality:1.1": {
+      "name": "best_quality",
+      "type": "quality"
+    },
+    "bunnygirl": {
+      "category": "Subject & Creatures",
+      "name": "bunny_ears",
+      "type": "attire"
+    },
+    "masterpiece:1.2": {
+      "name": "masterpiece",
+      "type": "quality"
+    },
+    "pov": {
+      "category": "Composition",
+      "confidence": 0.85,
+      "type": "composition"
+    },
+    "school_uniform": {
+      "name": "serafuku"
+    }
+  },
+  "category_aliases": {
+    "Copyright": "Franchise & Lore",
+    "Franchise": "Franchise & Lore",
+    "Lore": "Franchise & Lore",
+    "Meta": "Style & Meta"
+  },
+  "direct": {
+    "1boy": {
+      "category": "Subject & Creatures",
+      "confidence": 0.94,
+      "source": "Count metadata",
+      "type": "count"
+    },
+    "1girl": {
+      "category": "Subject & Creatures",
+      "confidence": 0.94,
+      "source": "Count metadata",
+      "type": "count"
+    },
+    "1other": {
+      "category": "Subject & Creatures",
+      "confidence": 0.94,
+      "source": "Count metadata",
+      "type": "count"
+    },
+    "2boys": {
+      "category": "Subject & Creatures",
+      "confidence": 0.94,
+      "source": "Count metadata",
+      "type": "count"
+    },
+    "2girls": {
+      "category": "Subject & Creatures",
+      "confidence": 0.94,
+      "source": "Count metadata",
+      "type": "count"
+    },
+    "3girls": {
+      "category": "Subject & Creatures",
+      "confidence": 0.94,
+      "source": "Count metadata",
+      "type": "count"
+    },
+    "absurdres": {
+      "category": "Quality",
+      "confidence": 0.96,
+      "source": "Quality metadata",
+      "type": "quality"
+    },
+    "ahoge": {
+      "category": "Hair",
+      "confidence": 0.88,
+      "source": "Common anatomy metadata",
+      "type": "anatomy"
+    },
+    "angry": {
+      "category": "Emotion & Expression",
+      "confidence": 0.84,
+      "source": "Expression metadata",
+      "type": "expression"
+    },
+    "animal_ears": {
+      "category": "Subject & Creatures",
+      "confidence": 0.88,
+      "source": "Common anatomy metadata",
+      "type": "anatomy"
+    },
+    "apron": {
+      "category": "Attire",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "attire"
+    },
+    "armor": {
+      "category": "Attire",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "attire"
+    },
+    "backlighting": {
+      "category": "Lighting & Effects",
+      "confidence": 0.84,
+      "source": "Scene metadata",
+      "type": "lighting"
+    },
+    "beach": {
+      "category": "Setting & Environment",
+      "confidence": 0.84,
+      "source": "Scene metadata",
+      "type": "environment"
+    },
+    "best_quality": {
+      "category": "Quality",
+      "confidence": 0.96,
+      "source": "Quality metadata",
+      "type": "quality"
+    },
+    "bikini": {
+      "category": "Attire",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "attire"
+    },
+    "black_hair": {
+      "category": "Hair",
+      "confidence": 0.88,
+      "source": "Common anatomy metadata",
+      "type": "anatomy"
+    },
+    "blonde_hair": {
+      "category": "Hair",
+      "confidence": 0.88,
+      "source": "Common anatomy metadata",
+      "type": "anatomy"
+    },
+    "blue_eyes": {
+      "category": "Eyes",
+      "confidence": 0.88,
+      "source": "Common anatomy metadata",
+      "type": "anatomy"
+    },
+    "blue_hair": {
+      "category": "Hair",
+      "confidence": 0.88,
+      "source": "Common anatomy metadata",
+      "type": "anatomy"
+    },
+    "blush": {
+      "category": "Emotion & Expression",
+      "confidence": 0.88,
+      "source": "Common anatomy metadata",
+      "type": "anatomy"
+    },
+    "blushing": {
+      "category": "Emotion & Expression",
+      "confidence": 0.84,
+      "source": "Expression metadata",
+      "type": "expression"
+    },
+    "bokeh": {
+      "category": "Lighting & Effects",
+      "confidence": 0.84,
+      "source": "Scene metadata",
+      "type": "lighting"
+    },
+    "boots": {
+      "category": "Accessories",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "accessory"
+    },
+    "braid": {
+      "category": "Hair",
+      "confidence": 0.88,
+      "source": "Common anatomy metadata",
+      "type": "anatomy"
+    },
+    "brown_hair": {
+      "category": "Hair",
+      "confidence": 0.88,
+      "source": "Common anatomy metadata",
+      "type": "anatomy"
+    },
+    "bunny_ears": {
+      "category": "Subject & Creatures",
+      "confidence": 0.88,
+      "source": "Common anatomy metadata",
+      "type": "anatomy"
+    },
+    "cat_ears": {
+      "category": "Subject & Creatures",
+      "confidence": 0.88,
+      "source": "Common anatomy metadata",
+      "type": "anatomy"
+    },
+    "city": {
+      "category": "Setting & Environment",
+      "confidence": 0.84,
+      "source": "Scene metadata",
+      "type": "environment"
+    },
+    "closed_mouth": {
+      "category": "Face",
+      "confidence": 0.88,
+      "source": "Common anatomy metadata",
+      "type": "anatomy"
+    },
+    "cloud": {
+      "category": "Setting & Environment",
+      "confidence": 0.84,
+      "source": "Scene metadata",
+      "type": "environment"
+    },
+    "concept_art": {
+      "category": "Style & Meta",
+      "confidence": 0.82,
+      "source": "Style metadata",
+      "type": "style"
+    },
+    "confident": {
+      "category": "Emotion & Expression",
+      "confidence": 0.84,
+      "source": "Expression metadata",
+      "type": "expression"
+    },
+    "crying": {
+      "category": "Emotion & Expression",
+      "confidence": 0.84,
+      "source": "Expression metadata",
+      "type": "expression"
+    },
+    "dancing": {
+      "category": "Actions & Poses",
+      "confidence": 0.83,
+      "source": "Pose metadata",
+      "type": "pose"
+    },
+    "day": {
+      "category": "Setting & Environment",
+      "confidence": 0.84,
+      "source": "Scene metadata",
+      "type": "environment"
+    },
+    "detailed_background": {
+      "category": "Quality",
+      "confidence": 0.96,
+      "source": "Quality metadata",
+      "type": "quality"
+    },
+    "determined": {
+      "category": "Emotion & Expression",
+      "confidence": 0.84,
+      "source": "Expression metadata",
+      "type": "expression"
+    },
+    "digital_painting": {
+      "category": "Style & Meta",
+      "confidence": 0.82,
+      "source": "Style metadata",
+      "type": "style"
+    },
+    "dramatic_lighting": {
+      "category": "Lighting & Effects",
+      "confidence": 0.84,
+      "source": "Scene metadata",
+      "type": "lighting"
+    },
+    "dress": {
+      "category": "Attire",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "attire"
+    },
+    "duo": {
+      "category": "Subject & Creatures",
+      "confidence": 0.94,
+      "source": "Count metadata",
+      "type": "count"
+    },
+    "fang": {
+      "category": "Face",
+      "confidence": 0.88,
+      "source": "Common anatomy metadata",
+      "type": "anatomy"
+    },
+    "fighting_stance": {
+      "category": "Actions & Poses",
+      "confidence": 0.83,
+      "source": "Pose metadata",
+      "type": "pose"
+    },
+    "fireworks": {
+      "category": "Lighting & Effects",
+      "confidence": 0.84,
+      "source": "Scene metadata",
+      "type": "lighting"
+    },
+    "forest": {
+      "category": "Setting & Environment",
+      "confidence": 0.84,
+      "source": "Scene metadata",
+      "type": "environment"
+    },
+    "fox_ears": {
+      "category": "Subject & Creatures",
+      "confidence": 0.88,
+      "source": "Common anatomy metadata",
+      "type": "anatomy"
+    },
+    "glasses": {
+      "category": "Face",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "accessory"
+    },
+    "gloves": {
+      "category": "Accessories",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "accessory"
+    },
+    "gown": {
+      "category": "Attire",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "attire"
+    },
+    "green_eyes": {
+      "category": "Eyes",
+      "confidence": 0.88,
+      "source": "Common anatomy metadata",
+      "type": "anatomy"
+    },
+    "grin": {
+      "category": "Emotion & Expression",
+      "confidence": 0.84,
+      "source": "Expression metadata",
+      "type": "expression"
+    },
+    "group": {
+      "category": "Subject & Creatures",
+      "confidence": 0.94,
+      "source": "Count metadata",
+      "type": "count"
+    },
+    "hakama": {
+      "category": "Attire",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "attire"
+    },
+    "hat": {
+      "category": "Accessories",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "accessory"
+    },
+    "headphones": {
+      "category": "Accessories",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "accessory"
+    },
+    "heterochromia": {
+      "category": "Eyes",
+      "confidence": 0.88,
+      "source": "Common anatomy metadata",
+      "type": "anatomy"
+    },
+    "highres": {
+      "category": "Quality",
+      "confidence": 0.96,
+      "source": "Quality metadata",
+      "type": "quality"
+    },
+    "hoodie": {
+      "category": "Attire",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "attire"
+    },
+    "horns": {
+      "category": "Subject & Creatures",
+      "confidence": 0.88,
+      "source": "Common anatomy metadata",
+      "type": "anatomy"
+    },
+    "indoors": {
+      "category": "Setting & Environment",
+      "confidence": 0.84,
+      "source": "Scene metadata",
+      "type": "environment"
+    },
+    "jacket": {
+      "category": "Attire",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "attire"
+    },
+    "jumping": {
+      "category": "Actions & Poses",
+      "confidence": 0.83,
+      "source": "Pose metadata",
+      "type": "pose"
+    },
+    "kimono": {
+      "category": "Attire",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "attire"
+    },
+    "kneeling": {
+      "category": "Actions & Poses",
+      "confidence": 0.83,
+      "source": "Pose metadata",
+      "type": "pose"
+    },
+    "leotard": {
+      "category": "Attire",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "attire"
+    },
+    "light_rays": {
+      "category": "Lighting & Effects",
+      "confidence": 0.84,
+      "source": "Scene metadata",
+      "type": "lighting"
+    },
+    "lineart": {
+      "category": "Style & Meta",
+      "confidence": 0.82,
+      "source": "Style metadata",
+      "type": "style"
+    },
+    "long_hair": {
+      "category": "Hair",
+      "confidence": 0.88,
+      "source": "Common anatomy metadata",
+      "type": "anatomy"
+    },
+    "looking_at_viewer": {
+      "category": "Composition",
+      "confidence": 0.83,
+      "source": "Pose metadata",
+      "type": "composition"
+    },
+    "lying": {
+      "category": "Actions & Poses",
+      "confidence": 0.83,
+      "source": "Pose metadata",
+      "type": "pose"
+    },
+    "maid": {
+      "category": "Attire",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "attire"
+    },
+    "maid_headdress": {
+      "category": "Accessories",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "accessory"
+    },
+    "masterpiece": {
+      "category": "Quality",
+      "confidence": 0.96,
+      "source": "Quality metadata",
+      "type": "quality"
+    },
+    "monochrome": {
+      "category": "Style & Meta",
+      "confidence": 0.82,
+      "source": "Style metadata",
+      "type": "style"
+    },
+    "mountain": {
+      "category": "Setting & Environment",
+      "confidence": 0.84,
+      "source": "Scene metadata",
+      "type": "environment"
+    },
+    "multiple_girls": {
+      "category": "Subject & Creatures",
+      "confidence": 0.94,
+      "source": "Count metadata",
+      "type": "count"
+    },
+    "night": {
+      "category": "Setting & Environment",
+      "confidence": 0.84,
+      "source": "Scene metadata",
+      "type": "environment"
+    },
+    "official_style": {
+      "category": "Style & Meta",
+      "confidence": 0.82,
+      "source": "Style metadata",
+      "type": "style"
+    },
+    "open_mouth": {
+      "category": "Face",
+      "confidence": 0.88,
+      "source": "Common anatomy metadata",
+      "type": "anatomy"
+    },
+    "outdoors": {
+      "category": "Setting & Environment",
+      "confidence": 0.84,
+      "source": "Scene metadata",
+      "type": "environment"
+    },
+    "particle_effect": {
+      "category": "Lighting & Effects",
+      "confidence": 0.84,
+      "source": "Scene metadata",
+      "type": "lighting"
+    },
+    "pink_hair": {
+      "category": "Hair",
+      "confidence": 0.88,
+      "source": "Common anatomy metadata",
+      "type": "anatomy"
+    },
+    "pixel_art": {
+      "category": "Style & Meta",
+      "confidence": 0.82,
+      "source": "Style metadata",
+      "type": "style"
+    },
+    "pointing": {
+      "category": "Actions & Poses",
+      "confidence": 0.83,
+      "source": "Pose metadata",
+      "type": "pose"
+    },
+    "purple_eyes": {
+      "category": "Eyes",
+      "confidence": 0.88,
+      "source": "Common anatomy metadata",
+      "type": "anatomy"
+    },
+    "rain": {
+      "category": "Weather & Atmosphere",
+      "confidence": 0.84,
+      "source": "Scene metadata",
+      "type": "environment"
+    },
+    "reaching": {
+      "category": "Actions & Poses",
+      "confidence": 0.83,
+      "source": "Pose metadata",
+      "type": "pose"
+    },
+    "red_eyes": {
+      "category": "Eyes",
+      "confidence": 0.88,
+      "source": "Common anatomy metadata",
+      "type": "anatomy"
+    },
+    "rough_sketch": {
+      "category": "Style & Meta",
+      "confidence": 0.82,
+      "source": "Style metadata",
+      "type": "style"
+    },
+    "running": {
+      "category": "Actions & Poses",
+      "confidence": 0.83,
+      "source": "Pose metadata",
+      "type": "pose"
+    },
+    "sailor_collar": {
+      "category": "Attire",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "attire"
+    },
+    "sandals": {
+      "category": "Accessories",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "accessory"
+    },
+    "school_uniform": {
+      "category": "Attire",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "attire"
+    },
+    "serafuku": {
+      "category": "Attire",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "attire"
+    },
+    "serious": {
+      "category": "Emotion & Expression",
+      "confidence": 0.84,
+      "source": "Expression metadata",
+      "type": "expression"
+    },
+    "short_hair": {
+      "category": "Hair",
+      "confidence": 0.88,
+      "source": "Common anatomy metadata",
+      "type": "anatomy"
+    },
+    "shout": {
+      "category": "Emotion & Expression",
+      "confidence": 0.84,
+      "source": "Expression metadata",
+      "type": "expression"
+    },
+    "sitting": {
+      "category": "Actions & Poses",
+      "confidence": 0.83,
+      "source": "Pose metadata",
+      "type": "pose"
+    },
+    "sky": {
+      "category": "Setting & Environment",
+      "confidence": 0.84,
+      "source": "Scene metadata",
+      "type": "environment"
+    },
+    "smile": {
+      "category": "Emotion & Expression",
+      "confidence": 0.88,
+      "source": "Common anatomy metadata",
+      "type": "anatomy"
+    },
+    "smiling": {
+      "category": "Emotion & Expression",
+      "confidence": 0.84,
+      "source": "Expression metadata",
+      "type": "expression"
+    },
+    "sneakers": {
+      "category": "Accessories",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "accessory"
+    },
+    "snow": {
+      "category": "Weather & Atmosphere",
+      "confidence": 0.84,
+      "source": "Scene metadata",
+      "type": "environment"
+    },
+    "solo": {
+      "category": "Subject & Creatures",
+      "confidence": 0.94,
+      "source": "Count metadata",
+      "type": "count"
+    },
+    "standing": {
+      "category": "Actions & Poses",
+      "confidence": 0.83,
+      "source": "Pose metadata",
+      "type": "pose"
+    },
+    "stockings": {
+      "category": "Accessories",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "accessory"
+    },
+    "storm": {
+      "category": "Weather & Atmosphere",
+      "confidence": 0.84,
+      "source": "Scene metadata",
+      "type": "environment"
+    },
+    "street": {
+      "category": "Setting & Environment",
+      "confidence": 0.84,
+      "source": "Scene metadata",
+      "type": "environment"
+    },
+    "sunrise": {
+      "category": "Setting & Environment",
+      "confidence": 0.84,
+      "source": "Scene metadata",
+      "type": "environment"
+    },
+    "sunset": {
+      "category": "Setting & Environment",
+      "confidence": 0.84,
+      "source": "Scene metadata",
+      "type": "environment"
+    },
+    "sweat": {
+      "category": "Emotion & Expression",
+      "confidence": 0.84,
+      "source": "Expression metadata",
+      "type": "expression"
+    },
+    "swimsuit": {
+      "category": "Attire",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "attire"
+    },
+    "tears": {
+      "category": "Emotion & Expression",
+      "confidence": 0.84,
+      "source": "Expression metadata",
+      "type": "expression"
+    },
+    "thighhighs": {
+      "category": "Accessories",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "accessory"
+    },
+    "traditional_media": {
+      "category": "Style & Meta",
+      "confidence": 0.82,
+      "source": "Style metadata",
+      "type": "style"
+    },
+    "twintails": {
+      "category": "Hair",
+      "confidence": 0.88,
+      "source": "Common anatomy metadata",
+      "type": "anatomy"
+    },
+    "ultra_detailed": {
+      "category": "Quality",
+      "confidence": 0.96,
+      "source": "Quality metadata",
+      "type": "quality"
+    },
+    "watercolor": {
+      "category": "Style & Meta",
+      "confidence": 0.82,
+      "source": "Style metadata",
+      "type": "style"
+    },
+    "waving": {
+      "category": "Actions & Poses",
+      "confidence": 0.83,
+      "source": "Pose metadata",
+      "type": "pose"
+    },
+    "white_hair": {
+      "category": "Hair",
+      "confidence": 0.88,
+      "source": "Common anatomy metadata",
+      "type": "anatomy"
+    },
+    "wings": {
+      "category": "Subject & Creatures",
+      "confidence": 0.88,
+      "source": "Common anatomy metadata",
+      "type": "anatomy"
+    },
+    "wink": {
+      "category": "Emotion & Expression",
+      "confidence": 0.84,
+      "source": "Expression metadata",
+      "type": "expression"
+    },
+    "yukata": {
+      "category": "Attire",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "attire"
+    }
+  },
+  "keyword_rules": [
+    {
+      "category": "Style & Meta",
+      "confidence": 0.8,
+      "keyword": "official",
+      "type": "meta"
+    },
+    {
+      "category": "Style & Meta",
+      "confidence": 0.78,
+      "keyword": "original",
+      "type": "meta"
+    },
+    {
+      "confidence": 0.82,
+      "keyword": "franchise",
+      "type": "copyright"
+    },
+    {
+      "confidence": 0.8,
+      "keyword": "project",
+      "type": "copyright"
+    },
+    {
+      "confidence": 0.8,
+      "keyword": "series",
+      "type": "copyright"
+    },
+    {
+      "confidence": 0.78,
+      "keyword": "pose",
+      "type": "pose"
+    },
+    {
+      "confidence": 0.8,
+      "keyword": "lighting",
+      "type": "lighting"
+    }
+  ],
+  "prefix_rules": [
+    {
+      "confidence": 0.92,
+      "prefix": "artist:",
+      "type": "artist"
+    },
+    {
+      "confidence": 0.9,
+      "prefix": "circle:",
+      "type": "circle"
+    },
+    {
+      "confidence": 0.9,
+      "prefix": "copyright:",
+      "type": "copyright"
+    },
+    {
+      "confidence": 0.92,
+      "prefix": "character:",
+      "type": "character"
+    },
+    {
+      "confidence": 0.85,
+      "prefix": "series:",
+      "type": "copyright"
+    },
+    {
+      "confidence": 0.75,
+      "prefix": "meta:",
+      "type": "meta"
+    }
+  ],
+  "regex_rules": [
+    {
+      "confidence": 0.94,
+      "pattern": "^[a-z0-9]+_\\([^)]+\\)$",
+      "type": "character"
+    },
+    {
+      "confidence": 0.9,
+      "pattern": "\\((artist|circle)\\)$",
+      "type": "artist"
+    },
+    {
+      "confidence": 0.99,
+      "pattern": "^(rating:(s|q|e))$",
+      "type": "rating"
+    }
+  ],
+  "suffix_rules": [
+    {
+      "confidence": 0.92,
+      "suffix": "_artist",
+      "type": "artist"
+    },
+    {
+      "confidence": 0.88,
+      "suffix": "_sensei",
+      "type": "artist"
+    },
+    {
+      "confidence": 0.86,
+      "suffix": "_studio",
+      "type": "circle"
+    },
+    {
+      "confidence": 0.82,
+      "suffix": "_works",
+      "type": "copyright"
+    },
+    {
+      "confidence": 0.82,
+      "suffix": "_series",
+      "type": "copyright"
+    }
+  ],
+  "type_defaults": {
+    "accessory": {
+      "category": "Accessories",
+      "confidence": 0.82
+    },
+    "anatomy": {
+      "category": "Body Parts",
+      "confidence": 0.88
+    },
+    "artist": {
+      "category": "Artists",
+      "confidence": 0.98
+    },
+    "attire": {
+      "category": "Attire",
+      "confidence": 0.85
+    },
+    "character": {
+      "category": "Characters",
+      "confidence": 0.94
+    },
+    "circle": {
+      "category": "Artists",
+      "confidence": 0.9
+    },
+    "copyright": {
+      "category": "Franchise & Lore",
+      "confidence": 0.92
+    },
+    "count": {
+      "category": "Subject & Creatures",
+      "confidence": 0.9
+    },
+    "environment": {
+      "category": "Setting & Environment",
+      "confidence": 0.82
+    },
+    "expression": {
+      "category": "Emotion & Expression",
+      "confidence": 0.86
+    },
+    "lighting": {
+      "category": "Lighting & Effects",
+      "confidence": 0.82
+    },
+    "meta": {
+      "category": "Style & Meta",
+      "confidence": 0.85
+    },
+    "pose": {
+      "category": "Actions & Poses",
+      "confidence": 0.85
+    },
+    "prop": {
+      "category": "Held Items & Objects",
+      "confidence": 0.8
+    },
+    "quality": {
+      "category": "Quality",
+      "confidence": 0.95
+    },
+    "rating": {
+      "category": "Rating & Safety",
+      "confidence": 0.95
+    },
+    "style": {
+      "category": "Style & Meta",
+      "confidence": 0.88
+    },
+    "subject": {
+      "category": "Subject & Creatures",
+      "confidence": 0.88
+    }
+  }
+}

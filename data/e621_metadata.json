@@ -1,0 +1,860 @@
+{
+  "aliases": {
+    "andromorph": {
+      "category": "Gender & Identity",
+      "confidence": 0.9,
+      "type": "gender"
+    },
+    "explicit_rating": {
+      "name": "rating:e",
+      "type": "rating"
+    },
+    "futa": {
+      "category": "Gender & Identity",
+      "confidence": 0.9,
+      "type": "gender"
+    },
+    "gynomorph": {
+      "category": "Gender & Identity",
+      "confidence": 0.9,
+      "type": "gender"
+    },
+    "herm": {
+      "category": "Gender & Identity",
+      "confidence": 0.9,
+      "type": "gender"
+    },
+    "questionable_rating": {
+      "name": "rating:q",
+      "type": "rating"
+    },
+    "safe_rating": {
+      "name": "rating:s",
+      "type": "rating"
+    }
+  },
+  "direct": {
+    "absurdres": {
+      "category": "Quality",
+      "confidence": 0.95,
+      "source": "Quality metadata",
+      "type": "quality"
+    },
+    "anthro": {
+      "category": "Species & Body",
+      "confidence": 0.9,
+      "source": "Species metadata",
+      "type": "species"
+    },
+    "arena": {
+      "category": "Scene & Setting",
+      "confidence": 0.84,
+      "source": "Scene metadata",
+      "type": "scene"
+    },
+    "armor": {
+      "category": "Wardrobe & Accessories",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "wardrobe"
+    },
+    "avian": {
+      "category": "Species & Body",
+      "confidence": 0.9,
+      "source": "Species metadata",
+      "type": "species"
+    },
+    "backlighting": {
+      "category": "Lighting & Effects",
+      "confidence": 0.84,
+      "source": "Lighting metadata",
+      "type": "lighting"
+    },
+    "bdsm": {
+      "category": "Kinks & Themes",
+      "confidence": 0.9,
+      "source": "Theme metadata",
+      "type": "kink"
+    },
+    "bedroom": {
+      "category": "Scene & Setting",
+      "confidence": 0.84,
+      "source": "Scene metadata",
+      "type": "scene"
+    },
+    "best_quality": {
+      "category": "Quality",
+      "confidence": 0.95,
+      "source": "Quality metadata",
+      "type": "quality"
+    },
+    "blindfold": {
+      "category": "Wardrobe & Accessories",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "wardrobe"
+    },
+    "bondage": {
+      "category": "Kinks & Themes",
+      "confidence": 0.9,
+      "source": "Theme metadata",
+      "type": "kink"
+    },
+    "book": {
+      "category": "Props & Gear",
+      "confidence": 0.84,
+      "source": "Prop metadata",
+      "type": "prop"
+    },
+    "boots": {
+      "category": "Wardrobe & Accessories",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "wardrobe"
+    },
+    "bovine": {
+      "category": "Species & Body",
+      "confidence": 0.9,
+      "source": "Species metadata",
+      "type": "species"
+    },
+    "breeding": {
+      "category": "Kinks & Themes",
+      "confidence": 0.9,
+      "source": "Theme metadata",
+      "type": "kink"
+    },
+    "camera": {
+      "category": "Props & Gear",
+      "confidence": 0.84,
+      "source": "Prop metadata",
+      "type": "prop"
+    },
+    "canine": {
+      "category": "Species & Body",
+      "confidence": 0.9,
+      "source": "Species metadata",
+      "type": "species"
+    },
+    "city": {
+      "category": "Scene & Setting",
+      "confidence": 0.84,
+      "source": "Scene metadata",
+      "type": "scene"
+    },
+    "claws": {
+      "category": "Anatomy & Detail",
+      "confidence": 0.88,
+      "source": "Anatomy metadata",
+      "type": "anatomy"
+    },
+    "collar": {
+      "category": "Wardrobe & Accessories",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "wardrobe"
+    },
+    "colored_lighting": {
+      "category": "Lighting & Effects",
+      "confidence": 0.84,
+      "source": "Lighting metadata",
+      "type": "lighting"
+    },
+    "desert": {
+      "category": "Scene & Setting",
+      "confidence": 0.84,
+      "source": "Scene metadata",
+      "type": "scene"
+    },
+    "digitigrade": {
+      "category": "Anatomy & Detail",
+      "confidence": 0.88,
+      "source": "Anatomy metadata",
+      "type": "anatomy"
+    },
+    "dominant": {
+      "category": "Kinks & Themes",
+      "confidence": 0.9,
+      "source": "Theme metadata",
+      "type": "kink"
+    },
+    "dragon": {
+      "category": "Species & Body",
+      "confidence": 0.9,
+      "source": "Species metadata",
+      "type": "species"
+    },
+    "dramatic_lighting": {
+      "category": "Lighting & Effects",
+      "confidence": 0.84,
+      "source": "Lighting metadata",
+      "type": "lighting"
+    },
+    "dungeon": {
+      "category": "Scene & Setting",
+      "confidence": 0.84,
+      "source": "Scene metadata",
+      "type": "scene"
+    },
+    "equine": {
+      "category": "Species & Body",
+      "confidence": 0.9,
+      "source": "Species metadata",
+      "type": "species"
+    },
+    "explicit": {
+      "category": "Rating & Safety",
+      "confidence": 0.99,
+      "source": "e621 rating metadata",
+      "type": "rating"
+    },
+    "feathers": {
+      "category": "Anatomy & Detail",
+      "confidence": 0.88,
+      "source": "Anatomy metadata",
+      "type": "anatomy"
+    },
+    "feline": {
+      "category": "Species & Body",
+      "confidence": 0.9,
+      "source": "Species metadata",
+      "type": "species"
+    },
+    "feral": {
+      "category": "Species & Body",
+      "confidence": 0.9,
+      "source": "Species metadata",
+      "type": "species"
+    },
+    "forest": {
+      "category": "Scene & Setting",
+      "confidence": 0.84,
+      "source": "Scene metadata",
+      "type": "scene"
+    },
+    "fur": {
+      "category": "Anatomy & Detail",
+      "confidence": 0.88,
+      "source": "Anatomy metadata",
+      "type": "anatomy"
+    },
+    "gag": {
+      "category": "Wardrobe & Accessories",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "wardrobe"
+    },
+    "gloves": {
+      "category": "Wardrobe & Accessories",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "wardrobe"
+    },
+    "glow": {
+      "category": "Lighting & Effects",
+      "confidence": 0.84,
+      "source": "Lighting metadata",
+      "type": "lighting"
+    },
+    "gun": {
+      "category": "Props & Gear",
+      "confidence": 0.84,
+      "source": "Prop metadata",
+      "type": "prop"
+    },
+    "harness": {
+      "category": "Wardrobe & Accessories",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "wardrobe"
+    },
+    "highres": {
+      "category": "Quality",
+      "confidence": 0.95,
+      "source": "Quality metadata",
+      "type": "quality"
+    },
+    "hooves": {
+      "category": "Anatomy & Detail",
+      "confidence": 0.88,
+      "source": "Anatomy metadata",
+      "type": "anatomy"
+    },
+    "humanoid": {
+      "category": "Species & Body",
+      "confidence": 0.9,
+      "source": "Species metadata",
+      "type": "species"
+    },
+    "hybrid": {
+      "category": "Species & Body",
+      "confidence": 0.9,
+      "source": "Species metadata",
+      "type": "species"
+    },
+    "hypnosis": {
+      "category": "Kinks & Themes",
+      "confidence": 0.9,
+      "source": "Theme metadata",
+      "type": "kink"
+    },
+    "indoors": {
+      "category": "Scene & Setting",
+      "confidence": 0.84,
+      "source": "Scene metadata",
+      "type": "scene"
+    },
+    "inflation": {
+      "category": "Kinks & Themes",
+      "confidence": 0.9,
+      "source": "Theme metadata",
+      "type": "kink"
+    },
+    "instrument": {
+      "category": "Props & Gear",
+      "confidence": 0.84,
+      "source": "Prop metadata",
+      "type": "prop"
+    },
+    "kimono": {
+      "category": "Wardrobe & Accessories",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "wardrobe"
+    },
+    "laboratory": {
+      "category": "Scene & Setting",
+      "confidence": 0.84,
+      "source": "Scene metadata",
+      "type": "scene"
+    },
+    "latex": {
+      "category": "Kinks & Themes",
+      "confidence": 0.9,
+      "source": "Theme metadata",
+      "type": "kink"
+    },
+    "leash": {
+      "category": "Props & Gear",
+      "confidence": 0.84,
+      "source": "Prop metadata",
+      "type": "prop"
+    },
+    "long_tail": {
+      "category": "Anatomy & Detail",
+      "confidence": 0.88,
+      "source": "Anatomy metadata",
+      "type": "anatomy"
+    },
+    "lupine": {
+      "category": "Species & Body",
+      "confidence": 0.9,
+      "source": "Species metadata",
+      "type": "species"
+    },
+    "macro": {
+      "category": "Kinks & Themes",
+      "confidence": 0.9,
+      "source": "Theme metadata",
+      "type": "kink"
+    },
+    "markings": {
+      "category": "Anatomy & Detail",
+      "confidence": 0.88,
+      "source": "Anatomy metadata",
+      "type": "anatomy"
+    },
+    "masterpiece": {
+      "category": "Quality",
+      "confidence": 0.95,
+      "source": "Quality metadata",
+      "type": "quality"
+    },
+    "micro": {
+      "category": "Kinks & Themes",
+      "confidence": 0.9,
+      "source": "Theme metadata",
+      "type": "kink"
+    },
+    "microphone": {
+      "category": "Props & Gear",
+      "confidence": 0.84,
+      "source": "Prop metadata",
+      "type": "prop"
+    },
+    "milking": {
+      "category": "Kinks & Themes",
+      "confidence": 0.9,
+      "source": "Theme metadata",
+      "type": "kink"
+    },
+    "mustelid": {
+      "category": "Species & Body",
+      "confidence": 0.9,
+      "source": "Species metadata",
+      "type": "species"
+    },
+    "muzzle": {
+      "category": "Anatomy & Detail",
+      "confidence": 0.88,
+      "source": "Anatomy metadata",
+      "type": "anatomy"
+    },
+    "ocean": {
+      "category": "Scene & Setting",
+      "confidence": 0.84,
+      "source": "Scene metadata",
+      "type": "scene"
+    },
+    "outdoors": {
+      "category": "Scene & Setting",
+      "confidence": 0.84,
+      "source": "Scene metadata",
+      "type": "scene"
+    },
+    "particle_effect": {
+      "category": "Lighting & Effects",
+      "confidence": 0.84,
+      "source": "Lighting metadata",
+      "type": "lighting"
+    },
+    "pawpads": {
+      "category": "Anatomy & Detail",
+      "confidence": 0.88,
+      "source": "Anatomy metadata",
+      "type": "anatomy"
+    },
+    "phone": {
+      "category": "Props & Gear",
+      "confidence": 0.84,
+      "source": "Prop metadata",
+      "type": "prop"
+    },
+    "plantigrade": {
+      "category": "Anatomy & Detail",
+      "confidence": 0.88,
+      "source": "Anatomy metadata",
+      "type": "anatomy"
+    },
+    "questionable": {
+      "category": "Rating & Safety",
+      "confidence": 0.99,
+      "source": "e621 rating metadata",
+      "type": "rating"
+    },
+    "rating:e": {
+      "category": "Rating & Safety",
+      "confidence": 0.99,
+      "source": "e621 rating metadata",
+      "type": "rating"
+    },
+    "rating:q": {
+      "category": "Rating & Safety",
+      "confidence": 0.99,
+      "source": "e621 rating metadata",
+      "type": "rating"
+    },
+    "rating:s": {
+      "category": "Rating & Safety",
+      "confidence": 0.99,
+      "source": "e621 rating metadata",
+      "type": "rating"
+    },
+    "restraint": {
+      "category": "Props & Gear",
+      "confidence": 0.84,
+      "source": "Prop metadata",
+      "type": "prop"
+    },
+    "rim_light": {
+      "category": "Lighting & Effects",
+      "confidence": 0.84,
+      "source": "Lighting metadata",
+      "type": "lighting"
+    },
+    "robes": {
+      "category": "Wardrobe & Accessories",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "wardrobe"
+    },
+    "safe": {
+      "category": "Rating & Safety",
+      "confidence": 0.99,
+      "source": "e621 rating metadata",
+      "type": "rating"
+    },
+    "scales": {
+      "category": "Anatomy & Detail",
+      "confidence": 0.88,
+      "source": "Anatomy metadata",
+      "type": "anatomy"
+    },
+    "sergal": {
+      "category": "Species & Body",
+      "confidence": 0.9,
+      "source": "Species metadata",
+      "type": "species"
+    },
+    "shield": {
+      "category": "Props & Gear",
+      "confidence": 0.84,
+      "source": "Prop metadata",
+      "type": "prop"
+    },
+    "snout": {
+      "category": "Anatomy & Detail",
+      "confidence": 0.88,
+      "source": "Anatomy metadata",
+      "type": "anatomy"
+    },
+    "space": {
+      "category": "Scene & Setting",
+      "confidence": 0.84,
+      "source": "Scene metadata",
+      "type": "scene"
+    },
+    "stockings": {
+      "category": "Wardrobe & Accessories",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "wardrobe"
+    },
+    "submissive": {
+      "category": "Kinks & Themes",
+      "confidence": 0.9,
+      "source": "Theme metadata",
+      "type": "kink"
+    },
+    "suit": {
+      "category": "Wardrobe & Accessories",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "wardrobe"
+    },
+    "sword": {
+      "category": "Props & Gear",
+      "confidence": 0.84,
+      "source": "Prop metadata",
+      "type": "prop"
+    },
+    "tail": {
+      "category": "Anatomy & Detail",
+      "confidence": 0.88,
+      "source": "Anatomy metadata",
+      "type": "anatomy"
+    },
+    "talons": {
+      "category": "Anatomy & Detail",
+      "confidence": 0.88,
+      "source": "Anatomy metadata",
+      "type": "anatomy"
+    },
+    "taur": {
+      "category": "Species & Body",
+      "confidence": 0.9,
+      "source": "Species metadata",
+      "type": "species"
+    },
+    "tentacles": {
+      "category": "Kinks & Themes",
+      "confidence": 0.9,
+      "source": "Theme metadata",
+      "type": "kink"
+    },
+    "thighhighs": {
+      "category": "Wardrobe & Accessories",
+      "confidence": 0.86,
+      "source": "Wardrobe metadata",
+      "type": "wardrobe"
+    },
+    "transformation": {
+      "category": "Kinks & Themes",
+      "confidence": 0.9,
+      "source": "Theme metadata",
+      "type": "kink"
+    },
+    "ultra_detailed": {
+      "category": "Quality",
+      "confidence": 0.95,
+      "source": "Quality metadata",
+      "type": "quality"
+    },
+    "underwater": {
+      "category": "Scene & Setting",
+      "confidence": 0.84,
+      "source": "Scene metadata",
+      "type": "scene"
+    },
+    "vore": {
+      "category": "Kinks & Themes",
+      "confidence": 0.9,
+      "source": "Theme metadata",
+      "type": "kink"
+    },
+    "vulpine": {
+      "category": "Species & Body",
+      "confidence": 0.9,
+      "source": "Species metadata",
+      "type": "species"
+    },
+    "watersports": {
+      "category": "Kinks & Themes",
+      "confidence": 0.9,
+      "source": "Theme metadata",
+      "type": "kink"
+    },
+    "weapon": {
+      "category": "Props & Gear",
+      "confidence": 0.84,
+      "source": "Prop metadata",
+      "type": "prop"
+    },
+    "wings": {
+      "category": "Anatomy & Detail",
+      "confidence": 0.88,
+      "source": "Anatomy metadata",
+      "type": "anatomy"
+    }
+  },
+  "keyword_rules": [
+    {
+      "confidence": 0.9,
+      "keyword": "feral",
+      "type": "species"
+    },
+    {
+      "confidence": 0.9,
+      "keyword": "anthro",
+      "type": "species"
+    },
+    {
+      "confidence": 0.88,
+      "keyword": "taur",
+      "type": "species"
+    },
+    {
+      "category": "Gender & Identity",
+      "confidence": 0.9,
+      "keyword": "futa",
+      "type": "gender"
+    },
+    {
+      "category": "Gender & Identity",
+      "confidence": 0.88,
+      "keyword": "herm",
+      "type": "gender"
+    },
+    {
+      "confidence": 0.9,
+      "keyword": "cock",
+      "type": "genital"
+    },
+    {
+      "confidence": 0.9,
+      "keyword": "sheath",
+      "type": "genital"
+    },
+    {
+      "confidence": 0.85,
+      "keyword": "musk",
+      "type": "kink"
+    },
+    {
+      "confidence": 0.82,
+      "keyword": "restraint",
+      "type": "prop"
+    },
+    {
+      "confidence": 0.82,
+      "keyword": "lighting",
+      "type": "lighting"
+    },
+    {
+      "confidence": 0.95,
+      "keyword": "highres",
+      "type": "quality"
+    }
+  ],
+  "prefix_rules": [
+    {
+      "confidence": 0.98,
+      "prefix": "rating:",
+      "type": "rating"
+    },
+    {
+      "confidence": 0.92,
+      "prefix": "species:",
+      "type": "species"
+    },
+    {
+      "confidence": 0.92,
+      "prefix": "gender:",
+      "type": "gender"
+    },
+    {
+      "confidence": 0.92,
+      "prefix": "character:",
+      "type": "character"
+    },
+    {
+      "confidence": 0.9,
+      "prefix": "artist:",
+      "type": "artist"
+    },
+    {
+      "confidence": 0.88,
+      "prefix": "copyright:",
+      "type": "copyright"
+    },
+    {
+      "confidence": 0.85,
+      "prefix": "lore:",
+      "type": "lore"
+    },
+    {
+      "confidence": 0.8,
+      "prefix": "meta:",
+      "type": "style"
+    },
+    {
+      "confidence": 0.85,
+      "prefix": "body:",
+      "type": "anatomy"
+    },
+    {
+      "confidence": 0.9,
+      "prefix": "kink:",
+      "type": "kink"
+    }
+  ],
+  "regex_rules": [
+    {
+      "confidence": 0.99,
+      "pattern": "^(rating:(s|q|e))$",
+      "type": "rating"
+    },
+    {
+      "confidence": 0.94,
+      "pattern": "^[a-z0-9]+_[a-z0-9]+_penis$",
+      "type": "genital"
+    },
+    {
+      "confidence": 0.94,
+      "pattern": "^[a-z0-9]+_[a-z0-9]+_vagina$",
+      "type": "genital"
+    },
+    {
+      "confidence": 0.85,
+      "pattern": "^[a-z0-9]+_gear$",
+      "type": "prop"
+    }
+  ],
+  "suffix_rules": [
+    {
+      "confidence": 0.94,
+      "suffix": "_penis",
+      "type": "genital"
+    },
+    {
+      "confidence": 0.94,
+      "suffix": "_vagina",
+      "type": "genital"
+    },
+    {
+      "confidence": 0.92,
+      "suffix": "_knot",
+      "type": "genital"
+    },
+    {
+      "confidence": 0.88,
+      "suffix": "_tail",
+      "type": "anatomy"
+    },
+    {
+      "confidence": 0.86,
+      "suffix": "_wings",
+      "type": "anatomy"
+    },
+    {
+      "confidence": 0.86,
+      "suffix": "_collar",
+      "type": "wardrobe"
+    },
+    {
+      "confidence": 0.86,
+      "suffix": "_harness",
+      "type": "wardrobe"
+    }
+  ],
+  "type_defaults": {
+    "anatomy": {
+      "category": "Anatomy & Detail",
+      "confidence": 0.88
+    },
+    "artist": {
+      "category": "Artists",
+      "confidence": 0.95
+    },
+    "character": {
+      "category": "Characters",
+      "confidence": 0.94
+    },
+    "copyright": {
+      "category": "Meta & Lore",
+      "confidence": 0.9
+    },
+    "count": {
+      "category": "Species & Body",
+      "confidence": 0.85
+    },
+    "gender": {
+      "category": "Gender & Identity",
+      "confidence": 0.9
+    },
+    "genital": {
+      "category": "Genitals & Fluids",
+      "confidence": 0.9
+    },
+    "kink": {
+      "category": "Kinks & Themes",
+      "confidence": 0.9
+    },
+    "lighting": {
+      "category": "Lighting & Effects",
+      "confidence": 0.82
+    },
+    "lore": {
+      "category": "Meta & Lore",
+      "confidence": 0.85
+    },
+    "prop": {
+      "category": "Props & Gear",
+      "confidence": 0.82
+    },
+    "quality": {
+      "category": "Quality",
+      "confidence": 0.95
+    },
+    "rating": {
+      "category": "Rating & Safety",
+      "confidence": 0.99
+    },
+    "scene": {
+      "category": "Scene & Setting",
+      "confidence": 0.82
+    },
+    "species": {
+      "category": "Species & Body",
+      "confidence": 0.9
+    },
+    "style": {
+      "category": "Style & Meta",
+      "confidence": 0.85
+    },
+    "wardrobe": {
+      "category": "Wardrobe & Accessories",
+      "confidence": 0.84
+    }
+  }
+}
