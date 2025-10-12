@@ -1,0 +1,624 @@
+{
+  "sources": [
+    "https://github.com/e621ng/e621ng",
+    "https://e621.net/help/artist_tag_tutorial"
+  ],
+  "stopwords": [
+    "the",
+    "a",
+    "an",
+    "of",
+    "and",
+    "with"
+  ],
+  "type_map": {
+    "artist": [
+      "Artists"
+    ],
+    "character": [
+      "Characters"
+    ],
+    "species": [
+      "Species & Body"
+    ],
+    "rating": [
+      "Rating & Safety"
+    ],
+    "meta": [
+      "Meta & Lore"
+    ],
+    "lore": [
+      "Meta & Lore"
+    ],
+    "copyright": [
+      "Meta & Lore"
+    ],
+    "technical": [
+      "Meta & Lore"
+    ],
+    "general": []
+  },
+  "keyword_categories": {
+    "Rating & Safety": [
+      "rating:s",
+      "rating:q",
+      "rating:e",
+      "safe",
+      "explicit",
+      "questionable"
+    ],
+    "Gender & Identity": [
+      "male",
+      "female",
+      "intersex",
+      "herm",
+      "gynomorph",
+      "andromorph",
+      "cuntboy",
+      "dickgirl",
+      "trans"
+    ],
+    "Species & Body": [
+      "anthro",
+      "feral",
+      "taur",
+      "sergal",
+      "protogen",
+      "gryphon",
+      "canine",
+      "feline",
+      "avian",
+      "dragon",
+      "reptile"
+    ],
+    "Anatomy & Detail": [
+      "paw",
+      "hoof",
+      "talon",
+      "muzzle",
+      "snout",
+      "digitigrade",
+      "plantigrade",
+      "wing",
+      "tail",
+      "horn"
+    ],
+    "Genitals & Fluids": [
+      "penis",
+      "sheath",
+      "knot",
+      "vagina",
+      "cloaca",
+      "cum",
+      "ejaculation",
+      "semen",
+      "orgasm",
+      "wet"
+    ],
+    "Kinks & Themes": [
+      "bondage",
+      "bdsm",
+      "vore",
+      "inflation",
+      "hypnosis",
+      "transformation",
+      "milking",
+      "petplay"
+    ],
+    "Wardrobe & Accessories": [
+      "collar",
+      "harness",
+      "latex",
+      "leotard",
+      "lingerie",
+      "underwear",
+      "hoodie"
+    ],
+    "Props & Gear": [
+      "dildo",
+      "strapon",
+      "toy",
+      "plug",
+      "restraint",
+      "rope",
+      "chain",
+      "whip"
+    ],
+    "Actions & Interaction": [
+      "sex",
+      "penetration",
+      "blowjob",
+      "handjob",
+      "grinding",
+      "kissing",
+      "hugging",
+      "mounting"
+    ],
+    "Scene & Setting": [
+      "bedroom",
+      "couch",
+      "forest",
+      "cave",
+      "beach",
+      "shower",
+      "bathroom",
+      "studio",
+      "laboratory"
+    ],
+    "Lighting & Effects": [
+      "spotlight",
+      "moonlight",
+      "neon",
+      "dramatic_lighting",
+      "rim_light",
+      "glow"
+    ],
+    "Meta & Lore": [
+      "comic",
+      "animated",
+      "series",
+      "reference_sheet",
+      "character_sheet",
+      "lore"
+    ],
+    "Quality": [
+      "best_quality",
+      "highres",
+      "detailed",
+      "ultra_detailed"
+    ]
+  },
+  "patterns": [
+    {
+      "regex": "^rating:[sqe]$",
+      "category": "Rating & Safety",
+      "weight": 1.2,
+      "reason": "E621 rating tag"
+    },
+    {
+      "regex": "^(male|female|intersex|herm|gynomorph|andromorph|cuntboy|dickgirl)$",
+      "category": "Gender & Identity",
+      "weight": 1.15,
+      "reason": "Gender identity"
+    },
+    {
+      "regex": ".*_(penis|vagina|cloaca|testicles|sheath)$",
+      "category": "Genitals & Fluids",
+      "weight": 1.05,
+      "reason": "Anatomy suffix"
+    },
+    {
+      "regex": ".*_(paw|paws|hoof|hooves|talon|talons|wing|wings)$",
+      "category": "Anatomy & Detail",
+      "weight": 1.0,
+      "reason": "Limb detail"
+    },
+    {
+      "regex": ".*_(collar|harness|leash)$",
+      "category": "Wardrobe & Accessories",
+      "weight": 0.95,
+      "reason": "Accessory suffix"
+    },
+    {
+      "regex": ".*_(rope|chain|whip|strap)$",
+      "category": "Props & Gear",
+      "weight": 0.95,
+      "reason": "Restraint gear"
+    },
+    {
+      "regex": ".*_(position|job)$",
+      "category": "Actions & Interaction",
+      "weight": 0.9,
+      "reason": "Position tag"
+    },
+    {
+      "regex": "^(forest|beach|bedroom|cave|shower|bathroom|laboratory)$",
+      "category": "Scene & Setting",
+      "weight": 0.85,
+      "reason": "Environment"
+    },
+    {
+      "regex": "^(spotlight|moonlight|studio_lighting|neon)$",
+      "category": "Lighting & Effects",
+      "weight": 0.8,
+      "reason": "Lighting cue"
+    }
+  ],
+  "tag_metadata": {
+    "rating:s": {
+      "category": "Rating & Safety",
+      "confidence": 1.0,
+      "type": "rating"
+    },
+    "rating:q": {
+      "category": "Rating & Safety",
+      "confidence": 1.0,
+      "type": "rating"
+    },
+    "rating:e": {
+      "category": "Rating & Safety",
+      "confidence": 1.0,
+      "type": "rating"
+    },
+    "male": {
+      "category": "Gender & Identity",
+      "confidence": 1.0
+    },
+    "female": {
+      "category": "Gender & Identity",
+      "confidence": 1.0
+    },
+    "herm": {
+      "category": "Gender & Identity"
+    },
+    "intersex": {
+      "category": "Gender & Identity"
+    },
+    "gynomorph": {
+      "category": "Gender & Identity"
+    },
+    "andromorph": {
+      "category": "Gender & Identity"
+    },
+    "cuntboy": {
+      "category": "Gender & Identity"
+    },
+    "dickgirl": {
+      "category": "Gender & Identity"
+    },
+    "transgender": {
+      "category": "Gender & Identity"
+    },
+    "solo": {
+      "category": "Actions & Interaction",
+      "implies": [
+        "focus"
+      ],
+      "confidence": 0.9
+    },
+    "duo": {
+      "category": "Actions & Interaction"
+    },
+    "group": {
+      "category": "Actions & Interaction"
+    },
+    "anthro": {
+      "category": "Species & Body",
+      "confidence": 1.0
+    },
+    "feral": {
+      "category": "Species & Body",
+      "confidence": 1.0
+    },
+    "taur": {
+      "category": "Species & Body"
+    },
+    "sergal": {
+      "category": "Species & Body"
+    },
+    "protogen": {
+      "category": "Species & Body"
+    },
+    "dragon": {
+      "category": "Species & Body"
+    },
+    "canine": {
+      "category": "Species & Body"
+    },
+    "feline": {
+      "category": "Species & Body"
+    },
+    "avian": {
+      "category": "Species & Body"
+    },
+    "reptile": {
+      "category": "Species & Body"
+    },
+    "mammal": {
+      "category": "Species & Body"
+    },
+    "amphibian": {
+      "category": "Species & Body"
+    },
+    "hooves": {
+      "category": "Anatomy & Detail"
+    },
+    "paws": {
+      "category": "Anatomy & Detail"
+    },
+    "talons": {
+      "category": "Anatomy & Detail"
+    },
+    "wings": {
+      "category": "Anatomy & Detail"
+    },
+    "tail": {
+      "category": "Anatomy & Detail"
+    },
+    "horns": {
+      "category": "Anatomy & Detail"
+    },
+    "snout": {
+      "category": "Anatomy & Detail"
+    },
+    "digitigrade": {
+      "category": "Anatomy & Detail"
+    },
+    "plantigrade": {
+      "category": "Anatomy & Detail"
+    },
+    "penis": {
+      "category": "Genitals & Fluids"
+    },
+    "sheath": {
+      "category": "Genitals & Fluids"
+    },
+    "knot": {
+      "category": "Genitals & Fluids"
+    },
+    "vagina": {
+      "category": "Genitals & Fluids"
+    },
+    "cloaca": {
+      "category": "Genitals & Fluids"
+    },
+    "testicles": {
+      "category": "Genitals & Fluids"
+    },
+    "cum": {
+      "category": "Genitals & Fluids"
+    },
+    "ejaculation": {
+      "category": "Genitals & Fluids"
+    },
+    "pre": {
+      "category": "Genitals & Fluids"
+    },
+    "dripping": {
+      "category": "Genitals & Fluids"
+    },
+    "knotting": {
+      "category": "Actions & Interaction",
+      "implies": [
+        "knot"
+      ]
+    },
+    "penetration": {
+      "category": "Actions & Interaction"
+    },
+    "anal": {
+      "category": "Actions & Interaction"
+    },
+    "oral": {
+      "category": "Actions & Interaction"
+    },
+    "blowjob": {
+      "category": "Actions & Interaction"
+    },
+    "handjob": {
+      "category": "Actions & Interaction"
+    },
+    "riding": {
+      "category": "Actions & Interaction"
+    },
+    "mounting": {
+      "category": "Actions & Interaction"
+    },
+    "missionary_position": {
+      "category": "Actions & Interaction"
+    },
+    "cowgirl_position": {
+      "category": "Actions & Interaction"
+    },
+    "reverse_cowgirl_position": {
+      "category": "Actions & Interaction"
+    },
+    "bondage": {
+      "category": "Kinks & Themes"
+    },
+    "bdsm": {
+      "category": "Kinks & Themes"
+    },
+    "hypnosis": {
+      "category": "Kinks & Themes"
+    },
+    "vore": {
+      "category": "Kinks & Themes"
+    },
+    "inflation": {
+      "category": "Kinks & Themes"
+    },
+    "transformation": {
+      "category": "Kinks & Themes"
+    },
+    "milking": {
+      "category": "Kinks & Themes"
+    },
+    "petplay": {
+      "category": "Kinks & Themes"
+    },
+    "latex": {
+      "category": "Wardrobe & Accessories"
+    },
+    "leotard": {
+      "category": "Wardrobe & Accessories"
+    },
+    "lingerie": {
+      "category": "Wardrobe & Accessories"
+    },
+    "underwear": {
+      "category": "Wardrobe & Accessories"
+    },
+    "hoodie": {
+      "category": "Wardrobe & Accessories"
+    },
+    "collar": {
+      "category": "Wardrobe & Accessories"
+    },
+    "harness": {
+      "category": "Wardrobe & Accessories"
+    },
+    "leash": {
+      "category": "Wardrobe & Accessories"
+    },
+    "strapon": {
+      "category": "Props & Gear"
+    },
+    "dildo": {
+      "category": "Props & Gear"
+    },
+    "toy": {
+      "category": "Props & Gear"
+    },
+    "plug": {
+      "category": "Props & Gear"
+    },
+    "rope": {
+      "category": "Props & Gear"
+    },
+    "chain": {
+      "category": "Props & Gear"
+    },
+    "whip": {
+      "category": "Props & Gear"
+    },
+    "restraints": {
+      "category": "Props & Gear"
+    },
+    "bedroom": {
+      "category": "Scene & Setting"
+    },
+    "couch": {
+      "category": "Scene & Setting"
+    },
+    "forest": {
+      "category": "Scene & Setting"
+    },
+    "cave": {
+      "category": "Scene & Setting"
+    },
+    "beach": {
+      "category": "Scene & Setting"
+    },
+    "shower": {
+      "category": "Scene & Setting"
+    },
+    "bathroom": {
+      "category": "Scene & Setting"
+    },
+    "laboratory": {
+      "category": "Scene & Setting"
+    },
+    "studio": {
+      "category": "Scene & Setting"
+    },
+    "spotlight": {
+      "category": "Lighting & Effects"
+    },
+    "moonlight": {
+      "category": "Lighting & Effects"
+    },
+    "neon": {
+      "category": "Lighting & Effects"
+    },
+    "dramatic_lighting": {
+      "category": "Lighting & Effects"
+    },
+    "glow": {
+      "category": "Lighting & Effects"
+    },
+    "best_quality": {
+      "category": "Quality"
+    },
+    "highres": {
+      "category": "Quality"
+    },
+    "detailed": {
+      "category": "Quality"
+    },
+    "ultra_detailed": {
+      "category": "Quality"
+    },
+    "comic": {
+      "category": "Meta & Lore"
+    },
+    "animated": {
+      "category": "Meta & Lore"
+    },
+    "reference_sheet": {
+      "category": "Meta & Lore"
+    },
+    "character_sheet": {
+      "category": "Meta & Lore"
+    },
+    "story_focus": {
+      "category": "Meta & Lore"
+    },
+    "lore": {
+      "category": "Meta & Lore"
+    },
+    "focus": {
+      "category": "Actions & Interaction"
+    },
+    "m/m": {
+      "category": "Actions & Interaction"
+    },
+    "f/f": {
+      "category": "Actions & Interaction"
+    },
+    "m/f": {
+      "category": "Actions & Interaction"
+    }
+  },
+  "aliases": {
+    "male/male": "m/m",
+    "female/female": "f/f",
+    "male/female": "m/f",
+    "sheath knot": "knot",
+    "detailed fur": "detailed"
+  },
+  "implications": {
+    "strapon": [
+      "penetration"
+    ],
+    "dildo": [
+      "toy"
+    ],
+    "rope": [
+      "restraints"
+    ],
+    "chain": [
+      "restraints"
+    ],
+    "bondage": [
+      "restraints"
+    ],
+    "knotting": [
+      "penetration"
+    ],
+    "missionary_position": [
+      "penetration"
+    ],
+    "cowgirl_position": [
+      "penetration"
+    ],
+    "reverse_cowgirl_position": [
+      "penetration"
+    ]
+  },
+  "tag_types": {
+    "kirawra": "artist",
+    "ashen-ninja": "artist",
+    "saucemancer": "artist",
+    "janrock": "artist",
+    "stunky": "character",
+    "krystal_(star_fox)": "character",
+    "renamon": "character",
+    "pokemon": "copyright",
+    "my_little_pony": "copyright",
+    "digimon": "copyright",
+    "equestria_girls": "series",
+    "reference_sheet": "meta",
+    "character_sheet": "meta"
+  }
+}
