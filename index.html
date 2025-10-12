@@ -56,6 +56,18 @@
         --glass-border: rgba(16, 244, 177, 0.35);
         --body-background: radial-gradient(circle at top left, #0f172a 0%, #03111f 35%, #000000 100%);
       }
+
+      .theme-yodayo {
+        --accent-color: #ff6bd6;
+        --accent-color-hover: #d946ef;
+        --accent-color-rgb: 255, 107, 214;
+        --processed-tag-bg: rgba(255, 107, 214, 0.18);
+        --processed-tag-text: rgba(255, 240, 252, 1);
+        --processed-tag-border: #ff6bd6;
+        --glass-bg: rgba(25, 20, 45, 0.85);
+        --glass-border: rgba(244, 114, 182, 0.4);
+        --body-background: radial-gradient(circle at top right, #120a24 0%, #1a1039 40%, #06020f 100%);
+      }
       
       body {
         font-family: 'Inter', sans-serif;
@@ -315,6 +327,42 @@
         opacity: 0.6;
         background: rgba(148, 163, 184, 0.2);
         border-color: rgba(148, 163, 184, 0.4);
+      }
+
+      .collapsible-section {
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        border-radius: 0.75rem;
+        background: rgba(15, 23, 42, 0.55);
+        overflow: hidden;
+      }
+
+      .collapsible-section summary {
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        font-weight: 600;
+        color: #e2e8f0;
+      }
+
+      .collapsible-section summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .collapsible-section[open] summary .collapse-icon {
+        transform: rotate(180deg);
+      }
+
+      .collapsible-body {
+        padding: 0 1rem 1rem 1rem;
+        display: grid;
+        gap: 0.75rem;
+      }
+
+      .collapse-icon {
+        transition: transform 0.2s ease;
       }
 
       #hiddenCategoriesBanner {
@@ -726,6 +774,40 @@
       ::-webkit-scrollbar-thumb:hover {
         background: var(--accent-color-hover);
       }
+
+      .scroll-nav {
+        position: fixed;
+        right: 1.5rem;
+        bottom: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        z-index: 40;
+      }
+
+      .scroll-nav button {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 9999px;
+        border: 1px solid rgba(var(--accent-color-rgb), 0.35);
+        background: rgba(15, 23, 42, 0.7);
+        color: var(--accent-color);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+      }
+
+      .scroll-nav button:hover {
+        background: rgba(var(--accent-color-rgb), 0.25);
+        color: #f8fafc;
+        transform: translateY(-2px);
+      }
+
+      .scroll-nav button:active {
+        transform: translateY(0);
+      }
       
       /* Responsive improvements */
       @media (max-width: 768px) {
@@ -773,6 +855,7 @@
         <button class="theme-button" style="background: linear-gradient(135deg, #f43f5e, #fb7185);" data-theme="theme-rose" title="Rose"></button>
         <button class="theme-button" style="background: linear-gradient(135deg, #06b6d4, #22d3ee);" data-theme="theme-cyan" title="Cyan"></button>
         <button class="theme-button" style="background: linear-gradient(135deg, #39ff14, #10f4b1);" data-theme="theme-neon" title="Neon"></button>
+        <button class="theme-button" style="background: linear-gradient(135deg, #ff6bd6, #d946ef);" data-theme="theme-yodayo" title="Yodayo"></button>
         
         <div class="w-px h-6 bg-gray-600 mx-2"></div>
         
@@ -878,7 +961,7 @@
                         <span class="text-sm">Deduplicate Tags</span>
                     </label>
                     <label class="flex items-center gap-2 cursor-pointer">
-                        <input id="underscoreToggle" type="checkbox" class="rounded" checked>
+                        <input id="underscoreToggle" type="checkbox" class="rounded">
                         <span class="text-sm">Use Underscores</span>
                     </label>
                     <label class="flex items-center gap-2 cursor-pointer">
@@ -891,11 +974,18 @@
             <div class="control-group">
                 <div class="control-label">Sorting & Limits</div>
                 <div class="space-y-3">
+                    <select id="datasetSelect" class="input-base text-sm w-full">
+                        <option value="danbooru" selected>Dataset: Danbooru</option>
+                        <option value="e621">Dataset: e621</option>
+                    </select>
                     <select id="sortSelect" class="input-base text-sm w-full">
                         <option value="danbooru" selected>Sort: Danbooru</option>
+                        <option value="e621">Sort: e621</option>
                         <option value="smart">Sort: Smart</option>
                         <option value="flow">Sort: Prompt Flow</option>
-                        <option value="illustrious">Sort: Illustrious Guide</option>
+                        <option value="illustrious-danbooru">Sort: Illustrious Guide (Danbooru)</option>
+                        <option value="illustrious-e621">Sort: Illustrious Guide (e621)</option>
+                        <option value="artist-blueprint">Sort: Prompt Blueprint</option>
                         <option value="manual">Sort: Manual</option>
                         <option value="recent">Sort: Recent</option>
                         <option value="none">Sort: None</option>
@@ -924,6 +1014,12 @@
                     </button>
                     <button onclick="importTags()" class="quick-action-btn text-center py-2">
                         <div class="text-xs">Import</div>
+                    </button>
+                    <button onclick="stripWeightedTags()" class="quick-action-btn text-center py-2">
+                        <div class="text-xs">Strip Weights</div>
+                    </button>
+                    <button onclick="escapeParenthesesTags()" class="quick-action-btn text-center py-2">
+                        <div class="text-xs">Escape ()</div>
                     </button>
                     <button id="copyJsonButton" onclick="copyPromptAsJson()" class="quick-action-btn text-center py-2">
                         <div class="text-xs">Copy JSON</div>
@@ -957,47 +1053,71 @@
                     </div>
                 </div>
 
-                <div>
-                    <div class="flex items-center mb-2">
-                        <label for="swapsInput" class="control-label block flex-1 mb-0">Aliases / Swaps</label>
-                        <div class="help-tooltip-wrapper">
-                            <button type="button" class="help-icon" aria-label="Learn about aliases" aria-describedby="tooltip-aliases">?</button>
-                            <div class="help-tooltip" role="tooltip" id="tooltip-aliases">
-                                Map shorthand words to the tags you actually want. Example: convert <em>girl</em> to <em>1girl</em> every time it appears.
+                <details class="collapsible-section" id="swapsSection" data-storage-key="section-swaps" open>
+                    <summary>
+                        <span>Aliases / Swaps</span>
+                        <svg class="collapse-icon w-4 h-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.939l3.71-3.71a.75.75 0 111.06 1.061l-4.24 4.243a.75.75 0 01-1.06 0L5.25 8.29a.75.75 0 01-.02-1.08z" clip-rule="evenodd" />
+                        </svg>
+                    </summary>
+                    <div class="collapsible-body">
+                        <div class="flex items-start justify-between gap-3 text-sm text-gray-400">
+                            <p class="leading-relaxed">Map shorthand words to the tags you actually want. Example: convert <em>girl</em> to <em>1girl</em> every time it appears.</p>
+                            <div class="help-tooltip-wrapper">
+                                <button type="button" class="help-icon" aria-label="Learn about aliases" aria-describedby="tooltip-aliases">?</button>
+                                <div class="help-tooltip" role="tooltip" id="tooltip-aliases">
+                                    Map shorthand words to the tags you actually want. Example: convert <em>girl</em> to <em>1girl</em> every time it appears.
+                                </div>
                             </div>
                         </div>
+                        <textarea id="swapsInput" rows="3" class="input-base w-full"
+                                  placeholder="girl -> 1girl, boobs -> large_breasts"></textarea>
                     </div>
-                    <textarea id="swapsInput" rows="3" class="input-base w-full"
-                              placeholder="girl -> 1girl, boobs -> large_breasts"></textarea>
-                </div>
+                </details>
 
-                <div>
-                    <div class="flex items-center mb-2">
-                        <label for="implicationsInput" class="control-label block flex-1 mb-0">Implications</label>
-                        <div class="help-tooltip-wrapper">
-                            <button type="button" class="help-icon" aria-label="Learn about implications" aria-describedby="tooltip-implications">?</button>
-                            <div class="help-tooltip" role="tooltip" id="tooltip-implications">
-                                Automatically append related tags whenever a trigger appears. Use <code>tag =&gt; extra_tag, another_tag</code> to expand prompts.
+                <details class="collapsible-section" id="implicationsSection" data-storage-key="section-implications" open>
+                    <summary>
+                        <span>Implications</span>
+                        <svg class="collapse-icon w-4 h-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.939l3.71-3.71a.75.75 0 111.06 1.061l-4.24 4.243a.75.75 0 01-1.06 0L5.25 8.29a.75.75 0 01-.02-1.08z" clip-rule="evenodd" />
+                        </svg>
+                    </summary>
+                    <div class="collapsible-body">
+                        <div class="flex items-start justify-between gap-3 text-sm text-gray-400">
+                            <p class="leading-relaxed">Automatically append related tags whenever a trigger appears. Use <code>tag =&gt; extra_tag, another_tag</code> to expand prompts.</p>
+                            <div class="help-tooltip-wrapper">
+                                <button type="button" class="help-icon" aria-label="Learn about implications" aria-describedby="tooltip-implications">?</button>
+                                <div class="help-tooltip" role="tooltip" id="tooltip-implications">
+                                    Automatically append related tags whenever a trigger appears. Use <code>tag =&gt; extra_tag, another_tag</code> to expand prompts.
+                                </div>
                             </div>
                         </div>
+                        <textarea id="implicationsInput" rows="3" class="input-base w-full"
+                                  placeholder="1girl => backlighting"></textarea>
                     </div>
-                    <textarea id="implicationsInput" rows="3" class="input-base w-full"
-                              placeholder="1girl => backlighting"></textarea>
-                </div>
+                </details>
 
-                <div>
-                    <div class="flex items-center mb-2">
-                        <label for="blacklistInput" class="control-label block flex-1 mb-0">Blacklist</label>
-                        <div class="help-tooltip-wrapper">
-                            <button type="button" class="help-icon" aria-label="Learn about the blacklist" aria-describedby="tooltip-blacklist">?</button>
-                            <div class="help-tooltip" role="tooltip" id="tooltip-blacklist">
-                                Filter out any tag that matches. Separate entries with commas and they’ll never reach the prompt.
+                <details class="collapsible-section" id="blacklistSection" data-storage-key="section-blacklist" open>
+                    <summary>
+                        <span>Blacklist</span>
+                        <svg class="collapse-icon w-4 h-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.939l3.71-3.71a.75.75 0 111.06 1.061l-4.24 4.243a.75.75 0 01-1.06 0L5.25 8.29a.75.75 0 01-.02-1.08z" clip-rule="evenodd" />
+                        </svg>
+                    </summary>
+                    <div class="collapsible-body">
+                        <div class="flex items-start justify-between gap-3 text-sm text-gray-400">
+                            <p class="leading-relaxed">Filter out any tag that matches. Separate entries with commas and they’ll never reach the prompt.</p>
+                            <div class="help-tooltip-wrapper">
+                                <button type="button" class="help-icon" aria-label="Learn about the blacklist" aria-describedby="tooltip-blacklist">?</button>
+                                <div class="help-tooltip" role="tooltip" id="tooltip-blacklist">
+                                    Filter out any tag that matches. Separate entries with commas and they’ll never reach the prompt.
+                                </div>
                             </div>
                         </div>
+                        <textarea id="blacklistInput" rows="2" class="input-base w-full"
+                                  placeholder="bad_anatomy, blurry, text"></textarea>
                     </div>
-                    <textarea id="blacklistInput" rows="2" class="input-base w-full"
-                              placeholder="bad_anatomy, blurry, text"></textarea>
-                </div>
+                </details>
             </div>
 
             <!-- Main Output Section -->
@@ -1102,6 +1222,11 @@
         </div>
     </div>
 
+    <div class="scroll-nav" aria-label="Quick scroll controls">
+        <button type="button" id="scrollTopBtn" title="Scroll to top">↑</button>
+        <button type="button" id="scrollBottomBtn" title="Scroll to bottom">↓</button>
+    </div>
+
     <!-- Settings Panel (hidden by default) -->
     <div id="settingsPanel" class="fixed inset-0 z-50 hidden">
         <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="toggleSettingsPanel()"></div>
@@ -1135,8 +1260,36 @@
 <script>
     const GITHUB_USER = 'isaacwach234';
     const GITHUB_REPO = 'isaacwach234.github.io';
-    
-    let TAG_DATABASE = [], gitHubPat = null, tagCategorizer, tagIdCounter = 0;
+
+    const DATASETS = {
+        danbooru: {
+            key: 'danbooru',
+            name: 'Danbooru',
+            tagsFile: 'tags.json',
+            taxonomyKey: 'danbooru',
+            metadata: {
+                endpoint: (tag) => `https://danbooru.donmai.us/tags.json?search[name_matches]=${encodeURIComponent(tag)}&search[order]=count&limit=1`,
+                parse: (data, tag) => {
+                    if (!Array.isArray(data)) return null;
+                    const normalized = tag.toLowerCase();
+                    return data.find(item => (item.name || '').toLowerCase() === normalized) || data[0] || null;
+                }
+            }
+        },
+        e621: {
+            key: 'e621',
+            name: 'e621',
+            tagsFile: 'e621_tags.json',
+            taxonomyKey: 'e621',
+            metadata: null
+        }
+    };
+
+    const METADATA_STORAGE_PREFIX = 'tag-metadata-cache-';
+    const COLLAPSE_STORAGE_PREFIX = 'danbooru-collapsible-';
+
+    let TAG_DATABASE = [], TAXONOMIES = {}, metadataService = null, currentDatasetKey = 'danbooru';
+    let gitHubPat = null, tagCategorizer, tagIdCounter = 0;
     let baseTags = [], copyHistory = [], selectedTagIds = new Set(), sortableInstances = [];
     let autocomplete = { active: false, index: -1, currentWord: '', suggestions: [] };
     let hiddenCategories = new Set(), knownCategories = new Set(), favoriteTags = new Map();
@@ -1146,7 +1299,7 @@
     const element = (id) => document.getElementById(id);
     const body = document.body, tagInput = element('tagInput'), swapsInput = element('swapsInput'), implicationsInput = element('implicationsInput'), blacklistInput = element('blacklistInput'), triggerInput = element('triggerInput'), appendInput = element('appendInput');
     const deduplicateToggle = element('deduplicateToggle'), underscoreToggle = element('underscoreToggle'), enableWeightingToggle = element('enableWeightingToggle');
-    const sortSelect = element('sortSelect'), maxTagsInput = element('maxTagsInput'), tagOutput = element('tagOutput');
+    const datasetSelect = element('datasetSelect'), sortSelect = element('sortSelect'), maxTagsInput = element('maxTagsInput'), tagOutput = element('tagOutput');
     const copyButton = element('copyButton'), copyMessage = element('copyMessage'), historyContainer = element('history-container'), autocompleteBox = element('autocomplete-box');
     const suggestBtn = element('suggest-btn'), themeButtons = document.querySelectorAll('.theme-button'), suggestionCountInput = element('suggestionCountInput');
     const categoryToggleContainer = element('categoryToggleContainer'), hiddenCategoriesBanner = element('hiddenCategoriesBanner');
@@ -1286,6 +1439,114 @@
         quality: [['masterpiece', 8], ['best quality', 7], ['ultra detailed', 6], ['highres', 5], ['8k', 4], ['4k', 3], ['hdr', 3]]
     };
 
+    const E621_ILLUSTRIOUS_PHASES = [
+        {
+            key: 'artistStyle',
+            label: 'Artist & Style',
+            description: 'Optionally lead with artists or stylistic descriptors to ground the illustration vibe.',
+            categories: ['Artists', 'Style & Meta', 'Rendering', 'Meta'],
+            keywords: ['artist', 'style', 'brushwork', 'digital', 'painterly', 'sketch', 'cel shaded']
+        },
+        {
+            key: 'species',
+            label: 'Species & Subjects',
+            description: 'Describe the species, number of characters and defining physical traits.',
+            categories: ['Species', 'Subject & Creatures', 'Characters', 'Body Parts', 'Attire', 'Accessories'],
+            keywords: ['anthro', 'feral', 'canine', 'feline', 'dragon', 'solo', 'duo', 'group', 'collar', 'armor', 'tail']
+        },
+        {
+            key: 'pose',
+            label: 'Pose, Action & Mood',
+            description: 'Capture motions, gestures and emotional beats that set the moment.',
+            categories: ['Actions & Poses', 'Mood & Expression', 'Interaction', 'Camera & Perspective'],
+            keywords: ['pose', 'standing', 'sitting', 'flying', 'hug', 'kiss', 'cuddle', 'presenting', 'smile', 'snarl']
+        },
+        {
+            key: 'scene',
+            label: 'Scene & Environment',
+            description: 'Outline the environment, props and atmospheric cues surrounding the characters.',
+            categories: ['Setting & Environment', 'Props', 'Composition'],
+            keywords: ['forest', 'beach', 'city', 'bedroom', 'background', 'night', 'day', 'storm', 'sofa', 'bed']
+        },
+        {
+            key: 'effects',
+            label: 'Effects & Atmosphere',
+            description: 'Add lighting, magic or sensory flourishes to sell the mood.',
+            categories: ['Lighting & Effects', 'Rendering', 'Props', 'Meta'],
+            keywords: ['glow', 'sparkles', 'magic', 'energy', 'particles', 'lighting', 'spotlight', 'bokeh']
+        },
+        {
+            key: 'quality',
+            label: 'Quality Boosters',
+            description: 'Close with global quality tags to reinforce fidelity.',
+            categories: ['Quality', 'Meta'],
+            keywords: ['masterpiece', 'best quality', 'highres', 'ultra detailed']
+        }
+    ];
+
+    const E621_ILLUSTRIOUS_PRIORITY_KEYWORDS = {
+        artistStyle: [['style', 4], ['artist', 4], ['digital', 3], ['painterly', 3], ['sketch', 2], ['cel shaded', 2]],
+        species: [['anthro', 4], ['feral', 4], ['canine', 3], ['feline', 3], ['dragon', 3], ['solo', 3], ['duo', 2], ['collar', 2]],
+        pose: [['pose', 4], ['hug', 3], ['kiss', 3], ['cuddle', 3], ['presenting', 3], ['sitting', 2], ['standing', 2], ['smile', 2], ['snarl', 2]],
+        scene: [['forest', 3], ['beach', 3], ['city', 3], ['bedroom', 2], ['background', 2], ['night', 2], ['storm', 2]],
+        effects: [['glow', 3], ['sparkles', 3], ['magic', 3], ['energy', 2], ['spotlight', 2], ['bokeh', 2]],
+        quality: [['masterpiece', 8], ['best quality', 7], ['highres', 5], ['ultra detailed', 5]]
+    };
+
+    const ARTIST_BLUEPRINT_PHASES = [
+        {
+            key: 'artistStyle',
+            label: 'Artist or Style (optional)',
+            description: 'If you want a specific art style, start with an artist tag or style tag. Illustrious responds strongly to these, so consider weighting (redrop:0.7) to blend rather than clone. Skip if no artist is needed or use a broad style cue like "90s anime style".',
+            categories: ['Artists', 'Style & Meta', 'Rendering', 'Meta'],
+            keywords: ['artist', 'style', 'inspired', 'redrop', 'semi-realistic', '90s anime', 'digital painting']
+        },
+        {
+            key: 'subject',
+            label: 'Subject & Character Description',
+            description: 'Specify character count and type (1girl, 2boys, etc.) and outline hair, eyes, outfit and key traits. Separate each trait with commas and repeat for each character if multiple are present.',
+            categories: ['Characters', 'Subject & Creatures', 'Species', 'Hair', 'Eyes', 'Face', 'Body Parts', 'Attire', 'Accessories'],
+            keywords: ['1girl', '1boy', 'solo', 'anthro', 'hair', 'eyes', 'uniform', 'dress', 'armor', 'collar', 'tail', 'ears']
+        },
+        {
+            key: 'pose',
+            label: 'Pose, Action & Expression',
+            description: 'Add actions, poses and facial expressions to communicate what the subject is doing and feeling - holding broom, middle finger up, angry, anger vein, and similar cues belong here.',
+            categories: ['Actions & Poses', 'Mood & Expression', 'Interaction', 'Camera & Perspective'],
+            keywords: ['pose', 'standing', 'sitting', 'running', 'hug', 'kiss', 'smile', 'angry', 'expression', 'presenting']
+        },
+        {
+            key: 'scene',
+            label: 'Scene & Background',
+            description: 'Describe the environment or backdrop when it matters - cafe, daytime, sun rays, colorful lighting. Without guidance Illustrious may default to a simple background.',
+            categories: ['Setting & Environment', 'Composition', 'Props'],
+            keywords: ['background', 'forest', 'city', 'cafe', 'indoors', 'outdoors', 'sunset', 'night', 'storm', 'bedroom']
+        },
+        {
+            key: 'effects',
+            label: 'Effects & Additional Detail',
+            description: 'Mention art effects and finishing flourishes like dramatic lighting, bokeh, particle effects or watercolor styling. Keep these near the end of the descriptive portion.',
+            categories: ['Lighting & Effects', 'Rendering', 'Style & Meta', 'Props'],
+            keywords: ['dramatic lighting', 'bokeh', 'glow', 'particles', 'magic', 'sparkles', 'aura', 'film grain']
+        },
+        {
+            key: 'quality',
+            label: 'Quality Tags',
+            description: 'Close with the quality boosters - masterpiece, best quality, highres, ultra detailed - so they influence the entire prompt.',
+            categories: ['Quality', 'Meta'],
+            keywords: ['masterpiece', 'best quality', 'ultra detailed', 'highres', '8k', 'hdr']
+        }
+    ];
+
+    const ARTIST_BLUEPRINT_PRIORITY_KEYWORDS = {
+        artistStyle: [['artist', 4], ['style', 4], ['inspired', 3], ['semi-realistic', 3], ['illustration', 2], ['digital', 2]],
+        subject: [['solo', 4], ['1girl', 4], ['anthro', 4], ['hair', 3], ['eyes', 3], ['uniform', 2], ['dress', 2], ['armor', 2], ['tail', 2], ['ears', 2]],
+        pose: [['pose', 4], ['standing', 3], ['sitting', 3], ['running', 3], ['hug', 3], ['kiss', 3], ['smile', 2], ['angry', 2]],
+        scene: [['background', 4], ['forest', 3], ['city', 3], ['indoors', 2], ['outdoors', 2], ['sunset', 3], ['night', 2], ['storm', 2]],
+        effects: [['lighting', 4], ['dramatic', 3], ['bokeh', 3], ['glow', 3], ['particles', 2], ['magic', 2], ['sparkles', 2]],
+        quality: [['masterpiece', 8], ['best quality', 7], ['ultra detailed', 6], ['highres', 5], ['8k', 4], ['hdr', 3]]
+    };
+
     function createPromptFlowConfig(phases, priorityKeywords, fallbackKey) {
         const processedPhases = phases.map(phase => ({
             ...phase,
@@ -1305,6 +1566,8 @@
 
     const PROMPT_FLOW_CONFIG = createPromptFlowConfig(PROMPT_FLOW_PHASES, FLOW_PHASE_PRIORITY_KEYWORDS, 'extras');
     const ILLUSTRIOUS_FLOW_CONFIG = createPromptFlowConfig(ILLUSTRIOUS_PROMPT_PHASES, ILLUSTRIOUS_PHASE_PRIORITY_KEYWORDS, 'quality');
+    const E621_ILLUSTRIOUS_FLOW_CONFIG = createPromptFlowConfig(E621_ILLUSTRIOUS_PHASES, E621_ILLUSTRIOUS_PRIORITY_KEYWORDS, 'quality');
+    const ARTIST_BLUEPRINT_CONFIG = createPromptFlowConfig(ARTIST_BLUEPRINT_PHASES, ARTIST_BLUEPRINT_PRIORITY_KEYWORDS, 'quality');
 
     const categoryPickerState = { tagId: null };
 
@@ -1317,125 +1580,215 @@
         };
     }
 
-    class EnhancedTagCategorizer {
-        constructor(tagMap, allTags, categoryOrder) {
-            this.primaryIndex = tagMap;
-            this.categoryOrder = categoryOrder;
-            this.categories = [...new Set([...Object.values(tagMap), ...categoryOrder, 'Uncategorized'])];
-            this.patternIndex = { ends: {}, starts: {} };
-            this.keywordIndex = {};
-            this.buildHeuristicIndexes(allTags);
-            this.buildEnhancedHeuristics();
+    class TagMetadataService {
+        constructor(datasetConfig, taxonomy, onUpdate) {
+            this.dataset = datasetConfig;
+            this.taxonomy = taxonomy || {};
+            this.onUpdate = typeof onUpdate === 'function' ? onUpdate : null;
+            this.cache = new Map();
+            this.inFlight = new Map();
+            this.storageKey = datasetConfig?.key ? `${METADATA_STORAGE_PREFIX}${datasetConfig.key}` : null;
+            this.loadFromStorage();
         }
 
-        buildHeuristicIndexes(allTags) {
-            const keywordCategoryCounts = {};
-            const suffixCategoryCounts = {};
-            const prefixCategoryCounts = {};
-            const COPYRIGHT_KEYWORDS = new Set(['(genshin_impact)', '(azur_lane)', '(touhou)', '(hololive)', '(fate/grand_order)']);
-            allTags.forEach(tag => {
-                const category = this.primaryIndex[tag];
-                if (!category) return;
-                const words = tag.split('_');
-                if (words.length > 1) {
-                    words.forEach(word => {
-                        if (word.length < 4 || COPYRIGHT_KEYWORDS.has(word)) return;
-                        if (!keywordCategoryCounts[word]) keywordCategoryCounts[word] = {};
-                        keywordCategoryCounts[word][category] = (keywordCategoryCounts[word][category] || 0) + 1;
-                    });
-                    const suffix = words[words.length - 1];
-                    if (!suffixCategoryCounts[suffix]) suffixCategoryCounts[suffix] = {};
-                    suffixCategoryCounts[suffix][category] = (suffixCategoryCounts[suffix][category] || 0) + 1;
-                    const prefix = words[0];
-                    if (!prefixCategoryCounts[prefix]) prefixCategoryCounts[prefix] = {};
-                    prefixCategoryCounts[prefix][category] = (prefixCategoryCounts[prefix][category] || 0) + 1;
+        loadFromStorage() {
+            if (!this.storageKey) return;
+            try {
+                const stored = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
+                stored.forEach(([tag, entry]) => {
+                    if (entry?.category) this.cache.set(tag, entry);
+                });
+            } catch (error) {
+                console.warn('Failed to load metadata cache', error);
+                this.cache.clear();
+            }
+        }
+
+        saveToStorage() {
+            if (!this.storageKey) return;
+            try {
+                const entries = Array.from(this.cache.entries()).slice(-500);
+                localStorage.setItem(this.storageKey, JSON.stringify(entries));
+            } catch (error) {
+                console.warn('Failed to persist metadata cache', error);
+            }
+        }
+
+        getCategory(tag) {
+            const normalized = normalizeTagKey(tag);
+            const entry = this.cache.get(normalized);
+            return entry ? { category: entry.category, source: entry.source } : null;
+        }
+
+        ensureFetch(tag) {
+            if (!this.dataset?.metadata) return;
+            const normalized = normalizeTagKey(tag);
+            if (this.cache.has(normalized) || this.inFlight.has(normalized)) return;
+            const fetchPromise = this.fetchAndStore(normalized).finally(() => this.inFlight.delete(normalized));
+            this.inFlight.set(normalized, fetchPromise);
+        }
+
+        async fetchAndStore(tag) {
+            try {
+                const response = await fetch(this.dataset.metadata.endpoint(tag), this.dataset.metadata.options || {});
+                if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+                const payload = await response.json();
+                const parsed = this.dataset.metadata.parse ? this.dataset.metadata.parse(payload, tag) : payload;
+                const category = this.resolveCategory(parsed);
+                if (category) {
+                    this.cache.set(tag, { category, source: `Metadata: ${this.dataset.name}` });
+                    this.saveToStorage();
+                    if (this.onUpdate) this.onUpdate();
                 }
-            });
-            for (const keyword in keywordCategoryCounts) {
-                const counts = keywordCategoryCounts[keyword];
-                const total = Object.values(counts).reduce((s, c) => s + c, 0);
-                const [mostLikelyCategory, categoryCount] = Object.entries(counts).reduce((a, b) => a[1] > b[1] ? a : b);
-                if (total > 5 && (categoryCount / total) > 0.8) this.keywordIndex[keyword] = mostLikelyCategory;
-            }
-            for (const suffix in suffixCategoryCounts) {
-                const counts = suffixCategoryCounts[suffix];
-                const total = Object.values(counts).reduce((s, c) => s + c, 0);
-                const [mostLikelyCategory, categoryCount] = Object.entries(counts).reduce((a, b) => a[1] > b[1] ? a : b);
-                if (total > 10 && (categoryCount / total) > 0.75) this.patternIndex.ends[`_${suffix}`] = mostLikelyCategory;
-            }
-            for (const prefix in prefixCategoryCounts) {
-                const counts = prefixCategoryCounts[prefix];
-                const total = Object.values(counts).reduce((s, c) => s + c, 0);
-                const [mostLikelyCategory, categoryCount] = Object.entries(counts).reduce((a, b) => a[1] > b[1] ? a : b);
-                 if (total > 10 && (categoryCount / total) > 0.75) this.patternIndex.starts[`${prefix}_`] = mostLikelyCategory;
+            } catch (error) {
+                console.warn(`Metadata lookup failed for '${tag}':`, error);
             }
         }
 
-        buildEnhancedHeuristics() {
-            this.characterPatterns = [ /\([^)]+\)$/, /_\([^)]+\)$/, /^[a-z]+_[a-z]+_\([^)]+\)$/ ];
+        resolveCategory(metadataItem) {
+            if (!metadataItem) return null;
+            const mapping = this.taxonomy?.categoryMapping || {};
+            const raw = metadataItem.category ?? metadataItem.category_id ?? metadataItem.tag_type ?? metadataItem.type;
+            if (raw === undefined || raw === null) return null;
+            const normalized = String(raw).toLowerCase();
+            const mapped = mapping[normalized] || mapping[String(raw)] || null;
+            if (!mapped || mapped === 'General') return null;
+            return mapped;
+        }
+    }
+
+    class EnhancedTagCategorizer {
+        constructor(taxonomy = {}, allTags = [], metadataService = null) {
+            this.taxonomy = taxonomy || {};
+            this.metadataService = metadataService;
+            this.overrides = {};
+            Object.entries(this.taxonomy.overrides || {}).forEach(([tag, category]) => {
+                this.overrides[normalizeTagKey(tag)] = category;
+            });
+            this.categoryOrder = Array.from(new Set([...(this.taxonomy.categoryOrder || []), 'Uncategorized']));
+            this.categories = [...this.categoryOrder];
+            this.keywordIndex = {};
+            Object.entries(this.taxonomy.generalKeywordBuckets || {}).forEach(([category, keywords]) => {
+                (keywords || []).forEach(keyword => {
+                    const normalized = keyword.toLowerCase();
+                    if (!this.keywordIndex[normalized]) this.keywordIndex[normalized] = new Set();
+                    this.keywordIndex[normalized].add(category);
+                });
+            });
+            this.characterPatterns = [/\([^)]+\)$/, /_\([^)]+\)$/, /^[a-z0-9]+_[a-z0-9]+_\([^)]+\)$/];
             this.qualityKeywords = new Set(['quality', 'masterpiece', 'best', 'high', 'ultra', 'super', 'extremely', 'detailed', 'resolution', 'res', '4k', '8k', 'hd', 'uhd', 'absurdres']);
-            this.compositionKeywords = new Set(['shot', 'view', 'angle', 'perspective', 'focus', 'body', 'portrait', 'landscape', 'close-up', 'wide', 'cowboy', 'full', 'upper', 'lower']);
-            this.bodyPartKeywords = new Set(['breasts', 'ass', 'butt', 'thighs', 'legs', 'arms', 'hands', 'feet', 'face', 'eyes', 'hair', 'skin', 'body', 'torso', 'chest', 'belly', 'navel', 'shoulders', 'back', 'neck', 'head', 'nose', 'lips', 'mouth']);
-            this.clothingKeywords = new Set(['dress', 'shirt', 'pants', 'skirt', 'shorts', 'jacket', 'coat', 'bikini', 'swimsuit', 'underwear', 'bra', 'panties', 'socks', 'stockings', 'thighhighs', 'pantyhose', 'boots', 'shoes', 'gloves']);
-            this.actionKeywords = new Set(['sitting', 'standing', 'lying', 'walking', 'running', 'jumping', 'dancing', 'singing', 'eating', 'drinking', 'sleeping', 'smiling', 'looking', 'holding', 'grabbing', 'touching', 'reaching']);
-            this.settingKeywords = new Set(['background', 'outdoor', 'indoor', 'room', 'bedroom', 'bathroom', 'kitchen', 'school', 'office', 'beach', 'forest', 'city', 'sky', 'night', 'day', 'sunset', 'sunrise', 'moon', 'star', 'cloud']);
+            (this.taxonomy.generalKeywordBuckets?.Quality || []).forEach(keyword => this.qualityKeywords.add(keyword.toLowerCase()));
+            this.compositionKeywords = new Set(['shot', 'view', 'angle', 'perspective', 'focus', 'body', 'portrait', 'landscape', 'close-up', 'wide', 'cowboy', 'full', 'upper', 'lower', 'profile']);
+            (this.taxonomy.generalKeywordBuckets?.Composition || []).forEach(keyword => this.compositionKeywords.add(keyword.toLowerCase()));
+            this.bodyPartKeywords = new Set(['breasts', 'ass', 'butt', 'thighs', 'legs', 'arms', 'hands', 'feet', 'face', 'eyes', 'hair', 'skin', 'body', 'torso', 'chest', 'belly', 'navel', 'shoulders', 'back', 'neck', 'head', 'nose', 'lips', 'mouth', 'paws', 'pawpads', 'claws', 'talons', 'hooves', 'tail', 'horns', 'ears', 'muzzle', 'snout', 'wings']);
+            (this.taxonomy.generalKeywordBuckets?.['Body Parts'] || []).forEach(keyword => this.bodyPartKeywords.add(keyword.toLowerCase()));
+            this.clothingKeywords = new Set(['dress', 'shirt', 'pants', 'skirt', 'shorts', 'jacket', 'coat', 'bikini', 'swimsuit', 'underwear', 'bra', 'panties', 'socks', 'stockings', 'thighhighs', 'pantyhose', 'boots', 'shoes', 'gloves', 'collar', 'harness', 'latex', 'armor', 'kimono', 'uniform', 'hoodie']);
+            (this.taxonomy.generalKeywordBuckets?.Attire || []).forEach(keyword => this.clothingKeywords.add(keyword.toLowerCase()));
+            this.actionKeywords = new Set(['sitting', 'standing', 'lying', 'walking', 'running', 'jumping', 'dancing', 'singing', 'eating', 'drinking', 'sleeping', 'smiling', 'looking', 'holding', 'grabbing', 'touching', 'reaching', 'hug', 'kiss', 'cuddle', 'cuddling', 'presenting']);
+            (this.taxonomy.generalKeywordBuckets?.['Actions & Poses'] || []).forEach(keyword => this.actionKeywords.add(keyword.toLowerCase()));
+            this.settingKeywords = new Set(['background', 'outdoor', 'indoor', 'room', 'bedroom', 'bathroom', 'kitchen', 'school', 'office', 'beach', 'forest', 'city', 'sky', 'night', 'day', 'sunset', 'sunrise', 'moon', 'star', 'cloud', 'cafe', 'mountain', 'ocean', 'lake', 'cave', 'space']);
+            (this.taxonomy.generalKeywordBuckets?.['Setting & Environment'] || []).forEach(keyword => this.settingKeywords.add(keyword.toLowerCase()));
+            this.expressionKeywords = new Set(['smile', 'smiling', 'blush', 'wink', 'grin', 'snarl', 'growl', 'anger', 'angry', 'happy', 'sad', 'nervous', 'expression']);
+            (this.taxonomy.generalKeywordBuckets?.['Mood & Expression'] || []).forEach(keyword => this.expressionKeywords.add(keyword.toLowerCase()));
+            this.speciesKeywords = new Set(['anthro', 'feral', 'canine', 'feline', 'dragon', 'avian', 'equine', 'pokemon', 'human', 'robot', 'taur', 'hybrid', 'chimera']);
+            (this.taxonomy.generalKeywordBuckets?.Species || []).forEach(keyword => this.speciesKeywords.add(keyword.toLowerCase()));
+            this.propKeywords = new Set(['weapon', 'sword', 'staff', 'wand', 'book', 'scroll', 'phone', 'tablet', 'laptop', 'microphone', 'camera', 'leash', 'chain', 'rope', 'ball', 'toy', 'plush']);
+            (this.taxonomy.generalKeywordBuckets?.Props || []).forEach(keyword => this.propKeywords.add(keyword.toLowerCase()));
+            this.lightingKeywords = new Set(['lighting', 'glow', 'rim_light', 'bloom', 'bokeh', 'particles', 'lens_flare', 'film_grain', 'sparkles', 'magic', 'aura']);
+            (this.taxonomy.generalKeywordBuckets?.['Lighting & Effects'] || []).forEach(keyword => this.lightingKeywords.add(keyword.toLowerCase()));
+            this.hairKeywords = new Set(['hair', 'bangs', 'ponytail', 'braid', 'twin_tails', 'ahoge', 'mane', 'spiky_hair', 'messy_hair']);
+            this.eyeKeywords = new Set(['eyes', 'eye', 'heterochromia', 'pupils', 'iris']);
+            this.colorWords = new Set(['red', 'blue', 'green', 'yellow', 'purple', 'pink', 'orange', 'black', 'white', 'grey', 'gray', 'brown', 'gold', 'silver', 'cyan', 'magenta']);
         }
 
         updateIndex(tag, newCategory) {
-            this.primaryIndex[tag.toLowerCase().replace(/ /g, '_')] = newCategory;
+            const normalized = normalizeTagKey(tag);
+            this.overrides[normalized] = newCategory;
+            if (!this.categories.includes(newCategory)) {
+                this.categories.push(newCategory);
+            }
         }
 
-        categorizeEnhanced(tagString) {
-            const tag = tagString.toLowerCase().replace(/ /g, '_');
-            if (this.primaryIndex[tag]) {
-                return { category: this.primaryIndex[tag], source: 'Primary', confidence: 1.0 };
+        resolveFromMetadata(tag) {
+            if (!this.metadataService) return null;
+            const result = this.metadataService.getCategory(tag);
+            if (result) return result;
+            this.metadataService.ensureFetch(tag);
+            return null;
+        }
+
+        applyHeuristics(tag, aggressive = false) {
+            const normalized = normalizeTagKey(tag);
+            const tokens = normalized.split('_').filter(Boolean);
+            if (/(?:^|_)\([^)]*\)$/.test(normalized)) {
+                return { category: 'Characters', source: 'Heuristic (Parentheses)' };
             }
-            for (const pattern of this.characterPatterns) {
-                if (pattern.test(tag)) return { category: 'Characters', source: 'Smart (Character)', confidence: 0.95 };
+            if (/^\d+(girl|girls|boy|boys|character|characters)$/.test(normalized)) {
+                return { category: 'Subject & Creatures', source: 'Heuristic (Count)' };
             }
-            const words = tag.split('_'), scores = {};
-            words.forEach(word => {
-                if (this.qualityKeywords.has(word)) scores['Quality'] = (scores['Quality'] || 0) + 0.8;
-                if (this.compositionKeywords.has(word)) scores['Composition'] = (scores['Composition'] || 0) + 0.7;
-                if (this.bodyPartKeywords.has(word)) scores['Body Parts'] = (scores['Body Parts'] || 0) + 0.9;
-                if (this.clothingKeywords.has(word)) scores['Attire'] = (scores['Attire'] || 0) + 0.8;
-                if (this.actionKeywords.has(word)) scores['Actions & Poses'] = (scores['Actions & Poses'] || 0) + 0.7;
-                if (this.settingKeywords.has(word)) scores['Setting & Environment'] = (scores['Setting & Environment'] || 0) + 0.8;
+            if (['solo', 'duo', 'trio', 'group'].includes(normalized)) {
+                return { category: 'Subject & Creatures', source: 'Heuristic (Grouping)' };
+            }
+            const scores = {};
+            tokens.forEach(token => {
+                const categories = this.keywordIndex[token];
+                if (categories) {
+                    categories.forEach(category => {
+                        scores[category] = (scores[category] || 0) + 1.2;
+                    });
+                }
+                if (this.qualityKeywords.has(token)) scores['Quality'] = (scores['Quality'] || 0) + 1;
+                if (this.compositionKeywords.has(token)) scores['Composition'] = (scores['Composition'] || 0) + 0.9;
+                if (this.bodyPartKeywords.has(token)) scores['Body Parts'] = (scores['Body Parts'] || 0) + 1.1;
+                if (this.clothingKeywords.has(token)) scores['Attire'] = (scores['Attire'] || 0) + 1;
+                if (this.actionKeywords.has(token)) scores['Actions & Poses'] = (scores['Actions & Poses'] || 0) + 0.9;
+                if (this.settingKeywords.has(token)) scores['Setting & Environment'] = (scores['Setting & Environment'] || 0) + 1;
+                if (this.expressionKeywords.has(token)) scores['Mood & Expression'] = (scores['Mood & Expression'] || 0) + 0.8;
+                if (this.speciesKeywords.has(token)) scores['Species'] = (scores['Species'] || 0) + 1.1;
+                if (this.propKeywords.has(token)) scores['Props'] = (scores['Props'] || 0) + 0.8;
+                if (this.lightingKeywords.has(token)) scores['Lighting & Effects'] = (scores['Lighting & Effects'] || 0) + 0.9;
             });
-            const colorWords = ['red', 'blue', 'green', 'yellow', 'purple', 'pink', 'orange', 'black', 'white', 'grey', 'gray', 'brown'];
-            if (words.some(word => colorWords.includes(word))) {
-                if (words.some(word => ['hair', 'eyes'].includes(word))) {
-                    scores['Hair'] = (scores['Hair'] || 0) + 0.6;
-                    scores['Eyes'] = (scores['Eyes'] || 0) + 0.6;
-                } else if (words.some(word => this.clothingKeywords.has(word))) {
-                    scores['Attire'] = (scores['Attire'] || 0) + 0.5;
+            if (tokens.some(token => this.colorWords.has(token))) {
+                if (tokens.some(token => this.hairKeywords.has(token))) scores['Hair'] = (scores['Hair'] || 0) + 0.9;
+                if (tokens.some(token => this.eyeKeywords.has(token))) scores['Eyes'] = (scores['Eyes'] || 0) + 0.9;
+                if (tokens.some(token => this.clothingKeywords.has(token))) scores['Attire'] = (scores['Attire'] || 0) + 0.5;
+            }
+            if (tokens.some(token => token === 'hair')) scores['Hair'] = (scores['Hair'] || 0) + 1.2;
+            if (tokens.some(token => token === 'eyes')) scores['Eyes'] = (scores['Eyes'] || 0) + 1.2;
+            if (tokens.some(token => ['smile', 'face', 'expression', 'blush', 'wink'].includes(token))) scores['Face'] = (scores['Face'] || 0) + 0.8;
+            if (aggressive && !scores['Subject & Creatures'] && tokens.some(token => /(girl|boy|character|creature|beast)/.test(token))) {
+                scores['Subject & Creatures'] = (scores['Subject & Creatures'] || 0) + 0.6;
+            }
+            const entries = Object.entries(scores);
+            if (entries.length > 0) {
+                const [bestCategory, bestScore] = entries.reduce((best, current) => current[1] > best[1] ? current : best, ['', -Infinity]);
+                if (bestScore > 0) {
+                    return { category: bestCategory, source: 'Smart Heuristic', confidence: Math.min(bestScore / 5, 0.95) };
                 }
             }
-            if (Object.keys(scores).length > 0) {
-                const bestCategory = Object.entries(scores).reduce((a, b) => a[1] > b[1] ? a : b);
-                return { category: bestCategory[0], source: 'Smart Heuristic', confidence: Math.min(bestCategory[1], 0.9) };
-            }
-            return this.categorizeOriginal(tagString);
+            return null;
         }
 
-        categorizeOriginal(tagString) {
-            const tag = tagString.toLowerCase().replace(/ /g, '_');
-            if (this.primaryIndex[tag]) return { category: this.primaryIndex[tag], source: 'Primary' };
-            if (tag.includes('(') && tag.includes(')')) {
-                const seriesMatch = tag.match(/\(([^)]+)\)/);
-                if (seriesMatch && this.primaryIndex[seriesMatch[1]]) return { category: 'Characters', source: 'Heuristic (Series)' };
-                return { category: 'Characters', source: 'Heuristic (Pattern)' };
+        categorize(tagString) {
+            return this.categorizeInternal(tagString, false);
+        }
+
+        categorizeSmart(tagString) {
+            return this.categorizeInternal(tagString, true);
+        }
+
+        categorizeInternal(tagString, aggressive = false) {
+            const normalized = normalizeTagKey(tagString);
+            if (!normalized) return { category: 'Uncategorized', source: 'Fallback' };
+            if (this.overrides[normalized]) {
+                return { category: this.overrides[normalized], source: 'Override' };
             }
-            for (const prefix in this.patternIndex.starts) if (tag.startsWith(prefix)) return { category: this.patternIndex.starts[prefix], source: 'Pattern (Prefix)' };
-            for (const suffix in this.patternIndex.ends) if (tag.endsWith(suffix)) return { category: this.patternIndex.ends[suffix], source: 'Pattern (Suffix)' };
-            const words = tag.split('_'), categoryScores = {};
-            words.forEach(word => { if (this.keywordIndex[word]) categoryScores[this.keywordIndex[word]] = (categoryScores[this.keywordIndex[word]] || 0) + 1; });
-            if (Object.keys(categoryScores).length > 0) return { category: Object.keys(categoryScores).reduce((a, b) => categoryScores[a] > categoryScores[b] ? a : b), source: 'Heuristic (Keywords)' };
+            const metadataResult = this.resolveFromMetadata(normalized);
+            if (metadataResult) return metadataResult;
+            const heuristic = this.applyHeuristics(normalized, aggressive);
+            if (heuristic) return heuristic;
             return { category: 'Uncategorized', source: 'Fallback' };
         }
-
-        categorize(tagString) { return this.categorizeOriginal(tagString); }
-        categorizeSmart(tagString) { return this.categorizeEnhanced(tagString); }
     }
 
     const getFavoriteKey = (tag) => tag.toLowerCase().replace(/\s+/g, '_');
@@ -1462,6 +1815,7 @@
         }
     }
 
+    const normalizeTagKey = (tag) => (tag || '').toLowerCase().replace(/\s+/g, '_');
     const normalizeTagText = (tag) => tag.toLowerCase().replace(/_/g, ' ').trim();
 
     function determinePromptFlowPhase(tag, config = PROMPT_FLOW_CONFIG) {
@@ -1853,7 +2207,7 @@
         }
 
         const sortValue = sortSelect.value;
-        if (sortValue === 'danbooru' || sortValue === 'smart') {
+        if (sortValue === 'danbooru' || sortValue === 'smart' || sortValue === 'e621') {
             const groups = visibleTags.reduce((acc, tag) => {
                 const c = tag.category || 'Uncategorized';
                 if (!acc[c]) acc[c] = [];
@@ -1874,8 +2228,14 @@
                 groupDiv.appendChild(container);
                 tagOutput.appendChild(groupDiv);
             });
-        } else if (sortValue === 'flow' || sortValue === 'illustrious') {
-            const flowConfig = sortValue === 'illustrious' ? ILLUSTRIOUS_FLOW_CONFIG : PROMPT_FLOW_CONFIG;
+        } else if (['flow', 'illustrious-danbooru', 'illustrious-e621', 'artist-blueprint'].includes(sortValue)) {
+            const flowConfigMap = {
+                flow: PROMPT_FLOW_CONFIG,
+                'illustrious-danbooru': ILLUSTRIOUS_FLOW_CONFIG,
+                'illustrious-e621': E621_ILLUSTRIOUS_FLOW_CONFIG,
+                'artist-blueprint': ARTIST_BLUEPRINT_CONFIG
+            };
+            const flowConfig = flowConfigMap[sortValue] || PROMPT_FLOW_CONFIG;
             const flowGroups = sortTagsByPromptFlow(visibleTags, flowConfig);
             flowGroups.forEach(({ phase, tags }) => {
                 if (!tags.length) return;
@@ -2017,16 +2377,28 @@
         if (!gitHubPat) { gitHubPat = prompt("To save changes directly to GitHub, please enter your Personal Access Token (PAT) with `repo` or `public_repo` scope.", ""); if (!gitHubPat) { copyMessage.textContent = 'Update cancelled. No PAT provided.'; setTimeout(() => copyMessage.textContent = '', 3000); return; } }
         const tagsToUpdate = baseTags.filter(t => selectedTagIds.has(t.id)); if (tagsToUpdate.length === 0) return;
         copyMessage.textContent = `Updating ${tagsToUpdate.length} tag(s)...`;
-        const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/tag_map.json`;
+        const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/taxonomies.json`;
         const headers = { 'Authorization': `Bearer ${gitHubPat}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' };
         try {
             const getFileResponse = await fetch(apiUrl, { headers }); if (!getFileResponse.ok) throw new Error(`Fetch failed: ${getFileResponse.status}`);
             const fileData = await getFileResponse.json(); const currentContent = atob(fileData.content); const currentSha = fileData.sha;
-            let currentTagMap = JSON.parse(currentContent); let changesCount = 0;
-            tagsToUpdate.forEach(tag => { const normalizedTag = tag.original.toLowerCase().replace(/ /g, '_'); if (currentTagMap[normalizedTag] !== newCategory) { currentTagMap[normalizedTag] = newCategory; changesCount++; } });
+            let taxonomies = JSON.parse(currentContent);
+            const datasetKey = currentDatasetKey || 'danbooru';
+            if (!taxonomies[datasetKey]) taxonomies[datasetKey] = { overrides: {}, categoryOrder: [] };
+            if (!taxonomies[datasetKey].overrides) taxonomies[datasetKey].overrides = {};
+            let changesCount = 0;
+            tagsToUpdate.forEach(tag => {
+                const normalizedTag = normalizeTagKey(tag.original);
+                if (taxonomies[datasetKey].overrides[normalizedTag] !== newCategory) {
+                    taxonomies[datasetKey].overrides[normalizedTag] = newCategory;
+                    changesCount++;
+                }
+            });
             if (changesCount === 0) { copyMessage.textContent = 'No changes needed.'; setTimeout(() => copyMessage.textContent = '', 3000); return; }
-            const sortedTagMap = Object.fromEntries(Object.entries(currentTagMap).sort()); const newContent = JSON.stringify(sortedTagMap, null, 2);
-            const updateResponse = await fetch(apiUrl, { method: 'PUT', headers, body: JSON.stringify({ message: `Update ${changesCount} tag(s) to '${newCategory}'`, content: btoa(newContent), sha: currentSha }) });
+            const sortedOverrides = Object.fromEntries(Object.entries(taxonomies[datasetKey].overrides).sort());
+            taxonomies[datasetKey].overrides = sortedOverrides;
+            const newContent = JSON.stringify(taxonomies, null, 2);
+            const updateResponse = await fetch(apiUrl, { method: 'PUT', headers, body: JSON.stringify({ message: `Update ${changesCount} tag(s) to '${newCategory}' for ${datasetKey}`, content: btoa(newContent), sha: currentSha }) });
             if (!updateResponse.ok) { const errorData = await updateResponse.json(); throw new Error(`GitHub API Error: ${errorData.message}`); }
             copyMessage.textContent = `Success! Updated ${changesCount} tag(s).`;
             tagsToUpdate.forEach(tag => { tagCategorizer.updateIndex(tag.original, newCategory); tag.category = newCategory; tag.categorySource = 'Primary'; });
@@ -2036,31 +2408,67 @@
         finally { setTimeout(() => copyMessage.textContent = '', 5000); }
     }
 
-    async function loadExternalData() {
+    async function loadExternalData(initialDataset = 'danbooru') {
         document.title = 'Danbooru Tag Helper (Loading...)';
         try {
-            // FIX: Use relative URLs for fetching data from a GitHub Pages site.
-            // This works both locally and when deployed.
-            const timestamp = `t=${new Date().getTime()}`;
-            const [tagsResponse, mapResponse] = await Promise.all([
-                fetch(`tags.json?${timestamp}`),
-                fetch(`tag_map.json?${timestamp}`)
-            ]);
-            if (!tagsResponse.ok) throw new Error(`Failed to fetch tags.json: ${tagsResponse.statusText}`);
-            if (!mapResponse.ok) throw new Error(`Failed to fetch tag_map.json: ${mapResponse.statusText}`);
-            TAG_DATABASE = await tagsResponse.json();
-            const tagMap = await mapResponse.json();
-            const categoryOrder = ['Quality', 'Composition', 'Characters', 'Subject & Creatures', 'Face', 'Eyes', 'Hair', 'Body Parts', 'Attire', 'Accessories', 'Held Items & Objects', 'Actions & Poses', 'Setting & Environment', 'Style & Meta'];
-            tagCategorizer = new EnhancedTagCategorizer(tagMap, TAG_DATABASE, categoryOrder);
-            knownCategories = new Set([...tagCategorizer.categories, 'Uncategorized']);
+            const timestamp = `t=${Date.now()}`;
+            const taxonomyResponse = await fetch(`taxonomies.json?${timestamp}`);
+            if (!taxonomyResponse.ok) throw new Error(`Failed to fetch taxonomies.json: ${taxonomyResponse.statusText}`);
+            TAXONOMIES = await taxonomyResponse.json();
+            await switchDataset(initialDataset);
             document.title = 'Danbooru Tag Helper (Ready)';
         } catch (error) {
-            console.error("FATAL ERROR loading data:", error);
+            console.error('FATAL ERROR loading data:', error);
             document.title = 'Danbooru Tag Helper (ERROR)';
             const errorDiv = document.createElement('div');
             errorDiv.className = 'p-4 mb-4 text-sm text-red-200 bg-red-800/50 rounded-lg';
-            errorDiv.innerHTML = `<strong>Error loading core data:</strong> ${error.message}. The application cannot start. Please check the console (F12) for details and ensure 'tags.json' and 'tag_map.json' are in the same directory as this HTML file.`;
+            errorDiv.innerHTML = `<strong>Error loading core data:</strong> ${error.message}. The application cannot start. Please check the console (F12) for details and ensure 'taxonomies.json' and the dataset tag files are in the same directory as this HTML file.`;
             document.querySelector('.glass-panel').prepend(errorDiv);
+        }
+    }
+
+    async function switchDataset(datasetKey) {
+        const dataset = DATASETS[datasetKey];
+        if (!dataset) throw new Error(`Unknown dataset '${datasetKey}'`);
+        currentDatasetKey = datasetKey;
+        const timestamp = `t=${Date.now()}`;
+        const tagsResponse = await fetch(`${dataset.tagsFile}?${timestamp}`);
+        if (!tagsResponse.ok) throw new Error(`Failed to fetch ${dataset.tagsFile}: ${tagsResponse.statusText}`);
+        TAG_DATABASE = await tagsResponse.json();
+        const taxonomy = TAXONOMIES[dataset.taxonomyKey] || TAXONOMIES[datasetKey] || { categoryOrder: [], overrides: {} };
+        metadataService = new TagMetadataService(dataset, taxonomy, () => {
+            if (document.visibilityState === 'visible') {
+                processAll();
+            } else {
+                const handler = () => {
+                    if (document.visibilityState === 'visible') {
+                        processAll();
+                        document.removeEventListener('visibilitychange', handler);
+                    }
+                };
+                document.addEventListener('visibilitychange', handler);
+            }
+        });
+        tagCategorizer = new EnhancedTagCategorizer(taxonomy, TAG_DATABASE, metadataService);
+        knownCategories = new Set([...tagCategorizer.categories, 'Uncategorized']);
+        if (datasetSelect) datasetSelect.value = datasetKey;
+        localStorage.setItem('danbooru-dataset', datasetKey);
+        adjustSortForDataset(datasetKey);
+        renderCategoryFilters();
+        processAll();
+        renderFavorites();
+    }
+
+    function adjustSortForDataset(datasetKey) {
+        if (!sortSelect) return;
+        const value = sortSelect.value;
+        if (datasetKey === 'e621') {
+            if (value === 'danbooru') sortSelect.value = 'e621';
+            if (value === 'illustrious-danbooru') sortSelect.value = 'illustrious-e621';
+            if (sortSelect.value === 'danbooru') sortSelect.value = 'e621';
+        } else if (datasetKey === 'danbooru') {
+            if (value === 'e621') sortSelect.value = 'danbooru';
+            if (value === 'illustrious-e621') sortSelect.value = 'illustrious-danbooru';
         }
     }
     
@@ -2091,7 +2499,7 @@
     }
 
     function initSortable() {
-        if (!['danbooru', 'smart', 'manual'].includes(sortSelect.value)) {
+        if (!['danbooru', 'smart', 'manual', 'e621'].includes(sortSelect.value)) {
             destroySortableInstances();
             return;
         }
@@ -2214,17 +2622,35 @@
     function toggleSettingsPanel() { element('settingsPanel').classList.toggle('hidden'); }
     function clearAll() { if (confirm('Clear all tags and settings?')) { element('tagInput').value = ''; element('triggerInput').value = ''; element('appendInput').value = ''; element('swapsInput').value = ''; element('implicationsInput').value = ''; element('blacklistInput').value = ''; processAll(); } }
     function randomizeTags() { if (baseTags.length === 0) return; for (let i = baseTags.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [baseTags[i], baseTags[j]] = [baseTags[j], baseTags[i]]; } displayTags(); }
-    function optimizeOrder() { const categoryPriority = { 'Quality': 1, 'Composition': 2, 'Characters': 3, 'Subject & Creatures': 4, 'Face': 5, 'Eyes': 6, 'Hair': 7, 'Body Parts': 8, 'Attire': 9, 'Accessories': 10, 'Held Items & Objects': 11, 'Actions & Poses': 12, 'Setting & Environment': 13, 'Style & Meta': 14 }; baseTags.sort((a, b) => { const aPriority = categoryPriority[a.category] || 99; const bPriority = categoryPriority[b.category] || 99; if (aPriority !== bPriority) return aPriority - bPriority; return a.original.localeCompare(b.original); }); displayTags(); copyMessage.textContent = 'Tags optimized!'; setTimeout(() => copyMessage.textContent = '', 2000); }
+    function optimizeOrder() {
+        if (baseTags.length === 0) return;
+        const categoryPriority = {};
+        (tagCategorizer?.categoryOrder || []).forEach((category, index) => {
+            if (!categoryPriority[category]) categoryPriority[category] = index + 1;
+        });
+        categoryPriority['Uncategorized'] = categoryPriority['Uncategorized'] || 99;
+        baseTags.sort((a, b) => {
+            const aPriority = categoryPriority[a.category] ?? 99;
+            const bPriority = categoryPriority[b.category] ?? 99;
+            if (aPriority !== bPriority) return aPriority - bPriority;
+            return a.original.localeCompare(b.original);
+        });
+        displayTags();
+        copyMessage.textContent = 'Tags optimized!';
+        setTimeout(() => copyMessage.textContent = '', 2000);
+    }
     function collectExportPayload() {
         const tags = getProcessedTagsForOutput();
         const payload = {
             tags,
             prompt: buildFinalPrompt(),
             settings: {
+                dataset: currentDatasetKey,
                 prepend: triggerInput.value,
                 append: appendInput.value,
                 maxTags: maxTagsInput.value,
                 sorting: sortSelect.value,
+                suggestionCount: suggestionCountInput.value,
                 deduplicate: deduplicateToggle.checked,
                 underscores: underscoreToggle.checked,
                 weighting: enableWeightingToggle.checked
@@ -2263,6 +2689,30 @@
             copyMessage.textContent = `Exported ${format.toUpperCase()}!`;
             setTimeout(() => copyMessage.textContent = '', 2500);
         }
+    }
+
+    function stripWeightedTags() {
+        const fields = [tagInput, triggerInput, appendInput];
+        fields.forEach(field => {
+            if (!field) return;
+            let value = field.value;
+            value = value.replace(/([\(\[\{])\s*([^()\[\]{}:]+?)\s*:\s*\d+(?:\.\d+)?\s*([\)\]\}])/g, '$2');
+            value = value.replace(/[\(\[\{]{2,}\s*([^()\[\]{}]+?)\s*[\)\]\}]{2,}/g, '$1');
+            field.value = value;
+        });
+        processAll();
+    }
+
+    function escapeParenthesesTags() {
+        const fields = [tagInput, triggerInput, appendInput];
+        fields.forEach(field => {
+            if (!field) return;
+            let value = field.value;
+            value = value.replace(/\\\(/g, '(').replace(/\\\)/g, ')');
+            value = value.replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+            field.value = value;
+        });
+        processAll();
     }
 
     function copyPromptAsJson() {
@@ -2322,9 +2772,126 @@
         };
         input.click();
     }
-    function exportSettings() { const settings = { theme: document.body.className.match(/theme-\w+/)?.[0] || 'theme-indigo', prepend: triggerInput.value, append: appendInput.value, swaps: swapsInput.value, implications: implicationsInput.value, blacklist: blacklistInput.value, maxTags: maxTagsInput.value, sorting: sortSelect.value, deduplicate: deduplicateToggle.checked, underscores: underscoreToggle.checked, weighting: enableWeightingToggle.checked, ratings: { safe: ratingSafe.checked, general: ratingGeneral.checked, questionable: ratingQuestionable.checked } }; const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `danbooru-helper-settings-${new Date().toISOString().split('T')[0]}.json`; a.click(); URL.revokeObjectURL(a.href); }
-    function importSettings(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { try { const settings = JSON.parse(e.target.result); if (settings.theme) applyTheme(settings.theme); if (settings.prepend !== undefined) triggerInput.value = settings.prepend; if (settings.append !== undefined) appendInput.value = settings.append; if (settings.swaps !== undefined) swapsInput.value = settings.swaps; if (settings.implications !== undefined) implicationsInput.value = settings.implications; if (settings.blacklist !== undefined) blacklistInput.value = settings.blacklist; if (settings.maxTags !== undefined) maxTagsInput.value = settings.maxTags; if (settings.sorting !== undefined) sortSelect.value = settings.sorting; if (settings.deduplicate !== undefined) deduplicateToggle.checked = settings.deduplicate; if (settings.underscores !== undefined) underscoreToggle.checked = settings.underscores; if (settings.weighting !== undefined) enableWeightingToggle.checked = settings.weighting; if (settings.ratings) { if (settings.ratings.safe !== undefined) ratingSafe.checked = settings.ratings.safe; if (settings.ratings.general !== undefined) ratingGeneral.checked = settings.ratings.general; if (settings.ratings.questionable !== undefined) ratingQuestionable.checked = settings.ratings.questionable; } toggleSettingsPanel(); processAll(); copyMessage.textContent = 'Settings imported!'; setTimeout(() => copyMessage.textContent = '', 3000); } catch (error) { alert('Error importing settings: ' + error.message); } }; reader.readAsText(file); }
-    function resetToDefaults() { if (confirm('Reset all settings to defaults?')) { tagInput.value = ''; triggerInput.value = ''; appendInput.value = ''; swapsInput.value = ''; implicationsInput.value = ''; blacklistInput.value = ''; maxTagsInput.value = '75'; sortSelect.value = 'danbooru'; suggestionCountInput.value = '15'; deduplicateToggle.checked = true; underscoreToggle.checked = true; enableWeightingToggle.checked = false; ratingSafe.checked = true; ratingGeneral.checked = true; ratingQuestionable.checked = false; applyTheme('theme-indigo'); toggleSettingsPanel(); processAll(); } }
+    function exportSettings() {
+        const settings = {
+            dataset: currentDatasetKey,
+            theme: document.body.className.match(/theme-\w+/)?.[0] || 'theme-indigo',
+            prepend: triggerInput.value,
+            append: appendInput.value,
+            swaps: swapsInput.value,
+            implications: implicationsInput.value,
+            blacklist: blacklistInput.value,
+            maxTags: maxTagsInput.value,
+            sorting: sortSelect.value,
+            suggestionCount: suggestionCountInput.value,
+            deduplicate: deduplicateToggle.checked,
+            underscores: underscoreToggle.checked,
+            weighting: enableWeightingToggle.checked,
+            ratings: {
+                safe: ratingSafe.checked,
+                general: ratingGeneral.checked,
+                questionable: ratingQuestionable.checked
+            },
+            hiddenCategories: Array.from(hiddenCategories),
+            sections: {}
+        };
+        document.querySelectorAll('.collapsible-section').forEach(section => {
+            const key = section.dataset.storageKey;
+            if (key) settings.sections[key] = section.open;
+        });
+        const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `danbooru-helper-settings-${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+    }
+
+    async function importSettings(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const settings = JSON.parse(e.target.result);
+                if (settings.dataset && DATASETS[settings.dataset] && settings.dataset !== currentDatasetKey) {
+                    await switchDataset(settings.dataset);
+                }
+                if (settings.theme) applyTheme(settings.theme);
+                if (settings.prepend !== undefined) triggerInput.value = settings.prepend;
+                if (settings.append !== undefined) appendInput.value = settings.append;
+                if (settings.swaps !== undefined) swapsInput.value = settings.swaps;
+                if (settings.implications !== undefined) implicationsInput.value = settings.implications;
+                if (settings.blacklist !== undefined) blacklistInput.value = settings.blacklist;
+                if (settings.maxTags !== undefined) maxTagsInput.value = settings.maxTags;
+                if (settings.sorting !== undefined) sortSelect.value = settings.sorting;
+                if (settings.suggestionCount !== undefined) suggestionCountInput.value = settings.suggestionCount;
+                if (settings.deduplicate !== undefined) deduplicateToggle.checked = settings.deduplicate;
+                if (settings.underscores !== undefined) underscoreToggle.checked = settings.underscores;
+                if (settings.weighting !== undefined) enableWeightingToggle.checked = settings.weighting;
+                if (settings.ratings) {
+                    if (settings.ratings.safe !== undefined) ratingSafe.checked = settings.ratings.safe;
+                    if (settings.ratings.general !== undefined) ratingGeneral.checked = settings.ratings.general;
+                    if (settings.ratings.questionable !== undefined) ratingQuestionable.checked = settings.ratings.questionable;
+                }
+                if (Array.isArray(settings.hiddenCategories)) {
+                    hiddenCategories = new Set(settings.hiddenCategories);
+                    saveHiddenCategories();
+                }
+                if (settings.sections && typeof settings.sections === 'object') {
+                    document.querySelectorAll('.collapsible-section').forEach(section => {
+                        const key = section.dataset.storageKey;
+                        if (!key) return;
+                        const desiredState = settings.sections[key];
+                        if (desiredState === true) {
+                            section.setAttribute('open', '');
+                        } else if (desiredState === false) {
+                            section.removeAttribute('open');
+                        }
+                        localStorage.setItem(`${COLLAPSE_STORAGE_PREFIX}${key}`, section.open ? 'open' : 'closed');
+                    });
+                }
+                adjustSortForDataset(currentDatasetKey);
+                toggleSettingsPanel();
+                processAll();
+                copyMessage.textContent = 'Settings imported!';
+                setTimeout(() => copyMessage.textContent = '', 3000);
+            } catch (error) {
+                alert('Error importing settings: ' + error.message);
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    async function resetToDefaults() {
+        if (!confirm('Reset all settings to defaults?')) return;
+        tagInput.value = '';
+        triggerInput.value = '';
+        appendInput.value = '';
+        swapsInput.value = '';
+        implicationsInput.value = '';
+        blacklistInput.value = '';
+        suggestionCountInput.value = '15';
+        deduplicateToggle.checked = true;
+        underscoreToggle.checked = false;
+        enableWeightingToggle.checked = false;
+        ratingSafe.checked = true;
+        ratingGeneral.checked = true;
+        ratingQuestionable.checked = false;
+        applyTheme('theme-indigo');
+        await switchDataset('danbooru');
+        sortSelect.value = 'danbooru';
+        maxTagsInput.value = '75';
+        hiddenCategories = new Set();
+        saveHiddenCategories();
+        document.querySelectorAll('.collapsible-section').forEach(section => {
+            section.setAttribute('open', '');
+            const key = section.dataset.storageKey;
+            if (key) localStorage.setItem(`${COLLAPSE_STORAGE_PREFIX}${key}`, 'open');
+        });
+        toggleSettingsPanel();
+        processAll();
+    }
     function applyTheme(theme) {
         const selectedTheme = theme || 'theme-indigo';
         document.documentElement.className = 'dark';
@@ -2368,7 +2935,8 @@
 
     document.addEventListener('DOMContentLoaded', async () => {
         initializeToken();
-        await loadExternalData();
+        const storedDataset = localStorage.getItem('danbooru-dataset') || 'danbooru';
+        await loadExternalData(storedDataset);
         const savedTheme = localStorage.getItem('danbooru-tag-helper-theme') || 'theme-indigo';
         applyTheme(savedTheme);
         runEntranceAnimations();
@@ -2383,6 +2951,19 @@
                 localStorage.setItem('danbooru-howto-open', howToPanel.open);
             });
         }
+        document.querySelectorAll('.collapsible-section').forEach(section => {
+            const key = section.dataset.storageKey;
+            if (!key) return;
+            const storedState = localStorage.getItem(`${COLLAPSE_STORAGE_PREFIX}${key}`);
+            if (storedState === 'open') {
+                section.setAttribute('open', '');
+            } else if (storedState === 'closed') {
+                section.removeAttribute('open');
+            }
+            section.addEventListener('toggle', () => {
+                localStorage.setItem(`${COLLAPSE_STORAGE_PREFIX}${key}`, section.open ? 'open' : 'closed');
+            });
+        });
         loadHiddenCategories();
         loadFavorites();
         renderFavorites();
@@ -2391,6 +2972,17 @@
         const savedHistory = localStorage.getItem('danbooru-tag-history');
         if (savedHistory) { copyHistory = JSON.parse(savedHistory); }
         document.querySelectorAll('.theme-button').forEach(btn => btn.addEventListener('click', () => applyTheme(btn.dataset.theme)));
+        if (datasetSelect) {
+            datasetSelect.addEventListener('change', async (event) => {
+                try {
+                    await switchDataset(event.target.value);
+                } catch (error) {
+                    console.error('Failed to switch dataset', error);
+                    alert(`Failed to load dataset: ${error.message}`);
+                    datasetSelect.value = currentDatasetKey;
+                }
+            });
+        }
         const debouncedTagProcessing = debounce(processAll, 300);
         const inputsForProcessing = [swapsInput, implicationsInput, blacklistInput, triggerInput, appendInput, maxTagsInput];
         inputsForProcessing.forEach(input => input && input.addEventListener('input', processAll));
@@ -2413,6 +3005,10 @@
         if (categoryPickerBackdrop) categoryPickerBackdrop.addEventListener('click', closeCategoryPicker);
         if (categoryPickerClose) categoryPickerClose.addEventListener('click', closeCategoryPicker);
         suggestBtn.addEventListener('click', suggestCoherentTags);
+        const scrollTopBtn = element('scrollTopBtn');
+        const scrollBottomBtn = element('scrollBottomBtn');
+        if (scrollTopBtn) scrollTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+        if (scrollBottomBtn) scrollBottomBtn.addEventListener('click', () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }));
         processAll();
         updateCopyHistory(null);
         updateTokenStatus();
