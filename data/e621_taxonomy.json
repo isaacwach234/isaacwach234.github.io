@@ -1,0 +1,85 @@
+{
+  "category_map": {
+    "general": "Meta & Lore",
+    "species": "Species & Body",
+    "character": "Characters",
+    "copyright": "Meta & Lore",
+    "artist": "Artists",
+    "meta": "Meta & Lore",
+    "lore": "Meta & Lore",
+    "rating": "Rating & Safety"
+  },
+  "keyword_hints": {
+    "rating": [
+      "rating:s",
+      "rating:q",
+      "rating:e",
+      "sfw",
+      "nsfw",
+      "explicit",
+      "safe",
+      "questionable"
+    ],
+    "species": [
+      "anthro",
+      "feral",
+      "taur",
+      "hybrid",
+      "scales",
+      "fur",
+      "hooves",
+      "muzzle",
+      "digitigrade",
+      "plantigrade"
+    ],
+    "character": [
+      "oc",
+      "original_character",
+      "sona",
+      "mascot",
+      "character"
+    ],
+    "artist": [
+      "artist:",
+      "commission",
+      "sketchbook",
+      "signature"
+    ],
+    "meta": [
+      "watermark",
+      "logo",
+      "text",
+      "interface",
+      "hud"
+    ],
+    "lore": [
+      "canon",
+      "alternate_universe",
+      "worldbuilding",
+      "story"
+    ],
+    "general": [
+      "comic",
+      "panel",
+      "speech_bubble",
+      "caption"
+    ]
+  },
+  "suffix_hints": {
+    "_collar": "Props & Gear",
+    "_leash": "Props & Gear",
+    "_background": "Scene & Setting",
+    "_cosplay": "Wardrobe & Accessories",
+    "_print": "Meta & Lore"
+  },
+  "additional_categories": [
+    "Gender & Identity",
+    "Genitals & Fluids",
+    "Kinks & Themes",
+    "Wardrobe & Accessories",
+    "Props & Gear",
+    "Scene & Setting",
+    "Anatomy & Detail",
+    "Rating & Safety"
+  ]
+}
