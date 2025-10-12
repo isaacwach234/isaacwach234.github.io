@@ -1,27 +1,22 @@
 # **Danbooru Tag Helper**
 
-A web-based utility designed primarily to **streamline the process of tagging**, particularly those using Danbooru-style conventions. It's also helpful for managing, refining, and formatting tags for AI image generation prompts. The helper now understands both Danbooru and e621 ecosystems with dataset-aware taxonomies and autocomplete sets.
+A web-based utility designed primarily to **streamline the process of tagging**, particularly those using Danbooru-style conventions. It's also helpful for managing, refining, and formatting tags for AI image generation prompts.
 
 This tool allows you to easily process lists of tags by applying various filters, formatting options, and additions, making dataset management more efficient.
 
 ## **Features**
 
-* **Dataset-aware tagging:** Select Danbooru or e621 datasets for tailored autocomplete, metadata-assisted categorisation, and matching sort orders.
-* **Tag Input:** Enter or paste comma-separated tags.
+* **Tag Input:** Enter or paste comma-separated tags.  
 * **Blacklisting:** Exclude tags containing specific keywords.  
 * **Trigger Word Prepending:** Add custom words or phrases to the beginning of your tag list (useful for prompts or specific dataset categorizations).  
   * **Uniquify Option:** Apply simple character substitutions (e.g., e-\>3, s-\>5) to trigger words for potential variation.  
 * **Append Tags:** Add custom words or phrases to the end of your tag list.  
 * **Tag Formatting:** Automatically replace spaces with underscores (or vice-versa) for consistency.  
-* **Sorting:** Sort alphabetically or keep the original order, or use curated flows like Prompt Flow, Illustrious (Danbooru/e621) and the new Prompt Blueprint guide.
+* **Sorting:** Sort the processed tags alphabetically (A-Z or Z-A) or keep the original order (after filtering).  
 * **Max Tag Limit:** Limit the number of processed tags included in the final output per item.  
 * **Tag Search:** Highlight or count tags matching a search term within the processed or original input list, aiding in review.  
 * **Clear Display:** Shows initial tag count, processed tag count, prepended triggers, and appended tags separately.  
 * **Copy to Clipboard:** Easily copy the final formatted tag list (including triggers, processed tags, and appended tags) for use in dataset files or prompts.
-
-* **Quick actions:** Strip weighting markup, escape parentheses, export structured JSON, or jump to the top/bottom of long tag lists instantly.
-* **Collapsible editors:** Hide or reveal Aliases, Implications, and Blacklist panels to declutter your workspace.
-* **Themes:** Choose from multiple accent palettes, including the new Yodayo-inspired theme.
 
 ## **How to Use**
 
